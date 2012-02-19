@@ -38,6 +38,9 @@ float eyephi = 180; // degrees sideways
 float eyetheta = 30; // degrees up
 // location of the camera
 
+float lookx, looky, lookz, eyex, eyey, eyez, up;
+glm::mat4 view, projection;
+
 float camspeed = .5;
 float zoomspeed = .1;
 // movemevt speeds
@@ -97,7 +100,7 @@ void moveCamera() {
 		eyetheta += camspeed;
 		if(eyetheta > 180) eyetheta -= 360;
 	} // up
-	if(keys['a']) {
+	if(keys['d']) {
 		eyephi -= camspeed;
 		if(eyephi < -180) eyephi += 360;
 	} // left
@@ -105,7 +108,7 @@ void moveCamera() {
 		eyetheta -= camspeed;
 		if(eyetheta < -180) eyetheta += 360;
 	} // down
-	if(keys['d']) {
+	if(keys['a']) {
 		eyephi += camspeed;
 		if(eyephi > 180) eyephi -= 360;
 	} // right
@@ -123,100 +126,51 @@ void idle() {
 	glutPostRedisplay();
 } // constantly calculates redraws
 
+void drawCube(Cube* c) {
+	glBindTexture(GL_TEXTURE_2D, c->texture_id);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
+	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
+	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
+	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->xpos, c->ypos, c->zpos));
+	// translate to position from origin
+	glm::mat4 mvp = projection * view * model;	
+	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+} // draws a cube
+
 void onDisplay() {
 	glClearColor(0.0, 0.0, 0.0, 0.0); // black
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
 
-	glUseProgram(program);
-
-	float lookx = cubes[0]->xpos;
-	float looky = cubes[0]->ypos;
-	float lookz = cubes[0]->zpos;
-	float eyex = lookx + eyedist*cos(eyetheta*PI/180.0)*cos(eyephi*PI/180.0);
-	float eyey = looky + eyedist*sin(eyetheta*PI/180.0);
-	float eyez = lookz + eyedist*cos(eyetheta*PI/180.0)*sin(eyephi*PI/180.0);	
-	float up = 1.0;
+	lookx = cubes[0]->xpos;
+	looky = cubes[0]->ypos;
+	lookz = cubes[0]->zpos;
+	eyex = lookx + eyedist*cos(eyetheta*PI/180.0)*cos(eyephi*PI/180.0);
+	eyey = looky + eyedist*sin(eyetheta*PI/180.0);
+	eyez = lookz + eyedist*cos(eyetheta*PI/180.0)*sin(eyephi*PI/180.0);	
+	up = 1.0;
 	if(abs(eyetheta) > 90.0) up = -1.0;
 	// eye and look coordinates are the same for all cubes
 	
-	glm::mat4 view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(lookx, looky, lookz), glm::vec3(0.0, up, 0.0));
-	glm::mat4 projection = glm::perspective(
-			45.0f, // view angle (y direction)
-			1.0f*screen_width/screen_height, // aspect ratio
-			0.1f, // near clipping plane
-			5000.0f); // far clipping plane
-	// projection from the eye	
+	view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(lookx, looky, lookz), glm::vec3(0.0, up, 0.0));
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
-
-	// draws background (skybox)
-	glBindTexture(GL_TEXTURE_2D, bg->texture_id);
-	
+	glUseProgram(program);
 	glEnableVertexAttribArray(attribute_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, bg->vbo_texcoords);
-	glVertexAttribPointer(
-		attribute_texcoord,			// attrib name (in v shader)
-		2,							// num elements per vertex (x, y)
-		GL_FLOAT,					// element type
-		GL_FALSE,					// take values as-is
-		0,							// no stride
-		0);							// no first element offset
-
 	glEnableVertexAttribArray(attribute_coord3d);
-	glBindBuffer(GL_ARRAY_BUFFER, bg->vbo_vertices);
-	glVertexAttribPointer(
-		attribute_coord3d,			// attrib name (in v shader)
-		3,							// num elements per vertex (x, y, z)
-		GL_FLOAT,					// element type
-		GL_FALSE,					// take values as-is
-		0,							// no stride
-		0);							// first element offset
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bg->ibo_elements);
-	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(bg->xpos, bg->ypos, bg->zpos));
-	// translate to position from origin
-	glm::mat4 mvp = projection * view * model;	
-	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-	for(int n = 0; n < numcubes; n++) {
-		glBindTexture(GL_TEXTURE_2D, cubes[n]->texture_id);
-	
-		glEnableVertexAttribArray(attribute_texcoord);
-		glBindBuffer(GL_ARRAY_BUFFER, cubes[n]->vbo_texcoords);
-		glVertexAttribPointer(
-			attribute_texcoord,			// attrib name (in v shader)
-			2,							// num elements per vertex (x, y)
-			GL_FLOAT,					// element type
-			GL_FALSE,					// take values as-is
-			0,							// no stride
-			0);							// no first element offset
-
-		glEnableVertexAttribArray(attribute_coord3d);
-		glBindBuffer(GL_ARRAY_BUFFER, cubes[n]->vbo_vertices);
-		glVertexAttribPointer(
-			attribute_coord3d,			// attrib name (in v shader)
-			3,							// num elements per vertex (x, y, z)
-			GL_FLOAT,					// element type
-			GL_FALSE,					// take values as-is
-			0,							// no stride
-			0);							// first element offset
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubes[n]->ibo_elements);
-		int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(cubes[n]->xpos, cubes[n]->ypos, cubes[n]->zpos));
-		// translate to position from origin
-		glm::mat4 mvp = projection * view * model;	
-		glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-	} // places and draws all cubes
+	drawCube(bg);
+	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
-	// disables attribute arrays
+	glUseProgram(0);
 	
 	while((glutGet(GLUT_ELAPSED_TIME) - lastframe) < 1000.0/MAX_FPS) {
 		continue;
