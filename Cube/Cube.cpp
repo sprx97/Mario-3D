@@ -125,10 +125,10 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	}
 	else if(texture == "groundblock") {
 		GLfloat tempcoords[48] = {
-			0.0, 0.0,
-			1.0, 0.0,
-			1.0, 1.0,
-			0.0, 1.0,
+			0.0 + .01, 0.0 + .01,
+			1.0 - .01, 0.0 + .01,
+			1.0 - .01, 1.0 - .01,
+			0.0 + .01, 1.0 - .01,
 		}; // what part of the texture image is used
 		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
 		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));

@@ -1,7 +1,7 @@
 // Jeremy Vercillo
 // 2/9/12
 
-#include <string.h>
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
@@ -18,6 +18,8 @@
 // local includes
 
 #define PI 3.1415926
+
+using namespace std;
 
 GLuint program;
 GLint attribute_coord3d, attribute_texcoord;
@@ -185,7 +187,15 @@ void onDisplay() {
 	while((glutGet(GLUT_ELAPSED_TIME) - lastframe) < 1000.0/MAX_FPS) {
 		continue;
 	} // limits FPS
-	printf("%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+	
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glRasterPos2f(-1.0f, -1.0f);
+	char* s = new char[20];
+	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+	for (int n = 0; n < strlen(s); n++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
+	}	
+	
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
 
 	glutSwapBuffers();
@@ -204,17 +214,18 @@ void free_resources() {
 	}
 } // cleans up memory
 
-void key_pressed(unsigned char key, int x, int y) {
-	keys[key] = 1; // key is pressed
-	if(key == 'm' && !fullscreen) {
-		glutFullScreen();
-		fullscreen = 1;
-	}
-	else if(key == 'm' && fullscreen) {
+void toggleFullscreen() {
+	fullscreen = !fullscreen;
+	if(fullscreen) glutFullScreen();
+	else {
 		glutReshapeWindow(800, 600);
 		glutPositionWindow(0, 0);
-		fullscreen = 0;
 	}
+}
+
+void key_pressed(unsigned char key, int x, int y) {
+	keys[key] = 1; // key is pressed
+	if(key == 'm') toggleFullscreen();
 } // watches keyboard
 
 void key_released(unsigned char key, int x, int y) {
