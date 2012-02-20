@@ -4,6 +4,7 @@
 #include <string>
 #include "questionblock_texture.c"
 #include "brickblock_texture.c"
+#include "groundblock_texture.c"
 #include "skybox_texture.c"
 #include "../common/shader_utils.h"
 #include "Cube.h"
@@ -120,6 +121,36 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 			GL_RGB,
 			GL_UNSIGNED_BYTE,
 			brickblock_texture.pixel_data);
+			// texture object
+	}
+	else if(texture == "groundblock") {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+			0,
+			GL_RGB,
+			groundblock_texture.width,
+			groundblock_texture.height,
+			0,
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			groundblock_texture.pixel_data);
 			// texture object
 	}
 	else if(texture == "skybox") {

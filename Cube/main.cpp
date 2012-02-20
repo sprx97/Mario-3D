@@ -148,6 +148,16 @@ void onDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
 
+/*	glUseProgram(program);
+
+	GLfloat color[] = {0.5f, 1.0f, 0.0f, 1.0f};
+	GLfloat position[] = {10.0f, 10.0f, 10.0f};
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, color);
+	glLightfv(GL_LIGHT0, GL_POSITION, position);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	GLUquadric* quad = gluNewQuadric();
+	gluSphere(quad, 20, 10, 10);*/
+		
 	lookx = cubes[0]->xpos;
 	looky = cubes[0]->ypos;
 	lookz = cubes[0]->zpos;
@@ -231,7 +241,7 @@ int main(int argc, char* argv[]) {
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 	for(int n = 0; n < numcubes; n++) {
-		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("brickblock"):("questionblock"), cubesize);
+		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
 
 	if(initShaders()) {
@@ -245,6 +255,10 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
+/*		glEnable(GL_COLOR_MATERIAL);
+		glShadeModel(GL_SMOOTH);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);*/
 		glutMainLoop();
 	}
 	
