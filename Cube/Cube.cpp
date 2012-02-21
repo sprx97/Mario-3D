@@ -55,7 +55,7 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// binds the vertex positions of the cube
 	
-	if(texture == "questionblock") {
+	if(strcmp(texture,"questionblock") == 0) {
 		GLfloat tempcoords[48] = {
 			0.0, 0.0,
 			0.5, 0.0,
@@ -93,7 +93,7 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 			questionblock_texture.pixel_data);	
 			// texture object
 	}
-	else if(texture == "brickblock") {
+	else if(strcmp(texture,"brickblock") == 0) {
 		GLfloat tempcoords[48] = {
 			0.0, 0.0,
 			1.0, 0.0,
@@ -123,7 +123,7 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 			brickblock_texture.pixel_data);
 			// texture object
 	}
-	else if(texture == "groundblock") {
+	else if(strcmp(texture,"groundblock") == 0) {
 		GLfloat tempcoords[48] = {
 			0.0 + .01, 0.0 + .01,
 			1.0 - .01, 0.0 + .01,
@@ -153,7 +153,7 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 			groundblock_texture.pixel_data);
 			// texture object
 	}
-	else if(texture == "skybox") {
+	else if(strcmp(texture,"skybox") == 0) {
 		GLfloat frontcoords[8] = {
 			0.25 + .0015, 1.0/3.0 + .0015,
 			0.5  - .0015, 1.0/3.0 + .0015,
