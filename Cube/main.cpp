@@ -10,12 +10,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <time.h>
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreGraphics/CGEventSource.h>
-#include <QuartzCore/QuartzCore.h>
+#ifdef __APPLE__
+#include <QuartzCore/QuartzCore.h> // Apple pointer warp
+#endif
 // libraries
 
 #include "Cube.h"
@@ -128,7 +125,9 @@ void update_vectors() {
 	lastx = midwindowx = screen_width/2;
 	lasty = midwindowy = screen_height/2;
 	
+#ifdef __APPLE__
 	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
+#endif
 } // updates camera position vectors
 
 void motion(int x, int y) {
@@ -163,7 +162,9 @@ void idle() {
 		screen_height = glutGet(GLUT_WINDOW_HEIGHT);
 		lastx = midwindowx = screen_width/2;
 		lasty = midwindowy = screen_height/2;
+#ifdef __APPLE__
 		CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
+#endif
 		mouseinit = true;
 	}
 	moveCamera();
@@ -293,7 +294,7 @@ int main(int argc, char* argv[]) {
 	}
 
 #ifdef __APPLE__
-	CGSetLocalEventsSuppressionInterval(0.0);
+	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
 	
 	if(initShaders()) {
