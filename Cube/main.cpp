@@ -51,6 +51,7 @@ int cubesize = 2;
 int numcubes = 100;
 Cube* cubes[100]; // array of cubes
 Cube* bg; // background skycube
+Cube* camcube[3]; // player "model"
 
 glm::mat4 view, projection;
 
@@ -215,14 +216,18 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
+    for(int n = 0; n < 2; n++) drawCube(camcube[n]);
 	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
+   
+    ///////////////////////////// VERY LAGGY
+    for(int n = 1; n < 3; n++) {
+        camcube[n-1] = new Cube(position.x, position.y - (n*cubesize), position.z, "questionblock", cubesize); // it should be position.y-(n*cubesize) and n=0 n<2 camcube[n] so that the head is covered but I want to see goddammit
+    }
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
-	
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRasterPos2f(-1.0f, -1.0f);
+    
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
 	for (int n = 0; n < strlen(s); n++) {
@@ -270,7 +275,7 @@ int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
-	glutCreateWindow("My Rotating Cube");
+	glutCreateWindow("Mario 3-D");
 	if(fullscreen) glutFullScreen();
 	// initializes glut window
 
@@ -287,8 +292,11 @@ int main(int argc, char* argv[]) {
 
 	position = glm::vec3(0, 5, -20);
 	angle = glm::vec3(0, -.15, 0);
-
+    
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+    for(int n = 1; n < 3; n++) {
+        camcube[n-1] = new Cube(position.x, position.y - (n*cubesize), position.z, "questionblock", cubesize); // it should be position.y-(n*cubesize) and n=0 n<2 camcube[n] so that the head is covered but I want to see goddammit
+    }
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
@@ -312,11 +320,19 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
-/*		glEnable(GL_COLOR_MATERIAL);
-		glShadeModel(GL_SMOOTH);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);*/
-		glutMainLoop();
+    /////////////////////////////////////////
+        float lightCol[4] = {1,1,1,1};
+        float ambientCol[4] = {1.0,1.0,1.0,1.0};
+        float lPosition[4] = {10,10,10,1};
+        glLightfv(GL_LIGHT0,GL_POSITION,lPosition);
+        glLightfv(GL_LIGHT0,GL_DIFFUSE,lightCol);
+        glLightfv(GL_LIGHT0,GL_AMBIENT,ambientCol);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+     ////////////////////////////////////////
+        glutMainLoop();
 	}
 	
 	free_resources();
