@@ -122,6 +122,12 @@ void update_vectors() {
 	lookat.x = sinf(angle.x) * cosf(angle.y);
 	lookat.y = sinf(angle.y);
 	lookat.z = cosf(angle.x) * cosf(angle.y);
+	
+	screen_width = glutGet(GLUT_WINDOW_WIDTH);
+	screen_height = glutGet(GLUT_WINDOW_HEIGHT);
+	oldx = midwindowx = screen_width/2;
+	oldy = midwindowy = screen_height/2;
+	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
 } // updates camera position vectors
 
 void motion(int x, int y) {
