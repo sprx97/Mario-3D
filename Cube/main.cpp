@@ -35,8 +35,8 @@ GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
 int screen_width = 800, screen_height = 600; // screen size
-int oldx = screen_width/2;
-int oldy = screen_height/2; // last mouse position
+int lastx = screen_width/2;
+int lasty = screen_height/2; // last mouse position
 int midwindowx = screen_width/2; // Middle of the window horizontally
 int midwindowy = screen_height/2; // Middle of the window vertically
 bool fullscreen = true;
@@ -125,37 +125,26 @@ void update_vectors() {
 	
 	screen_width = glutGet(GLUT_WINDOW_WIDTH);
 	screen_height = glutGet(GLUT_WINDOW_HEIGHT);
-	oldx = midwindowx = screen_width/2;
-	oldy = midwindowy = screen_height/2;
+	lastx = midwindowx = screen_width/2;
+	lasty = midwindowy = screen_height/2;
+	
 	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
 } // updates camera position vectors
 
 void motion(int x, int y) {
-	bool warp = false;
-	angle.x -= (x - oldx) * mousespeed /** dt*/;
-	angle.y -= (y - oldy) * mousespeed /** dt*/;
-	if (x <= 0) {
-		oldx = midwindowx;
-		x = midwindowx;
-	}
-	if (x >= screen_width) {
-		oldx = midwindowx;
-		x = midwindowx;
-	}
-	if (y >= screen_height) {
-		oldy = midwindowy;
-		y = midwindowy;
-	}
-	if (y <= 0) {
-		oldy = midwindowy;
-		y = midwindowy;
-	}
+	angle.x -= (x - lastx) * mousespeed; // phi
+	angle.y -= (y - lasty) * mousespeed; // theta
+	// moves camera
+	
 	if(angle.x < -M_PI) angle.x += M_PI * 2;
 	if(angle.x > M_PI) angle.x -= M_PI * 2;
 	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
 	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
-	oldx = x;
-	oldy = y;	
+	// keeps camera in range (can't do flips, etc)
+	
+	lastx = x;
+	lasty = y;
+	// sets last mouse position
 } // moves camera based on current key states
 
 void moveCamera() {
@@ -165,7 +154,6 @@ void moveCamera() {
 	if(keys['s']) position -= forward * movespeed;
 	if(keys['r']) position.y += movespeed;
 	if(keys['t']) position.y -= movespeed;
-	
 	update_vectors();
 }
 
@@ -173,8 +161,8 @@ void idle() {
 	if(!mouseinit) {
 		screen_width = glutGet(GLUT_WINDOW_WIDTH);
 		screen_height = glutGet(GLUT_WINDOW_HEIGHT);
-		oldx = midwindowx = screen_width/2;
-		oldy = midwindowy = screen_height/2;
+		lastx = midwindowx = screen_width/2;
+		lasty = midwindowy = screen_height/2;
 		CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
 		mouseinit = true;
 	}
@@ -303,6 +291,10 @@ int main(int argc, char* argv[]) {
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
+
+#ifdef __APPLE__
+	CGSetLocalEventsSuppressionInterval(0.0);
+#endif
 	
 	if(initShaders()) {
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
