@@ -11,11 +11,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <time.h>
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <CoreGraphics/CGEventSource.h>
+#include <QuartzCore/QuartzCore.h>
 // libraries
 
 #include "Cube.h"
 #include "../common/shader_utils.h"
 // local includes
+
+#ifndef GLUT_KEY_ESC
+#define GLUT_KEY_ESC 27
+#endif
 
 #define PI 3.1415926
 
@@ -26,7 +35,18 @@ GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
 int screen_width = 800, screen_height = 600; // screen size
-int fullscreen = 0;
+int oldx = screen_width/2;
+int oldy = screen_height/2; // last mouse position
+int midwindowx = screen_width/2; // Middle of the window horizontally
+int midwindowy = screen_height/2; // Middle of the window vertically
+bool fullscreen = true;
+bool mouseinit = false;
+
+static glm::vec3 angle;
+static glm::vec3 forward;
+static glm::vec3 right;
+static glm::vec3 lookat;
+static glm::vec3 position;
 
 int keys[256] = {0}; // array of whether keys are pressed
 
@@ -35,17 +55,10 @@ int numcubes = 100;
 Cube* cubes[100]; // array of cubes
 Cube* bg; // background skycube
 
-float eyedist = 20.0; // distance away
-float eyephi = 180; // degrees sideways
-float eyetheta = 30; // degrees up
-// location of the camera
-
-float lookx, looky, lookz, eyex, eyey, eyez, up;
 glm::mat4 view, projection;
 
-float camspeed = .5;
-float zoomspeed = .1;
-// movemevt speeds
+float movespeed = 0.001;
+float mousespeed = 0.001;
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
@@ -97,36 +110,75 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 	return sqrt((x2*x2-x1*x1) + (y2*y2-y1*y1) + (z2*z2-z1*z1));
 } // distance between 2 points
 
-void moveCamera() {
-	if(keys['w']) {
-		eyetheta += camspeed;
-		if(eyetheta > 180) eyetheta -= 360;
-	} // up
-	if(keys['d']) {
-		eyephi -= camspeed;
-		if(eyephi < -180) eyephi += 360;
-	} // left
-	if(keys['s']) {
-		eyetheta -= camspeed;
-		if(eyetheta < -180) eyetheta += 360;
-	} // down
-	if(keys['a']) {
-		eyephi += camspeed;
-		if(eyephi > 180) eyephi -= 360;
-	} // right
-	if(keys['r']) {
-		eyedist -= zoomspeed;
-		if(eyedist <= 0) eyedist = 0;
-	} // zoom in
-	if(keys['f']) {
-		eyedist += zoomspeed;
-	} // zoom out
+void update_vectors() {
+	forward.x = sinf(angle.x);
+	forward.y = 0;
+	forward.z = cosf(angle.x);
+	
+	right.x = -cosf(angle.x);
+	right.y = 0;
+	right.z = sinf(angle.x);
+	
+	lookat.x = sinf(angle.x) * cosf(angle.y);
+	lookat.y = sinf(angle.y);
+	lookat.z = cosf(angle.x) * cosf(angle.y);
+} // updates camera position vectors
+
+void motion(int x, int y) {
+	bool warp = false;
+	angle.x -= (x - oldx) * mousespeed /** dt*/;
+	angle.y -= (y - oldy) * mousespeed /** dt*/;
+	if (x <= 0) {
+		oldx = midwindowx;
+		x = midwindowx;
+	}
+	if (x >= screen_width) {
+		oldx = midwindowx;
+		x = midwindowx;
+	}
+	if (y >= screen_height) {
+		oldy = midwindowy;
+		y = midwindowy;
+	}
+	if (y <= 0) {
+		oldy = midwindowy;
+		y = midwindowy;
+	}
+	if(angle.x < -M_PI) angle.x += M_PI * 2;
+	if(angle.x > M_PI) angle.x -= M_PI * 2;
+	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
+	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
+	oldx = x;
+	oldy = y;	
 } // moves camera based on current key states
 
+void moveCamera() {
+    if(keys['a']) position -= right * movespeed;
+	if(keys['d']) position += right * movespeed;
+	if(keys['w']) position += forward * movespeed;
+	if(keys['s']) position -= forward * movespeed;
+	if(keys['r']) position.y += movespeed;
+	if(keys['t']) position.y -= movespeed;
+	
+	update_vectors();
+}
+
 void idle() {
+	if(!mouseinit) {
+		screen_width = glutGet(GLUT_WINDOW_WIDTH);
+		screen_height = glutGet(GLUT_WINDOW_HEIGHT);
+		oldx = midwindowx = screen_width/2;
+		oldy = midwindowy = screen_height/2;
+		CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
+		mouseinit = true;
+	}
 	moveCamera();
-	glutPostRedisplay();
 } // constantly calculates redraws
+
+void timer(int value) {
+	glutPostRedisplay();
+	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
+}
 
 void drawCube(Cube* c) {
 	glBindTexture(GL_TEXTURE_2D, c->texture_id);
@@ -159,18 +211,8 @@ void onDisplay() {
 	glColor3f(1.0f, 0.0f, 0.0f);
 	GLUquadric* quad = gluNewQuadric();
 	gluSphere(quad, 20, 10, 10);*/
-		
-	lookx = cubes[0]->xpos;
-	looky = cubes[0]->ypos;
-	lookz = cubes[0]->zpos;
-	eyex = lookx + eyedist*cos(eyetheta*PI/180.0)*cos(eyephi*PI/180.0);
-	eyey = looky + eyedist*sin(eyetheta*PI/180.0);
-	eyez = lookz + eyedist*cos(eyetheta*PI/180.0)*sin(eyephi*PI/180.0);	
-	up = 1.0;
-	if(abs(eyetheta) > 90.0) up = -1.0;
-	// eye and look coordinates are the same for all cubes
 	
-	view = glm::lookAt(glm::vec3(eyex, eyey, eyez), glm::vec3(lookx, looky, lookz), glm::vec3(0.0, up, 0.0));
+	view = glm::lookAt(position, position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
 	glUseProgram(program);
@@ -184,19 +226,15 @@ void onDisplay() {
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
 	
-	while((glutGet(GLUT_ELAPSED_TIME) - lastframe) < 1000.0/MAX_FPS) {
-		continue;
-	} // limits FPS
-	
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glRasterPos2f(-1.0f, -1.0f);
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
 	for (int n = 0; n < strlen(s); n++) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
-	}	
-	
+	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
+	// posts FPS to screen
 
 	glutSwapBuffers();
 } // displays to screen
@@ -223,12 +261,13 @@ void toggleFullscreen() {
 	}
 }
 
-void key_pressed(unsigned char key, int x, int y) {
+void key_pressed(int key, int x, int y) {
 	keys[key] = 1; // key is pressed
-	if(key == 'm') toggleFullscreen();
+	if(key == GLUT_KEY_ESC) toggleFullscreen();
+	if(key == 'q') exit(0);
 } // watches keyboard
 
-void key_released(unsigned char key, int x, int y) {
+void key_released(int key, int x, int y) {
 	keys[key] = 0; // key is no longer pressed
 } // watches keyboard
 
@@ -237,6 +276,7 @@ int main(int argc, char* argv[]) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
 	glutCreateWindow("My Rotating Cube");
+	if(fullscreen) glutFullScreen();
 	// initializes glut window
 
 	GLenum glew_status = glewInit();
@@ -250,17 +290,24 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
+	position = glm::vec3(0, 5, -20);
+	angle = glm::vec3(0, -.15, 0);
+
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
-
+	
 	if(initShaders()) {
+		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
-		glutReshapeFunc(reshape);
+		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutIdleFunc(idle);
-		glutKeyboardFunc(key_pressed);
-		glutKeyboardUpFunc(key_released);
+		glutReshapeFunc(reshape);
+		glutSpecialFunc(key_pressed);
+		glutSpecialUpFunc(key_released);
+		glutPassiveMotionFunc(motion);
+		glutMotionFunc(motion);
 		// glut functions
 		
 		glEnable(GL_BLEND);

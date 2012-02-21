@@ -245,6 +245,12 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 } // creates cube
 
+bool Cube::collidesWith(float x, float y, float z) {
+	return (x >= xpos && x <= xpos+size)
+		&& (y >= ypos && y <= ypos+size)
+		&& (z >= zpos && z <= zpos+size);
+} // whether the point (x, y, z) is in the cube (collides with it)
+
 Cube::~Cube() {
 	glDeleteBuffers(1, &vbo_vertices);
 	glDeleteBuffers(1, &vbo_texcoords);

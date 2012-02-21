@@ -26,6 +26,7 @@ class Cube {
 		const char* texturename;
 
 		Cube(float, float, float, const char*, float);
+		bool collidesWith(float, float, float);
 		~Cube();
 };
 #endif
