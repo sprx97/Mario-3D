@@ -4,13 +4,13 @@ OS = $(shell uname -s)
 ifeq ($(OS), Darwin)
 	COMPILER = g++
 	INCLUDES = -I/opt/local/include
-	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm
+	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm `sdl-config --cflags --libs`
 endif
 # Linux
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES = 
-	LIBS = -lm -lGL -lglut -lGLEW
+	LIBS = -lm -lGL -lglut -lGLEW `sdl-config --cflags --libs`
 endif
 
 all: main

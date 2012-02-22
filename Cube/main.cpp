@@ -1,6 +1,8 @@
 // Jeremy Vercillo
 // 2/9/12
 
+#include <SDL/sdl.h>
+
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
@@ -329,6 +331,8 @@ void key_released(unsigned char key, int x, int y) {
 } // watches keyboard
 
 int main(int argc, char* argv[]) {
+	SDL_Init(SDL_INIT_AUDIO);
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
