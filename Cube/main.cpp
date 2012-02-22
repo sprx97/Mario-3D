@@ -133,6 +133,9 @@ void update_vectors() {
 #ifdef __APPLE__
 	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
 #endif
+#ifdef __linux__
+	glutWarpPointer(midwindowx, midwindowy);
+#endif
 } // updates camera position vectors
 
 void motion(int x, int y) {
