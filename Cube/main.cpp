@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
+#include <QuartzCore/QuartzCore.h> // Apple pointer warp
 #endif
 #ifdef __linux__
 #include <GL/glut.h>
@@ -15,9 +16,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#ifdef __APPLE__
-#include <QuartzCore/QuartzCore.h> // Apple pointer warp
-#endif
 // libraries
 
 #include "Cube.h"
@@ -311,8 +309,14 @@ int main(int argc, char* argv[]) {
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
+#ifdef __APPLE__
 		glutSpecialFunc(key_pressed);
 		glutSpecialUpFunc(key_released);
+#endif
+#ifdef __linux__
+		glutKeyboardFunc(key_pressed);
+		glutKeyboardUpFunc(key_released);
+#endif
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
