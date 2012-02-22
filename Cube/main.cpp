@@ -110,32 +110,6 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 	return sqrt((x2*x2-x1*x1) + (y2*y2-y1*y1) + (z2*z2-z1*z1));
 } // distance between 2 points
 
-void update_vectors() {
-	forward.x = sinf(angle.x);
-	forward.y = 0;
-	forward.z = cosf(angle.x);
-	
-	right.x = -cosf(angle.x);
-	right.y = 0;
-	right.z = sinf(angle.x);
-	
-	lookat.x = sinf(angle.x) * cosf(angle.y);
-	lookat.y = sinf(angle.y);
-	lookat.z = cosf(angle.x) * cosf(angle.y);
-	
-	screen_width = glutGet(GLUT_WINDOW_WIDTH);
-	screen_height = glutGet(GLUT_WINDOW_HEIGHT);
-	lastx = midwindowx = screen_width/2;
-	lasty = midwindowy = screen_height/2;
-	
-#ifdef __APPLE__
-	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
-#endif
-#ifdef __linux__
-	glutWarpPointer(midwindowx, midwindowy);
-#endif
-} // updates camera position vectors
-
 void motion(int x, int y) {
 	angle.x -= (x - lastx) * mousespeed; // phi
 	angle.y -= (y - lasty) * mousespeed; // theta
@@ -195,7 +169,30 @@ void moveCamera() {
 				position.y += movespeed;
 		}		
 	}
-	update_vectors();
+	
+	forward.x = sinf(angle.x);
+	forward.y = 0;
+	forward.z = cosf(angle.x);
+	
+	right.x = -cosf(angle.x);
+	right.y = 0;
+	right.z = sinf(angle.x);
+	
+	lookat.x = sinf(angle.x) * cosf(angle.y);
+	lookat.y = sinf(angle.y);
+	lookat.z = cosf(angle.x) * cosf(angle.y);
+	
+	screen_width = glutGet(GLUT_WINDOW_WIDTH);
+	screen_height = glutGet(GLUT_WINDOW_HEIGHT);
+	lastx = midwindowx = screen_width/2;
+	lasty = midwindowy = screen_height/2;
+	
+#ifdef __APPLE__
+	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
+#endif
+#ifdef __linux__
+	glutWarpPointer(midwindowx, midwindowy);
+#endif
 }
 
 void idle() {
