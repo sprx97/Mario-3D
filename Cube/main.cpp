@@ -309,13 +309,16 @@ void toggleFullscreen() {
 	}
 }
 
-void key_pressed(int key, int x, int y) {
-	keys[key] = 1; // key is pressed
+void key_special(int key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
+} // handles special keyboard keys
+
+void key_pressed(unsigned char key, int x, int y) {
+	keys[key] = 1; // key is pressed
 	if(key == 'q') exit(0);
 } // watches keyboard
 
-void key_released(int key, int x, int y) {
+void key_released(unsigned char key, int x, int y) {
 	keys[key] = 0; // key is no longer pressed
 } // watches keyboard
 
@@ -323,7 +326,7 @@ int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
-	glutCreateWindow("Mario 3-D");
+	glutCreateWindow("Mario 3D");
 	if(fullscreen) glutFullScreen();
 	// initializes glut window
 
@@ -357,14 +360,9 @@ int main(int argc, char* argv[]) {
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
-#ifdef __APPLE__
-		glutSpecialFunc(key_pressed);
-		glutSpecialUpFunc(key_released);
-#endif
-#ifdef __linux__
+		glutSpecialFunc(key_special); // special keys
 		glutKeyboardFunc(key_pressed);
-		glutKeyboardUpFunc(key_released);
-#endif
+		glutKeyboardUpFunc(key_released); // keyboard keys
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
