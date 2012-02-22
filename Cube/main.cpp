@@ -34,6 +34,7 @@ GLuint program;
 GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
+int windowid;
 int screen_width = 800, screen_height = 600; // screen size
 int lastx = screen_width/2;
 int lasty = screen_height/2; // last mouse position
@@ -130,44 +131,62 @@ void motion(int x, int y) {
 void moveCamera() {
     if(keys['a']) {
 		position -= right * movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position += right * movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}
 	}
 	if(keys['d']) {
 		position += right * movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position -= right * movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}		
 	}
 	if(keys['w']) {
 		position += forward * movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position -= forward * movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}	
 	}
 	if(keys['s']) {
 		position -= forward * movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position += forward * movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}		
 	}
 	if(keys['r']) {
 		position.y += movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position.y -= movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}		
 	}
 	if(keys['t']) {
 		position.y -= movespeed;
+		camcube->move(position.x, position.y - cubesize, position.z);
 		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+			if(cubes[n]->collidesWith(camcube)) {
 				position.y += movespeed;
+				camcube->move(position.x, position.y - cubesize, position.z);
+			}
 		}		
 	}
 	
@@ -234,23 +253,6 @@ void drawCube(Cube* c) {
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 } // draws a cube
 
-void drawModelCube(Cube* c) {
-	glBindTexture(GL_TEXTURE_2D, c->texture_id);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
-	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
-	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
-	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position.x,position.y - cubesize,position.z));
-	// translate to position from origin, uses - cubesize so we can see.
-	glm::mat4 mvp = projection * view * model;	
-	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-} // draws a cube
-
 void onDisplay() {
 	glClearColor(0.0, 0.0, 0.0, 0.0); // black
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -264,7 +266,7 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
-    drawModelCube(camcube);
+    drawCube(camcube);
 	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
 
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -315,7 +317,11 @@ void key_special(int key, int x, int y) {
 
 void key_pressed(unsigned char key, int x, int y) {
 	keys[key] = 1; // key is pressed
-	if(key == 'q') exit(0);
+	if(key == 'q') {
+		glutDestroyWindow(windowid);
+		free_resources();
+		exit(0);
+	}
 } // watches keyboard
 
 void key_released(unsigned char key, int x, int y) {
@@ -326,7 +332,7 @@ int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
-	glutCreateWindow("Mario 3D");
+	windowid = glutCreateWindow("Mario 3D");
 	if(fullscreen) glutFullScreen();
 	// initializes glut window
 
@@ -341,11 +347,11 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
-	position = glm::vec3(0, cubesize, -cubesize);
+	position = glm::vec3(0, 3*cubesize, -cubesize);
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
-    camcube = new Cube(position.x, position.y - cubesize, position.z, "questionblock", cubesize); 
+    camcube = new Cube(position.x, position.y-cubesize, position.z, "brickblock", cubesize); 
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
@@ -384,7 +390,5 @@ int main(int argc, char* argv[]) {
      //////////////////////////////////////// */ 
         glutMainLoop();
 	}
-	
-	free_resources();
 	return 0;
 }

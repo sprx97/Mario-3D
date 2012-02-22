@@ -254,6 +254,21 @@ bool Cube::collidesWith(float x, float y, float z) {
 	// .25 is a buffer so that you aren't looking through the cubes
 } // whether the point (x, y, z) is in the cube (collides with it)
 
+bool Cube::collidesWith(Cube* other) {
+	return (other->xpos) + (other->size/2) >= xpos-size/2 
+		&& (other->xpos) - (other->size/2) <= xpos+size/2
+		&& (other->ypos) + (other->size/2) >= ypos-size/2 
+		&& (other->ypos) - (other->size/2) <= ypos+size/2
+		&& (other->zpos) + (other->size/2) >= zpos-size/2 
+		&& (other->zpos) - (other->size/2) <= zpos+size/2;
+} // whether the point (x, y, z) is in the cube (collides with it)
+
+void Cube::move(float x, float y, float z) {
+	xpos = x;
+	ypos = y;
+	zpos = z;
+}
+
 Cube::~Cube() {
 	glDeleteBuffers(1, &vbo_vertices);
 	glDeleteBuffers(1, &vbo_texcoords);
