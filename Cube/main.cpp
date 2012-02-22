@@ -5,7 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
+#ifdef __APPLE__
 #include <GLUT/glut.h>
+#endif
+#ifdef __linux__
+#include <GL/glut.h>
+#endif
 #include <math.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
