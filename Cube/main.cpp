@@ -5,7 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
+#ifdef __APPLE__
 #include <GLUT/glut.h>
+#endif
+#ifdef __linux__
+#include <GL/glut.h>
+#endif
 #include <math.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -127,6 +132,9 @@ void update_vectors() {
 	
 #ifdef __APPLE__
 	CGWarpMouseCursorPosition(CGPointMake(midwindowx, midwindowy));
+#endif
+#ifdef __linux__
+	glutWarpPointer(midwindowx, midwindowy);
 #endif
 } // updates camera position vectors
 

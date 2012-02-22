@@ -2,6 +2,8 @@
 // 2/15/12
 
 #include <string>
+#include <string.h>
+#include <stdio.h>
 #include "questionblock_texture.c"
 #include "brickblock_texture.c"
 #include "groundblock_texture.c"

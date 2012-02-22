@@ -4,6 +4,8 @@
 #include "shader_utils.h"
 
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 
 char* file_read(const char* filename) {
 	FILE* in = fopen(filename, "rb");
