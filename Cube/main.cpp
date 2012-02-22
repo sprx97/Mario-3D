@@ -54,6 +54,7 @@ int cubesize = 2;
 int numcubes = 100;
 Cube* cubes[100]; // array of cubes
 Cube* bg; // background skycube
+Cube* camcube; // player "model"
 
 glm::mat4 view, projection;
 
@@ -206,7 +207,9 @@ void idle() {
 #endif
 		mouseinit = true;
 	}
+    
 	moveCamera();
+    
 } // constantly calculates redraws
 
 void timer(int value) {
@@ -231,20 +234,27 @@ void drawCube(Cube* c) {
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 } // draws a cube
 
+void drawModelCube(Cube* c) {
+	glBindTexture(GL_TEXTURE_2D, c->texture_id);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
+	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
+	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
+	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position.x,position.y - cubesize,position.z));
+	// translate to position from origin, uses - cubesize so we can see.
+	glm::mat4 mvp = projection * view * model;	
+	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+} // draws a cube
+
 void onDisplay() {
 	glClearColor(0.0, 0.0, 0.0, 0.0); // black
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
-
-/*	glUseProgram(program);
-
-	GLfloat color[] = {0.5f, 1.0f, 0.0f, 1.0f};
-	GLfloat position[] = {10.0f, 10.0f, 10.0f};
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, color);
-	glLightfv(GL_LIGHT0, GL_POSITION, position);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	GLUquadric* quad = gluNewQuadric();
-	gluSphere(quad, 20, 10, 10);*/
 	
 	view = glm::lookAt(position, position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
@@ -254,14 +264,16 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
+    drawModelCube(camcube);
 	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
-	
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRasterPos2f(-1.0f, -1.0f);
+    
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glRasterPos2f(-1.0f, -1.0f);
+
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
 	for (int n = 0; n < strlen(s); n++) {
@@ -269,7 +281,7 @@ void onDisplay() {
 	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
 	// posts FPS to screen
-
+    
 	glutSwapBuffers();
 } // displays to screen
 
@@ -284,6 +296,8 @@ void free_resources() {
 	for(int n = 0; n < numcubes; n++) {
 		delete cubes[n];
 	}
+    delete camcube;
+    delete bg;
 } // cleans up memory
 
 void toggleFullscreen() {
@@ -309,7 +323,7 @@ int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
-	glutCreateWindow("My Rotating Cube");
+	glutCreateWindow("Mario 3-D");
 	if(fullscreen) glutFullScreen();
 	// initializes glut window
 
@@ -328,6 +342,7 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+    camcube = new Cube(position.x, position.y - cubesize, position.z, "questionblock", cubesize); 
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
@@ -357,11 +372,19 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
-/*		glEnable(GL_COLOR_MATERIAL);
-		glShadeModel(GL_SMOOTH);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);*/
-		glutMainLoop();
+  /*  /////////////////////////////////////////
+        float lightCol[4] = {1,1,1,1};
+        float ambientCol[4] = {1.0,1.0,1.0,1.0};
+        float lPosition[4] = {10,10,10,1};
+        glLightfv(GL_LIGHT0,GL_POSITION,lPosition);
+        glLightfv(GL_LIGHT0,GL_DIFFUSE,lightCol);
+        glLightfv(GL_LIGHT0,GL_AMBIENT,ambientCol);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+     //////////////////////////////////////// */ 
+        glutMainLoop();
 	}
 	
 	free_resources();
