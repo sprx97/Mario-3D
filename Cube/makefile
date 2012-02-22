@@ -13,12 +13,12 @@ endif
 
 all: main
 
-main: ../common/shader_utils.o cube.o main.o
-	$(COMPILER) $(LIBS) main.o cube.o ../common/shader_utils.o -o main
+main: ../common/shader_utils.o Cube.o main.o
+	$(COMPILER) $(LIBS) main.o Cube.o ../common/shader_utils.o -o main
 main.o: main.cpp
 	$(COMPILER) $(INCLUDES) -c main.cpp
-cube.o: cube.cpp
-	$(COMPILER) $(INCLUDES) -c cube.cpp
+Cube.o: Cube.cpp
+	$(COMPILER) $(INCLUDES) -c Cube.cpp
 
 clean:
 	rm -f *.o main
