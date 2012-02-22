@@ -51,7 +51,7 @@ int cubesize = 2;
 int numcubes = 100;
 Cube* cubes[100]; // array of cubes
 Cube* bg; // background skycube
-Cube* camcube[3]; // player "model"
+Cube* camcube; // player "model"
 
 glm::mat4 view, projection;
 
@@ -168,7 +168,9 @@ void idle() {
 #endif
 		mouseinit = true;
 	}
+    
 	moveCamera();
+    
 } // constantly calculates redraws
 
 void timer(int value) {
@@ -188,6 +190,23 @@ void drawCube(Cube* c) {
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->xpos, c->ypos, c->zpos));
 	// translate to position from origin
+	glm::mat4 mvp = projection * view * model;	
+	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+} // draws a cube
+
+void drawModelCube(Cube* c) {
+	glBindTexture(GL_TEXTURE_2D, c->texture_id);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
+	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
+	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
+	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position.x,position.y - cubesize,position.z));
+	// translate to position from origin, uses - cubesize so we can see.
 	glm::mat4 mvp = projection * view * model;	
 	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
@@ -216,18 +235,16 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
-    for(int n = 0; n < 2; n++) drawCube(camcube[n]);
+    drawModelCube(camcube);
 	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
-   
-    ///////////////////////////// VERY LAGGY
-    for(int n = 1; n < 3; n++) {
-        camcube[n-1] = new Cube(position.x, position.y - (n*cubesize), position.z, "questionblock", cubesize); // it should be position.y-(n*cubesize) and n=0 n<2 camcube[n] so that the head is covered but I want to see goddammit
-    }
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
     
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glRasterPos2f(-1.0f, -1.0f);
+
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
 	for (int n = 0; n < strlen(s); n++) {
@@ -235,7 +252,7 @@ void onDisplay() {
 	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
 	// posts FPS to screen
-
+    
 	glutSwapBuffers();
 } // displays to screen
 
@@ -250,6 +267,8 @@ void free_resources() {
 	for(int n = 0; n < numcubes; n++) {
 		delete cubes[n];
 	}
+    delete camcube;
+    delete bg;
 } // cleans up memory
 
 void toggleFullscreen() {
@@ -294,9 +313,7 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(0, -.15, 0);
     
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
-    for(int n = 1; n < 3; n++) {
-        camcube[n-1] = new Cube(position.x, position.y - (n*cubesize), position.z, "questionblock", cubesize); // it should be position.y-(n*cubesize) and n=0 n<2 camcube[n] so that the head is covered but I want to see goddammit
-    }
+    camcube = new Cube(position.x, position.y - cubesize, position.z, "questionblock", cubesize); 
 	for(int n = 0; n < numcubes; n++) {
 		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
 	}
@@ -320,7 +337,7 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
-    /////////////////////////////////////////
+  /*  /////////////////////////////////////////
         float lightCol[4] = {1,1,1,1};
         float ambientCol[4] = {1.0,1.0,1.0,1.0};
         float lPosition[4] = {10,10,10,1};
@@ -331,7 +348,7 @@ int main(int argc, char* argv[]) {
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-     ////////////////////////////////////////
+     //////////////////////////////////////// */ 
         glutMainLoop();
 	}
 	
