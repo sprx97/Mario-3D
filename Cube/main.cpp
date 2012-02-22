@@ -153,12 +153,48 @@ void motion(int x, int y) {
 } // moves camera based on current key states
 
 void moveCamera() {
-    if(keys['a']) position -= right * movespeed;
-	if(keys['d']) position += right * movespeed;
-	if(keys['w']) position += forward * movespeed;
-	if(keys['s']) position -= forward * movespeed;
-	if(keys['r']) position.y += movespeed;
-	if(keys['t']) position.y -= movespeed;
+    if(keys['a']) {
+		position -= right * movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position += right * movespeed;
+		}
+	}
+	if(keys['d']) {
+		position += right * movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position -= right * movespeed;
+		}		
+	}
+	if(keys['w']) {
+		position += forward * movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position -= forward * movespeed;
+		}	
+	}
+	if(keys['s']) {
+		position -= forward * movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position += forward * movespeed;
+		}		
+	}
+	if(keys['r']) {
+		position.y += movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position.y -= movespeed;
+		}		
+	}
+	if(keys['t']) {
+		position.y -= movespeed;
+		for(int n = 0; n < numcubes; n++) {
+			if(cubes[n]->collidesWith(position.x, position.y, position.z))
+				position.y += movespeed;
+		}		
+	}
 	update_vectors();
 }
 
@@ -291,8 +327,8 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
-	position = glm::vec3(0, 5, -20);
-	angle = glm::vec3(0, -.15, 0);
+	position = glm::vec3(0, cubesize, -cubesize);
+	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 	for(int n = 0; n < numcubes; n++) {

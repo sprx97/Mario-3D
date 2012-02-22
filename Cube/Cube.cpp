@@ -248,9 +248,10 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 } // creates cube
 
 bool Cube::collidesWith(float x, float y, float z) {
-	return (x >= xpos && x <= xpos+size)
-		&& (y >= ypos && y <= ypos+size)
-		&& (z >= zpos && z <= zpos+size);
+	return x >= xpos-size/2-.25 && x <= xpos+size/2+.25
+		&& y >= ypos-size/2-.25 && y <= ypos+size/2+.25
+		&& z >= zpos-size/2-.25 && z <= zpos+size/2+.25;
+	// .25 is a buffer so that you aren't looking through the cubes
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 Cube::~Cube() {
