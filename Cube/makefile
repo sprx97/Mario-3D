@@ -6,6 +6,10 @@ COMPILER = g++
 INCLUDES = -I/opt/local/include
 LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm
 endif
+ifeq ($(OS), Linux)
+	COMPILER = g++
+	LIBS = -lm -lGL -lglut -lGLEW
+endif
 
 all: main
 
