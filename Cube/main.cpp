@@ -42,12 +42,16 @@ int midwindowx = screen_width/2; // Middle of the window horizontally
 int midwindowy = screen_height/2; // Middle of the window vertically
 bool fullscreen = true;
 bool mouseinit = false;
+bool jump = false;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
 static glm::vec3 right;
 static glm::vec3 lookat;
 static glm::vec3 position;
+static glm::vec3 velocity;
+static glm::vec3 termvel;
+static glm::vec3 gravity;
 
 int keys[256] = {0}; // array of whether keys are pressed
 
@@ -128,6 +132,22 @@ void motion(int x, int y) {
 	// sets last mouse position
 } // moves camera based on current key states
 
+void applyPhysics() {
+	velocity += gravity;
+	position += velocity;
+	if(velocity.y < termvel.y) velocity = termvel;
+	camcube->move(position.x, position.y - cubesize, position.z);
+	for(int n = 0; n < numcubes; n++) {
+		if(cubes[n]->collidesWith(camcube)) {
+			position -= velocity;
+			velocity = glm::vec3(0, 0, 0);
+			jump = false;
+			camcube->move(position.x, position.y - cubesize, position.z);
+			break;
+		}
+	}
+} // moves by physics instead of input
+
 void moveCamera() {
     if(keys['a']) {
 		position -= right * movespeed;
@@ -136,6 +156,7 @@ void moveCamera() {
 			if(cubes[n]->collidesWith(camcube)) {
 				position += right * movespeed;
 				camcube->move(position.x, position.y - cubesize, position.z);
+				break;
 			}
 		}
 	}
@@ -146,6 +167,7 @@ void moveCamera() {
 			if(cubes[n]->collidesWith(camcube)) {
 				position -= right * movespeed;
 				camcube->move(position.x, position.y - cubesize, position.z);
+				break;
 			}
 		}		
 	}
@@ -156,6 +178,7 @@ void moveCamera() {
 			if(cubes[n]->collidesWith(camcube)) {
 				position -= forward * movespeed;
 				camcube->move(position.x, position.y - cubesize, position.z);
+				break;
 			}
 		}	
 	}
@@ -166,29 +189,16 @@ void moveCamera() {
 			if(cubes[n]->collidesWith(camcube)) {
 				position += forward * movespeed;
 				camcube->move(position.x, position.y - cubesize, position.z);
+				break;
 			}
 		}		
 	}
-	if(keys['r']) {
-		position.y += movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				position.y -= movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
-			}
-		}		
+	if(keys[' '] && !jump) {
+		velocity = glm::vec3(0, .5, 0);
+		jump = true;
 	}
-	if(keys['t']) {
-		position.y -= movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				position.y += movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
-			}
-		}		
-	}
+	
+	applyPhysics();
 	
 	forward.x = sinf(angle.x);
 	forward.y = 0;
@@ -266,7 +276,7 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
-    drawCube(camcube);
+//    drawCube(camcube);
 	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
 
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -347,6 +357,9 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
+	gravity = glm::vec3(0, -.0001, 0);
+	velocity = glm::vec3(0, 0, 0);
+	termvel = glm::vec3(0, -.1, 0);
 	position = glm::vec3(0, 3*cubesize, -cubesize);
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
