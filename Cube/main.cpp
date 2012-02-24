@@ -59,10 +59,7 @@ static glm::vec3 aigravity;
 static glm::vec3 aipos;
 static glm::vec3 aivelocity;
 
-//A* terms go here:
-
-
-//
+//A* terms go here
 
 int keys[256] = {0}; // array of whether keys are pressed
 
@@ -87,22 +84,17 @@ void Astar() {
 }  // A* algorithm (what I want to make the ai)
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
-    return sqrt(((x2*x2)-(x1*x1)) + ((y2*y2)-(y1*y1)) + ((z2*z2)-(z1*z1)));
-    
+    return sqrt(abs((x2*x2)-(x1*x1)) + abs((y2*y2)-(y1*y1)) + abs((z2*z2)-(z1*z1)));
 }// distance between 2 points
 
 void ai_chase() {
-    aipos.z += 0;
+    aipos.z += 0; // placeholder
 }
 
 void simpleAI() {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
-    dist = sqrt(((position.x*position.x)-(aipos.x*aipos.x)) + ((position.y*position.y)-(aipos.y*aipos.y)) + ((position.z*position.z)-(aipos.z*aipos.z)));
-    printf ("%f\n",dist);
-    if (dist < (5 * cubesize)) {
-
-        behavior = 1;
-    }
+    dist = distance(position.x, position.y, position.z, aipos.x, aipos.y, aipos.z);
+    if (dist < (5 * cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
@@ -140,11 +132,7 @@ void simpleAI() {
 			break;
 		}
 	}// ai physics
-    
-    
-
 } // Simple test AI
-
 
 int initShaders() {
 	GLuint vs, fs;
@@ -188,8 +176,6 @@ int initShaders() {
 	
 	return 1;
 }
-
-
 
 void motion(int x, int y) {
 	angle.x -= (x - lastx) * mousespeed; // phi
@@ -315,7 +301,6 @@ void idle() {
 	}
     
 	moveCamera();
-    
 } // constantly calculates redraws
 
 void timer(int value) {
