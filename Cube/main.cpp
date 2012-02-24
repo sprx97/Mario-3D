@@ -208,6 +208,14 @@ void applyPhysics() {
 			break;
 		}
 	}
+/*	for(int n = 0; n < pathlength/4; n++) {
+		if(aircubes[n]->collidesZ(camcube)) {
+			position -= velocity;
+			camcube->move(position.x, position.y - cubesize, position.z);
+			velocity = glm::vec3(0, 0, 0);
+			break;
+		} // collision from below
+	}*/
 } // moves by physics instead of input
 
 void moveCamera() {
@@ -342,9 +350,7 @@ void onDisplay() {
    // drawCube(camcube);
     drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
-    for(int n = 0; n < pathlength; n++) {
-        if(n % 4 == 0) drawCube(aircubes[n]);
-    }
+    for(int n = 0; n < pathlength/4; n++) drawCube(aircubes[n]);
     
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -439,7 +445,7 @@ int main(int argc, char* argv[]) {
             cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize,("groundblock"), cubesize);
 		}
 	}    
-    for (int n = 0; n < 25; n++) {
+    for (int n = 0; n < pathlength/4; n++) {
         aircubes[n] = new Cube(cubesize*n*4, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
     camcube = new Cube(position.x, position.y-cubesize, position.z, "brickblock", cubesize); 

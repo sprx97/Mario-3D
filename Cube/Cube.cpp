@@ -254,13 +254,20 @@ bool Cube::collidesWith(float x, float y, float z) {
 	// .25 is a buffer so that you aren't looking through the cubes
 } // whether the point (x, y, z) is in the cube (collides with it)
 
+bool Cube::collidesX(Cube* other) {
+	return abs(xpos-other->xpos) <= size;
+}
+
+bool Cube::collidesY(Cube* other) {
+	return abs(ypos-other->ypos) <= size;
+}
+
+bool Cube::collidesZ(Cube* other) {
+	return abs(zpos-other->zpos) <= size;
+}
+
 bool Cube::collidesWith(Cube* other) {
-	return (other->xpos) + (other->size/2) >= xpos-size/2 
-		&& (other->xpos) - (other->size/2) <= xpos+size/2
-		&& (other->ypos) + (other->size/2) >= ypos-size/2 
-		&& (other->ypos) - (other->size/2) <= ypos+size/2
-		&& (other->zpos) + (other->size/2) >= zpos-size/2 
-		&& (other->zpos) - (other->size/2) <= zpos+size/2;
+	return collidesX(other) && collidesY(other) && collidesZ(other);
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 void Cube::move(float x, float y, float z) {

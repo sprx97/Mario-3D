@@ -28,6 +28,9 @@ class Cube {
 		Cube(float, float, float, const char*, float);
 		bool collidesWith(float, float, float);
 		bool collidesWith(Cube*);
+		bool collidesX(Cube*);
+		bool collidesY(Cube*);
+		bool collidesZ(Cube*);
 		void move(float, float, float);
 		~Cube();
 };
