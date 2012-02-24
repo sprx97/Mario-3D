@@ -8,7 +8,8 @@
 
 class Cube {
 	public:
-		float xpos, ypos, zpos, size;
+		glm::vec3 position;
+		float size;
 		
 		GLfloat vertices[72]; // vertecies of each face
 		GLuint vbo_vertices; // VBO of coordinates

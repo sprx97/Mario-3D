@@ -4,6 +4,7 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
+#include <glm/glm.hpp>
 #include "questionblock_texture.c"
 #include "brickblock_texture.c"
 #include "groundblock_texture.c"
@@ -12,9 +13,7 @@
 #include "Cube.h"
 
 Cube::Cube(float x, float y, float z, const char* texture, float s) {
-	xpos = x;
-	ypos = y;
-	zpos = z;
+	position = glm::vec3(x, y, z);
 	size = s;
 	texturename = texture;
 
@@ -248,22 +247,22 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 } // creates cube
 
 bool Cube::collidesWith(float x, float y, float z) {
-	return x >= xpos-size/2 && x <= xpos+size/2
-		&& y >= ypos-size/2 && y <= ypos+size/2
-		&& z >= zpos-size/2 && z <= zpos+size/2;
+	return x >= position.x-size/2 && x <= position.x+size/2
+		&& y >= position.y-size/2 && y <= position.y+size/2
+		&& z >= position.z-size/2 && z <= position.z+size/2;
 	// .25 is a buffer so that you aren't looking through the cubes
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 bool Cube::collidesX(Cube* other) {
-	return abs(xpos-other->xpos) <= (size/2 + other->size/2);
+	return abs(position.x-other->position.x) <= (size/2 + other->size/2);
 }
 
 bool Cube::collidesY(Cube* other) {
-	return abs(ypos-other->ypos) <= (size/2 + other->size/2);
+	return abs(position.y-other->position.y) <= (size/2 + other->size/2);
 }
 
 bool Cube::collidesZ(Cube* other) {
-	return abs(zpos-other->zpos) <= (size/2 + other->size/2);
+	return abs(position.z-other->position.z) <= (size/2 + other->size/2);
 }
 
 bool Cube::collidesWith(Cube* other) {
@@ -271,9 +270,7 @@ bool Cube::collidesWith(Cube* other) {
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 void Cube::move(float x, float y, float z) {
-	xpos = x;
-	ypos = y;
-	zpos = z;
+	position = glm::vec3(x, y, z);
 }
 
 Cube::~Cube() {

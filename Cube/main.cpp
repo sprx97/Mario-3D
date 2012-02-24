@@ -51,7 +51,6 @@ static glm::vec3 angle;
 static glm::vec3 forward;
 static glm::vec3 right;
 static glm::vec3 lookat;
-static glm::vec3 position;
 static glm::vec3 velocity;
 static glm::vec3 termvel;
 static glm::vec3 gravity;
@@ -94,7 +93,7 @@ void ai_chase() {
 
 void simpleAI() {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
-    dist = distance(position.x, position.y, position.z, aipos.x, aipos.y, aipos.z);
+    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, aipos.x, aipos.y, aipos.z);
     if (dist < (5 * cubesize)) behavior = 1;
     else behavior = 0;
     
@@ -107,7 +106,6 @@ void simpleAI() {
             ai_chase();
             break;
     }
-    
     aitest->move(aipos.x, aipos.y, aipos.z);
     if(camcube->collidesWith(aitest)) {
         aipos += right * movespeed;
@@ -197,12 +195,12 @@ void motion(int x, int y) {
 void applyPhysics() {
 	velocity += gravity;
 //	if(velocity.y < termvel.y) velocity = termvel;
-	position += velocity;
-	camcube->move(position.x, position.y - cubesize, position.z);
+	camcube->position += velocity;
+//	camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(camcube)) {
-			position -= velocity;
-			camcube->move(position.x, position.y - cubesize, position.z);
+			camcube->position -= velocity;
+//			camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 			velocity = glm::vec3(0, 0, 0);
 			jump = false;
 			break;
@@ -211,7 +209,7 @@ void applyPhysics() {
 /*	for(int n = 0; n < pathlength/4; n++) {
 		if(aircubes[n]->collidesZ(camcube)) {
 			position -= velocity;
-			camcube->move(position.x, position.y - cubesize, position.z);
+			camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 			velocity = glm::vec3(0, 0, 0);
 			break;
 		} // collision from below
@@ -220,45 +218,45 @@ void applyPhysics() {
 
 void moveCamera() {
     if(keys['a']) {
-		position -= right * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
+		camcube->position -= right * movespeed;
+//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position += right * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position += right * movespeed;
+//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}
 	}
 	if(keys['d']) {
-		position += right * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
+		camcube->position += right * movespeed;
+//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position -= right * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position -= right * movespeed;
+//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}		
 	}
 	if(keys['w']) {
-		position += forward * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
+		camcube->position += forward * movespeed;
+//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position -= forward * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position -= forward * movespeed;
+//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}	
 	}
 	if(keys['s']) {
-		position -= forward * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
+		camcube->position -= forward * movespeed;
+//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position += forward * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position += forward * movespeed;
+//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}		
@@ -327,7 +325,7 @@ void drawCube(Cube* c) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
 	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->xpos, c->ypos, c->zpos));
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->position.x, c->position.y, c->position.z));
 	// translate to position from origin
 	glm::mat4 mvp = projection * view * model;	
 	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -339,7 +337,7 @@ void onDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
 	
-	view = glm::lookAt(position, position + lookat, glm::vec3(0.0, 1.0, 0.0));
+	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
 	glUseProgram(program);
@@ -435,7 +433,7 @@ int main(int argc, char* argv[]) {
     aigravity = glm::vec3(0, -.00001, 0);
 	velocity = glm::vec3(0, 0, 0);
 	termvel = glm::vec3(0, -.1, 0);
-	position = glm::vec3(0, 3*cubesize, -(pathwidth-1)/2*cubesize);
+//	position = glm::vec3(0, 3*cubesize, -(pathwidth-1)/2*cubesize);
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
     aipos = glm::vec3(20 * cubesize, cubesize, -4 * cubesize);
 
@@ -448,7 +446,7 @@ int main(int argc, char* argv[]) {
     for (int n = 0; n < pathlength/4; n++) {
         aircubes[n] = new Cube(cubesize*n*4, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
-    camcube = new Cube(position.x, position.y-cubesize, position.z, "brickblock", cubesize); 
+    camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(aipos.x, aipos.y, aipos.z, "questionblock", cubesize);
     
 #ifdef __APPLE__
