@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 // libraries
 
 #include "Cube.h"
@@ -40,9 +41,11 @@ int lastx = screen_width/2;
 int lasty = screen_height/2; // last mouse position
 int midwindowx = screen_width/2; // Middle of the window horizontally
 int midwindowy = screen_height/2; // Middle of the window vertically
+int pathwidthcheck = 1; // ai checks path width WIP
 bool fullscreen = true;
 bool mouseinit = false;
 bool jump = false;
+float dist;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -52,14 +55,24 @@ static glm::vec3 position;
 static glm::vec3 velocity;
 static glm::vec3 termvel;
 static glm::vec3 gravity;
+static glm::vec3 aigravity;
+static glm::vec3 aipos;
+static glm::vec3 aivelocity;
+
+//A* terms go here:
+
+
+//
 
 int keys[256] = {0}; // array of whether keys are pressed
 
 int cubesize = 2;
 int numcubes = 100;
-Cube* cubes[100]; // array of cubes
+Cube* cubes[1000]; // array of cubes
+Cube* aircubes[1000];
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
+Cube* aitest; // cube controlled by computer
 
 glm::mat4 view, projection;
 
@@ -68,6 +81,70 @@ float mousespeed = 0.001;
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
+
+void Astar() {
+
+}  // A* algorithm (what I want to make the ai)
+
+float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
+    return sqrt(((x2*x2)-(x1*x1)) + ((y2*y2)-(y1*y1)) + ((z2*z2)-(z1*z1)));
+    
+}// distance between 2 points
+
+void ai_chase() {
+    aipos.z += 0;
+}
+
+void simpleAI() {    
+    int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
+    dist = sqrt(((position.x*position.x)-(aipos.x*aipos.x)) + ((position.y*position.y)-(aipos.y*aipos.y)) + ((position.z*position.z)-(aipos.z*aipos.z)));
+    printf ("%f\n",dist);
+    if (dist < (5 * cubesize)) {
+
+        behavior = 1;
+    }
+    else behavior = 0;
+    
+    switch (behavior){
+        case 0:
+            aipos.z += pathwidthcheck * movespeed;
+            if(aipos.z > -1*cubesize || aipos.z < -7*cubesize) pathwidthcheck = -pathwidthcheck;
+            break;
+        case 1:
+            ai_chase();
+            break;
+    }
+    
+    aitest->move(aipos.x, aipos.y, aipos.z);
+    if(camcube->collidesWith(aitest)) {
+        aipos += right * movespeed;
+        aitest->move(aipos.x, aipos.y, aipos.z);
+    }
+    for(int n = 0; n < numcubes; n++) {
+        if(cubes[n]->collidesWith(aitest)) {
+            aipos.y += 1;
+            aitest->move(aipos.x, aipos.y, aipos.z);
+            break;
+        }
+    }// moves ai
+    
+    aivelocity += aigravity;
+	aipos += aivelocity;
+	if(aivelocity.y < termvel.y) aivelocity = termvel;
+	aitest->move(aipos.x, aipos.y, aipos.z);
+	for(int n = 0; n < 700; n++) {
+		if(cubes[n]->collidesWith(aitest)) {
+			aipos -= aivelocity;
+			aivelocity = glm::vec3(0, 0, 0);
+			aitest->move(aipos.x, aipos.y, aipos.z);
+			break;
+		}
+	}// ai physics
+    
+    
+
+} // Simple test AI
+
 
 int initShaders() {
 	GLuint vs, fs;
@@ -112,9 +189,7 @@ int initShaders() {
 	return 1;
 }
 
-float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
-	return sqrt((x2*x2-x1*x1) + (y2*y2-y1*y1) + (z2*z2-z1*z1));
-} // distance between 2 points
+
 
 void motion(int x, int y) {
 	angle.x -= (x - lastx) * mousespeed; // phi
@@ -137,7 +212,7 @@ void applyPhysics() {
 	position += velocity;
 	if(velocity.y < termvel.y) velocity = termvel;
 	camcube->move(position.x, position.y - cubesize, position.z);
-	for(int n = 0; n < numcubes; n++) {
+	for(int n = 0; n < 700; n++) {
 		if(cubes[n]->collidesWith(camcube)) {
 			position -= velocity;
 			velocity = glm::vec3(0, 0, 0);
@@ -194,12 +269,14 @@ void moveCamera() {
 		}		
 	}
 	if(keys[' '] && !jump) {
-		velocity = glm::vec3(0, .5, 0);
+		velocity = glm::vec3(0, .05, 0);
 		jump = true;
 	}
 	
 	applyPhysics();
 	
+    simpleAI();
+    
 	forward.x = sinf(angle.x);
 	forward.y = 0;
 	forward.z = cosf(angle.x);
@@ -276,9 +353,13 @@ void onDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
-//    drawCube(camcube);
-	for(int n = 0; n < numcubes; n++) drawCube(cubes[n]);
-
+   // drawCube(camcube);
+    drawCube(aitest);
+	for(int n = 0; n < 700; n++) drawCube(cubes[n]);
+    for(int n = 0; n < numcubes; n++) {
+        if(n % 4 == 0) drawCube(aircubes[n]);
+    }
+    
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
@@ -307,6 +388,7 @@ void free_resources() {
 	glDeleteProgram(program);
 	for(int n = 0; n < numcubes; n++) {
 		delete cubes[n];
+        delete aircubes[n];
 	}
     delete camcube;
     delete bg;
@@ -358,17 +440,27 @@ int main(int argc, char* argv[]) {
 	// initializes GLEW and checks for errors
 
 	gravity = glm::vec3(0, -.0001, 0);
+    aigravity = glm::vec3(0, -.0001, 0);
 	velocity = glm::vec3(0, 0, 0);
 	termvel = glm::vec3(0, -.1, 0);
-	position = glm::vec3(0, 3*cubesize, -cubesize);
+	position = glm::vec3(0, 3 * cubesize, -4 * cubesize);
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
+    aipos = glm::vec3(20 * cubesize, cubesize, -4 * cubesize);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+    for (int m = 1; m < 8; m++) {
+        int count = 0;
+        for (int n = ((100*m)-100); n < (m*100); n++) {
+            cubes[n] = new Cube(cubesize*count, 0.0, -m*cubesize,("groundblock"), cubesize);
+            count++;
+            }
+        }    
+    for (int n = 0; n < 100; n++) {
+        aircubes[n] = new Cube(cubesize*n, 4 * cubesize, -4*cubesize, ("questionblock"), cubesize);
+    }
     camcube = new Cube(position.x, position.y-cubesize, position.z, "brickblock", cubesize); 
-	for(int n = 0; n < numcubes; n++) {
-		cubes[n] = new Cube(cubesize*n, 0.0, -cubesize, (n%2==0)?("groundblock"):("questionblock"), cubesize);
-	}
-
+    aitest = new Cube(aipos.x, aipos.y, aipos.z, "questionblock", cubesize);
+    
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
