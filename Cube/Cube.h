@@ -8,7 +8,7 @@
 
 class Cube {
 	public:
-		glm::vec3 position;
+		glm::vec3 position, velocity;
 		float size;
 		
 		GLfloat vertices[72]; // vertecies of each face

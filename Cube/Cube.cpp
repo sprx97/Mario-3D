@@ -14,6 +14,7 @@
 
 Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	position = glm::vec3(x, y, z);
+	velocity = glm::vec3(0.0, 0.0, 0.0);
 	size = s;
 	texturename = texture;
 

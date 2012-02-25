@@ -51,7 +51,6 @@ static glm::vec3 angle;
 static glm::vec3 forward;
 static glm::vec3 right;
 static glm::vec3 lookat;
-static glm::vec3 velocity;
 static glm::vec3 termvel;
 static glm::vec3 gravity;
 static glm::vec3 aigravity;
@@ -193,24 +192,21 @@ void motion(int x, int y) {
 } // moves camera based on current key states
 
 void applyPhysics() {
-	velocity += gravity;
+	camcube->velocity += gravity;
 //	if(velocity.y < termvel.y) velocity = termvel;
-	camcube->position += velocity;
-//	camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
+	camcube->position += camcube->velocity;
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(camcube)) {
-			camcube->position -= velocity;
-//			camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
-			velocity = glm::vec3(0, 0, 0);
+			camcube->position -= camcube->velocity;
+			camcube->velocity = glm::vec3(0, 0, 0);
 			jump = false;
 			break;
 		}
 	}
 /*	for(int n = 0; n < pathlength/4; n++) {
 		if(aircubes[n]->collidesZ(camcube)) {
-			position -= velocity;
-			camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
-			velocity = glm::vec3(0, 0, 0);
+			camcube->position -= camcube->velocity;
+			camcube->velocity = glm::vec3(0, 0, 0);
 			break;
 		} // collision from below
 	}*/
@@ -219,50 +215,42 @@ void applyPhysics() {
 void moveCamera() {
     if(keys['a']) {
 		camcube->position -= right * movespeed;
-//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
 				camcube->position += right * movespeed;
-//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}
 	}
 	if(keys['d']) {
 		camcube->position += right * movespeed;
-//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
 				camcube->position -= right * movespeed;
-//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}		
 	}
 	if(keys['w']) {
 		camcube->position += forward * movespeed;
-//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
 				camcube->position -= forward * movespeed;
-//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}	
 	}
 	if(keys['s']) {
 		camcube->position -= forward * movespeed;
-//		camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
 				camcube->position += forward * movespeed;
-//				camcube->move(camcube->position.x, camcube->position.y - cubesize, camcube->position.z);
 				break;
 			}
 		}		
 	}
 	if(keys[' '] && !jump) {
-		velocity = glm::vec3(0, .01, 0);
+		camcube->velocity = glm::vec3(0, .01, 0);
 		jump = true;
 	}
 	
@@ -431,9 +419,8 @@ int main(int argc, char* argv[]) {
 
 	gravity = glm::vec3(0, -.00001, 0);
     aigravity = glm::vec3(0, -.00001, 0);
-	velocity = glm::vec3(0, 0, 0);
 	termvel = glm::vec3(0, -.1, 0);
-//	position = glm::vec3(0, 3*cubesize, -(pathwidth-1)/2*cubesize);
+
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
     aipos = glm::vec3(20 * cubesize, cubesize, -4 * cubesize);
 
