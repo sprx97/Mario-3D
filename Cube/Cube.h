@@ -8,7 +8,8 @@
 
 class Cube {
 	public:
-		float xpos, ypos, zpos, size;
+		glm::vec3 position, velocity;
+		float size;
 		
 		GLfloat vertices[72]; // vertecies of each face
 		GLuint vbo_vertices; // VBO of coordinates
@@ -28,6 +29,9 @@ class Cube {
 		Cube(float, float, float, const char*, float);
 		bool collidesWith(float, float, float);
 		bool collidesWith(Cube*);
+		bool collidesX(Cube*);
+		bool collidesY(Cube*);
+		bool collidesZ(Cube*);
 		void move(float, float, float);
 		~Cube();
 };

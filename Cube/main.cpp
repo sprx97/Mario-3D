@@ -51,23 +51,16 @@ static glm::vec3 angle;
 static glm::vec3 forward;
 static glm::vec3 right;
 static glm::vec3 lookat;
-static glm::vec3 position;
-static glm::vec3 velocity;
 static glm::vec3 termvel;
 static glm::vec3 gravity;
-static glm::vec3 aigravity;
-static glm::vec3 aipos;
-static glm::vec3 aivelocity;
 
-//A* terms go here:
-
-
-//
+//A* terms go here
 
 int keys[256] = {0}; // array of whether keys are pressed
 
 int cubesize = 2;
-int numcubes = 100;
+int pathlength = 100;
+int pathwidth = 8; // actually means 7
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
 Cube* bg; // background skycube
@@ -87,64 +80,50 @@ void Astar() {
 }  // A* algorithm (what I want to make the ai)
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
-    return sqrt(((x2*x2)-(x1*x1)) + ((y2*y2)-(y1*y1)) + ((z2*z2)-(z1*z1)));
-    
+    return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
 }// distance between 2 points
 
 void ai_chase() {
-    aipos.z += 0;
+    aitest->position -= forward * movespeed;
 }
 
 void simpleAI() {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
-    dist = sqrt(((position.x*position.x)-(aipos.x*aipos.x)) + ((position.y*position.y)-(aipos.y*aipos.y)) + ((position.z*position.z)-(aipos.z*aipos.z)));
-    printf ("%f\n",dist);
-    if (dist < (5 * cubesize)) {
-
-        behavior = 1;
-    }
+    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, aitest->position.x, aitest->position.y, aitest->position.z);
+    printf("%f\n",dist);
+    if (dist < (5 * cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
         case 0:
-            aipos.z += pathwidthcheck * movespeed;
-            if(aipos.z > -1*cubesize || aipos.z < -7*cubesize) pathwidthcheck = -pathwidthcheck;
+            aitest->position.z += pathwidthcheck * movespeed;
+            if(aitest->position.z > 0 || aitest->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
             break;
         case 1:
             ai_chase();
             break;
     }
-    
-    aitest->move(aipos.x, aipos.y, aipos.z);
     if(camcube->collidesWith(aitest)) {
-        aipos += right * movespeed;
-        aitest->move(aipos.x, aipos.y, aipos.z);
+        aitest->position += right * movespeed;
     }
-    for(int n = 0; n < numcubes; n++) {
+    for(int n = 0; n < pathlength; n++) {
         if(cubes[n]->collidesWith(aitest)) {
-            aipos.y += 1;
-            aitest->move(aipos.x, aipos.y, aipos.z);
+//			aitest->position.y += 1;
             break;
         }
-    }// moves ai
+    } // moves ai
     
-    aivelocity += aigravity;
-	aipos += aivelocity;
-	if(aivelocity.y < termvel.y) aivelocity = termvel;
-	aitest->move(aipos.x, aipos.y, aipos.z);
-	for(int n = 0; n < 700; n++) {
+    aitest->velocity += gravity;
+	aitest->position += aitest->velocity;
+	if(aitest->velocity.y < termvel.y) aitest->velocity = termvel;
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(aitest)) {
-			aipos -= aivelocity;
-			aivelocity = glm::vec3(0, 0, 0);
-			aitest->move(aipos.x, aipos.y, aipos.z);
+			aitest->position -= aitest->velocity;
+			aitest->velocity = glm::vec3(0, 0, 0);
 			break;
 		}
 	}// ai physics
-    
-    
-
 } // Simple test AI
-
 
 int initShaders() {
 	GLuint vs, fs;
@@ -189,8 +168,6 @@ int initShaders() {
 	return 1;
 }
 
-
-
 void motion(int x, int y) {
 	angle.x -= (x - lastx) * mousespeed; // phi
 	angle.y -= (y - lasty) * mousespeed; // theta
@@ -208,68 +185,67 @@ void motion(int x, int y) {
 } // moves camera based on current key states
 
 void applyPhysics() {
-	velocity += gravity;
-	position += velocity;
-	if(velocity.y < termvel.y) velocity = termvel;
-	camcube->move(position.x, position.y - cubesize, position.z);
-	for(int n = 0; n < 700; n++) {
+	camcube->velocity += gravity;
+	if(camcube->velocity.y < termvel.y) {
+		camcube->velocity = termvel;
+	}
+	camcube->position += camcube->velocity;
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(camcube)) {
-			position -= velocity;
-			velocity = glm::vec3(0, 0, 0);
+			camcube->position -= camcube->velocity;
+			camcube->velocity = glm::vec3(0, 0, 0);
 			jump = false;
-			camcube->move(position.x, position.y - cubesize, position.z);
 			break;
 		}
 	}
+/*	for(int n = 0; n < pathlength/4; n++) {
+		if(aircubes[n]->collidesZ(camcube)) {
+			camcube->position -= camcube->velocity;
+			camcube->velocity = glm::vec3(0, 0, 0);
+			break;
+		} // collision from below
+	}*/
 } // moves by physics instead of input
 
 void moveCamera() {
     if(keys['a']) {
-		position -= right * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
+		camcube->position -= right * movespeed;
+		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position += right * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position += right * movespeed;
 				break;
 			}
 		}
 	}
 	if(keys['d']) {
-		position += right * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
+		camcube->position += right * movespeed;
+		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position -= right * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position -= right * movespeed;
 				break;
 			}
 		}		
 	}
 	if(keys['w']) {
-		position += forward * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
+		camcube->position += forward * movespeed;
+		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position -= forward * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position -= forward * movespeed;
 				break;
 			}
 		}	
 	}
 	if(keys['s']) {
-		position -= forward * movespeed;
-		camcube->move(position.x, position.y - cubesize, position.z);
-		for(int n = 0; n < numcubes; n++) {
+		camcube->position -= forward * movespeed;
+		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesWith(camcube)) {
-				position += forward * movespeed;
-				camcube->move(position.x, position.y - cubesize, position.z);
+				camcube->position += forward * movespeed;
 				break;
 			}
 		}		
 	}
 	if(keys[' '] && !jump) {
-		velocity = glm::vec3(0, .05, 0);
+		camcube->velocity = glm::vec3(0, .0075, 0);
 		jump = true;
 	}
 	
@@ -315,7 +291,6 @@ void idle() {
 	}
     
 	moveCamera();
-    
 } // constantly calculates redraws
 
 void timer(int value) {
@@ -333,7 +308,7 @@ void drawCube(Cube* c) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
 	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->xpos, c->ypos, c->zpos));
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->position.x, c->position.y, c->position.z));
 	// translate to position from origin
 	glm::mat4 mvp = projection * view * model;	
 	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -345,7 +320,7 @@ void onDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
 	
-	view = glm::lookAt(position, position + lookat, glm::vec3(0.0, 1.0, 0.0));
+	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
 	glUseProgram(program);
@@ -355,10 +330,8 @@ void onDisplay() {
 	drawCube(bg);
    // drawCube(camcube);
     drawCube(aitest);
-	for(int n = 0; n < 700; n++) drawCube(cubes[n]);
-    for(int n = 0; n < numcubes; n++) {
-        if(n % 4 == 0) drawCube(aircubes[n]);
-    }
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
+    for(int n = 0; n < pathlength/4; n++) drawCube(aircubes[n]);
     
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -386,7 +359,7 @@ void reshape(int width, int height) {
 
 void free_resources() {
 	glDeleteProgram(program);
-	for(int n = 0; n < numcubes; n++) {
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		delete cubes[n];
         delete aircubes[n];
 	}
@@ -403,16 +376,17 @@ void toggleFullscreen() {
 	}
 }
 
-void key_special(int key, int x, int y) {
-	if(key == GLUT_KEY_ESC) toggleFullscreen();
-} // handles special keyboard keys
-
 void key_pressed(unsigned char key, int x, int y) {
-	keys[key] = 1; // key is pressed
-	if(key == 'q') {
-		glutDestroyWindow(windowid);
-		free_resources();
-		exit(0);
+	if(key == GLUT_KEY_ESC) {
+//		toggleFullscreen();
+	}
+	else {
+		keys[key] = 1; // key is pressed
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
 	}
 } // watches keyboard
 
@@ -439,27 +413,22 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
-	gravity = glm::vec3(0, -.0001, 0);
-    aigravity = glm::vec3(0, -.0001, 0);
-	velocity = glm::vec3(0, 0, 0);
-	termvel = glm::vec3(0, -.1, 0);
-	position = glm::vec3(0, 3 * cubesize, -4 * cubesize);
+	gravity = glm::vec3(0, -.0000025, 0);
+	termvel = glm::vec3(0, -.05, 0);
+
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
-    aipos = glm::vec3(20 * cubesize, cubesize, -4 * cubesize);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
-    for (int m = 1; m < 8; m++) {
-        int count = 0;
-        for (int n = ((100*m)-100); n < (m*100); n++) {
-            cubes[n] = new Cube(cubesize*count, 0.0, -m*cubesize,("groundblock"), cubesize);
-            count++;
-            }
-        }    
-    for (int n = 0; n < 100; n++) {
-        aircubes[n] = new Cube(cubesize*n, 4 * cubesize, -4*cubesize, ("questionblock"), cubesize);
+    for (int m = 0; m < pathwidth; m++) {
+        for (int n = (100*m); n < (m*100)+100; n++) {
+            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize,("groundblock"), cubesize);
+		}
+	}    
+    for (int n = 0; n < pathlength/4; n++) {
+        aircubes[n] = new Cube(cubesize*n*4, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
-    camcube = new Cube(position.x, position.y-cubesize, position.z, "brickblock", cubesize); 
-    aitest = new Cube(aipos.x, aipos.y, aipos.z, "questionblock", cubesize);
+    camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+    aitest = new Cube(20 * cubesize, cubesize, -4 * cubesize, "questionblock", cubesize);
     
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
@@ -471,7 +440,6 @@ int main(int argc, char* argv[]) {
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
-		glutSpecialFunc(key_special); // special keys
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
 		glutPassiveMotionFunc(motion);
