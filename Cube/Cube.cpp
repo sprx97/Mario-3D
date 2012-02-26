@@ -251,7 +251,6 @@ bool Cube::collidesWith(float x, float y, float z) {
 	return x >= position.x-size/2 && x <= position.x+size/2
 		&& y >= position.y-size/2 && y <= position.y+size/2
 		&& z >= position.z-size/2 && z <= position.z+size/2;
-	// .25 is a buffer so that you aren't looking through the cubes
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 bool Cube::collidesX(Cube* other) {
