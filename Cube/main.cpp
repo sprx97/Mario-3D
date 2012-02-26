@@ -375,19 +375,17 @@ void toggleFullscreen() {
 	}
 }
 
-void key_special(int key, int x, int y) {
-		printf("Fullscreen off\n");
-	if(key == GLUT_KEY_ESC) {
-		toggleFullscreen();
-	}
-} // handles special keyboard keys
-
 void key_pressed(unsigned char key, int x, int y) {
-	keys[key] = 1; // key is pressed
-	if(key == 'q') {
-		glutDestroyWindow(windowid);
-		free_resources();
-		exit(0);
+	if(key == GLUT_KEY_ESC) {
+//		toggleFullscreen();
+	}
+	else {
+		keys[key] = 1; // key is pressed
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
 	}
 } // watches keyboard
 
@@ -441,7 +439,6 @@ int main(int argc, char* argv[]) {
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
-		glutSpecialFunc(key_special); // special keys
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
 		glutPassiveMotionFunc(motion);
