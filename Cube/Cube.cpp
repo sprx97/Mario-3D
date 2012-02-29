@@ -256,26 +256,26 @@ bool Cube::collidesWith(float x, float y, float z) {
 bool Cube::collidesX(Cube* other) {
 	float nextpos = position.x + velocity.x;
 	float othernextpos = other->position.x + other->velocity.x;
-	return /*abs(position.x-other->position.x) > (size/2 + other->size/2)
-		&&*/ abs(nextpos-othernextpos) <= (size/2+other->size/2);
+	return abs(position.x-other->position.x) > (size/2 + other->size/2)
+		&& abs(nextpos-othernextpos) <= (size/2+other->size/2);
 }
 
 bool Cube::collidesY(Cube* other) {
 	float nextpos = position.y + velocity.y;
 	float othernextpos = other->position.y + other->velocity.y;
-	return /*abs(position.y-other->position.y) > (size/2 + other->size/2)
-		&&*/ abs(nextpos-othernextpos) <= (size/2+other->size/2);
+	return abs(position.y-other->position.y) > (size/2 + other->size/2)
+		&& abs(nextpos-othernextpos) <= (size/2+other->size/2);
 }
 
 bool Cube::collidesZ(Cube* other) {
 	float nextpos = position.z + velocity.z;
 	float othernextpos = other->position.z + other->velocity.z;
-	return /*abs(position.z-other->position.z) > (size/2 + other->size/2)
-		&&*/ abs(nextpos-othernextpos) <= (size/2+other->size/2);
+	return abs(position.z-other->position.z) > (size/2 + other->size/2)
+		&& abs(nextpos-othernextpos) <= (size/2+other->size/2);
 }
 
 bool Cube::collidesWith(Cube* other) {
-	return collidesX(other) && collidesY(other) && collidesZ(other);
+	return collidesX(other) || collidesY(other) || collidesZ(other);
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 void Cube::move(float x, float y, float z) {

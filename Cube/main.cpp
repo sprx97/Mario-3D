@@ -113,15 +113,14 @@ void simpleAI() {
     } // moves ai
     
     aitest->velocity += gravity;
-	aitest->position += aitest->velocity;
 	if(aitest->velocity.y < termvel.y) aitest->velocity = termvel;
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(aitest)) {
-			aitest->position -= aitest->velocity;
-			aitest->velocity = glm::vec3(0, 0, 0);
+			aitest->velocity.y = 0;
 			break;
 		}
-	}// ai physics
+	} // ai physics
+	aitest->position += aitest->velocity;
 } // Simple test AI
 
 int initShaders() {
@@ -187,16 +186,15 @@ void applyPhysics() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
 		camcube->velocity = termvel;
-	}
-	camcube->position += camcube->velocity;
+	}	
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesWith(camcube)) {
-			camcube->position -= camcube->velocity;
-			camcube->velocity = glm::vec3(0, 0, 0);
+			camcube->velocity.y = 0;
 			jump = false;
 			break;
 		}
 	}
+	camcube->position += camcube->velocity;
 /*	for(int n = 0; n < pathlength/4; n++) {
 		if(aircubes[n]->collidesZ(camcube)) {
 			camcube->position -= camcube->velocity;
@@ -427,7 +425,7 @@ int main(int argc, char* argv[]) {
         aircubes[n] = new Cube(cubesize*n*4, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-    aitest = new Cube(20 * cubesize, cubesize, -4 * cubesize, "questionblock", cubesize);
+    aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
     
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
