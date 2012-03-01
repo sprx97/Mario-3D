@@ -9,8 +9,9 @@
 class Cube {
 	public:
 		glm::vec3 position, velocity;
-       // GLfloat specrefon[];
-     //   GLfloat specrefoff[];
+		
+//		GLfloat specrefon[];
+//		GLfloat specrefoff[];
 		float size;
 		
 		GLfloat vertices[72]; // vertecies of each face
@@ -31,7 +32,7 @@ class Cube {
 		const char* texturename;
 
 		Cube(float, float, float, const char*, float);
-		bool collidesWith(float, float, float);
+		bool intersectsWith(float, float, float);
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);
