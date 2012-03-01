@@ -27,7 +27,7 @@ class Cube {
 		const char* texturename;
 
 		Cube(float, float, float, const char*, float);
-		bool collidesWith(float, float, float);
+		bool intersectsWith(float, float, float);
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);

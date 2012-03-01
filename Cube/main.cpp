@@ -51,8 +51,6 @@ static glm::vec3 angle;
 static glm::vec3 forward;
 static glm::vec3 right;
 static glm::vec3 lookat;
-static glm::vec3 termvel;
-static glm::vec3 gravity;
 
 //A* terms go here
 
@@ -69,8 +67,11 @@ Cube* aitest; // cube controlled by computer
 
 glm::mat4 view, projection;
 
-float movespeed = 0.001;
+float movespeed = 0.005;
 float mousespeed = 0.001;
+float jumpvel = .0125;
+glm::vec3 gravity = glm::vec3(0, -.000005, 0);
+glm::vec3 termvel = glm::vec3(0, -.05, 0);
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
@@ -242,7 +243,7 @@ void moveCamera() {
 		}		
 	}
 	if(keys[' '] && !jump) {
-		camcube->velocity = glm::vec3(0, .0075, 0);
+		camcube->velocity = glm::vec3(0, jumpvel, 0);
 		jump = true;
 	}
 	
@@ -375,7 +376,7 @@ void toggleFullscreen() {
 
 void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) {
-//		toggleFullscreen();
+		toggleFullscreen();
 	}
 	else {
 		keys[key] = 1; // key is pressed
@@ -384,6 +385,10 @@ void key_pressed(unsigned char key, int x, int y) {
 			free_resources();
 			exit(0);
 		}
+		if(key == 'r') {
+			camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+			aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
+		} // reset
 	}
 } // watches keyboard
 
@@ -409,9 +414,6 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	// initializes GLEW and checks for errors
-
-	gravity = glm::vec3(0, -.0000025, 0);
-	termvel = glm::vec3(0, -.05, 0);
 
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
