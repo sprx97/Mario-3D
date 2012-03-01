@@ -1,5 +1,7 @@
 // Jeremy Vercillo
 // 2/9/12
+// Final Project - Mario 3D
+// Main driver
 
 #include <string>
 #include <stdio.h>
@@ -16,9 +18,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 // libraries
 
+#include "Files.h"
 #include "Cube.h"
 #include "../common/shader_utils.h"
 // local includes
@@ -49,7 +51,7 @@ float dist;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
-static glm::vec3 right;
+static glm::vec3 rightvec;
 static glm::vec3 lookat;
 
 //A* terms go here
@@ -199,9 +201,9 @@ void setVectors() {
 	forward.y = 0;
 	forward.z = cosf(angle.x);
 	
-	right.x = -cosf(angle.x);
-	right.y = 0;
-	right.z = sinf(angle.x);
+	rightvec.x = -cosf(angle.x);
+	rightvec.y = 0;
+	rightvec.z = sinf(angle.x);
 	
 	lookat.x = sinf(angle.x) * cosf(angle.y);
 	lookat.y = sinf(angle.y);
@@ -227,31 +229,31 @@ void moveCamera() {
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
-		camcube->velocity -= right * movespeed;
+		camcube->velocity -= rightvec * movespeed;
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity += right * movespeed;
+				camcube->velocity += rightvec * movespeed;
 				break;
 			}
 		}
 		for(int n = 0; n < pathlength/16; n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
-				camcube->velocity += right * movespeed;
+				camcube->velocity += rightvec * movespeed;
 				break;
 			}
 		}
 	}
 	if(keys['d']) {
-		camcube->velocity += right * movespeed;
+		camcube->velocity += rightvec * movespeed;
 		for(int n = 0; n < pathlength; n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= right * movespeed;
+				camcube->velocity -= rightvec * movespeed;
 				break;
 			}
 		}		
 		for(int n = 0; n < pathlength/16; n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= right * movespeed;
+				camcube->velocity -= rightvec * movespeed;
 				break;
 			}
 		}	
@@ -287,8 +289,11 @@ void moveCamera() {
 		}	
 	}
 	if(keys[' '] && !jump) {
-		camcube->velocity = glm::vec3(0, jumpvel, 0);
+		camcube->velocity.y = jumpvel;
 		jump = true;
+	}
+	if(jump && !keys[' '] && camcube->velocity.y > 0) {
+		camcube->velocity.y = 0;
 	}
 	// key input
 	
@@ -437,6 +442,8 @@ int main(int argc, char* argv[]) {
 	// initializes GLEW and checks for errors
 
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
+
+	read_level("../todo.txt");
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
