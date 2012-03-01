@@ -287,6 +287,12 @@ bool Cube::collidesY(Cube* other) {
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
 
+bool Cube::collidesBottomY(Cube* other) {
+    return position.y <= other->position.y && position.y >= other->position.y-(2*size)
+        && position.x >= other->position.x-size/2 && position.x <= other->position.x+size/2
+        && position.z >= other->position.z-size/2 && position.z <= other->position.z+size/2;
+}
+
 bool Cube::collidesZ(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;

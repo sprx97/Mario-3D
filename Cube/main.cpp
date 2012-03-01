@@ -67,6 +67,7 @@ Cube* aircubes[1000];
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
+Cube* mushroom[100]; // mushroom locations
 
 glm::mat4 view, projection;
 
@@ -76,6 +77,7 @@ GLfloat specular[] = { 20 * cubesize, cubesize, -4 * cubesize, 1.0f }; // lighti
 GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float movespeed = 0.005;
+float mushmovespeed = 0.0005;
 float mousespeed = 0.001;
 float jumpvel = .0125;
 glm::vec3 gravity = glm::vec3(0, -.000005, 0);
@@ -83,6 +85,9 @@ glm::vec3 termvel = glm::vec3(0, -.05, 0);
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
+int test = 0;
+int mushnum = -1;
+bool mushdraw = false;
 
 void Astar() {
 
@@ -136,6 +141,9 @@ void simpleAI(Cube* c) {
 	aitest->position += aitest->velocity;
 } // Simple test AI
 
+void mushroomAI(Cube* c) {
+    c->position.x += mushmovespeed;
+}
 int initShaders() {
 	GLuint vs, fs;
 	if((vs = create_shader("cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
@@ -242,9 +250,34 @@ void setVectors() {
 #endif
 } // sets player vectors and mouse location
 
+void drawCube(Cube* c) {
+	glBindTexture(GL_TEXTURE_2D, c->texture_id);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
+	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
+	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
+	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->position.x, c->position.y, c->position.z));
+	// translate to position from origin
+	glm::mat4 mvp = projection * view * model;	
+	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+} // draws a cube
+
+void spawnsMushroom(Cube* c, Cube* Zoidberg) {
+    if (c->collidesBottomY(Zoidberg)) {
+        mushdraw = true;
+        if (mushnum < 100) mushnum++;
+    }
+}
+
 void moveCamera() {
 	setVectors();
 	applyGravity();
+    spawnsMushroom(camcube, aircubes[0]);
 
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
@@ -320,6 +353,7 @@ void moveCamera() {
 	camcube->position += camcube->velocity;
 
     simpleAI(aitest);
+    if (mushdraw) mushroomAI(mushroom[0]);
 }
 
 void idle() {
@@ -342,23 +376,6 @@ void timer(int value) {
 	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
 }
 
-void drawCube(Cube* c) {
-	glBindTexture(GL_TEXTURE_2D, c->texture_id);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
-	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
-	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
-	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->position.x, c->position.y, c->position.z));
-	// translate to position from origin
-	glm::mat4 mvp = projection * view * model;	
-	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-} // draws a cube
-
 void onDisplay() {
 	glClearColor(0.0, 0.0, 0.0, 1.0); // black
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -376,6 +393,9 @@ void onDisplay() {
     drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
+    if (mushdraw) {
+        drawCube(mushroom[0]);
+    }
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -484,8 +504,9 @@ int main(int argc, char* argv[]) {
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        aircubes[n] = new Cube(cubesize*n*16, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
+        aircubes[n] = new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
+    for (int n = 0; n < 100; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
