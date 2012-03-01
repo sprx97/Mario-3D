@@ -36,6 +36,7 @@ GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
 int windowid;
+int cubesize = 2;
 int screen_width = 800, screen_height = 600; // screen size
 int lastx = screen_width/2;
 int lasty = screen_height/2; // last mouse position
@@ -59,7 +60,6 @@ static glm::vec3 gravity;
 
 int keys[256] = {0}; // array of whether keys are pressed
 
-int cubesize = 2;
 int pathlength = 100;
 int pathwidth = 8; // actually means 7
 Cube* cubes[1000]; // array of cubes
@@ -89,45 +89,47 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
 }// distance between 2 points
 
-void ai_chase() {
-    aitest->position -= forward * movespeed;
+void ai_chase(Cube* c) {
+    c->position -= forward * movespeed;
 }
 
-void simpleAI() {    
+void AIphysics(Cube* c) {
+    c->velocity += gravity;
+	c->position += c->velocity;
+	if(c->velocity.y < termvel.y) c->velocity = termvel;
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+		if(cubes[n]->collidesWith(c)) {
+			c->position -= c->velocity;
+			c->velocity = glm::vec3(0, 0, 0);
+			break;
+		}
+	}
+} // ai physics
+
+void simpleAI(Cube* c) {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
-    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, aitest->position.x, aitest->position.y, aitest->position.z);
+    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (5 * cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
         case 0:
-            //aitest->position.z += pathwidthcheck * movespeed;
-            if(aitest->position.z > 0 || aitest->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
+            c->position.z += pathwidthcheck * movespeed;
+            if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
             break;
         case 1:
-            //ai_chase();
+            ai_chase(c);
             break;
     }
-    if(camcube->collidesWith(aitest)) {
-        aitest->position += right * movespeed;
+    if(camcube->collidesWith(c)) {
+        c->position += right * movespeed;
     }
     for(int n = 0; n < pathlength; n++) {
-        if(cubes[n]->collidesWith(aitest)) {
+        if(cubes[n]->collidesWith(c)) {
 //			aitest->position.y += 1;
             break;
         }
     } // moves ai
-    
-    aitest->velocity += gravity;
-	aitest->position += aitest->velocity;
-	if(aitest->velocity.y < termvel.y) aitest->velocity = termvel;
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
-		if(cubes[n]->collidesWith(aitest)) {
-			aitest->position -= aitest->velocity;
-			aitest->velocity = glm::vec3(0, 0, 0);
-			break;
-		}
-	}// ai physics
 } // Simple test AI
 
 int initShaders() {
@@ -262,7 +264,8 @@ void moveCamera() {
 	
 	applyPhysics();
 	
-    simpleAI();
+    AIphysics(aitest);
+    simpleAI(aitest);
     
 	forward.x = sinf(angle.x);
 	forward.y = 0;
@@ -343,6 +346,7 @@ void onDisplay() {
     drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/4; n++) drawCube(aircubes[n]);
+    
     
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -473,7 +477,7 @@ int main(int argc, char* argv[]) {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_3D);
-        glEnable(GL_LIGHTING);
+/*        glEnable(GL_LIGHTING);
         glLightfv(GL_LIGHT0,GL_SPECULAR,specular);
         glLightfv(GL_LIGHT0,GL_DIFFUSE,diffuse);
         glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
@@ -482,7 +486,7 @@ int main(int argc, char* argv[]) {
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
         glMaterialfv(GL_FRONT, GL_SPECULAR, specref);
-        glMateriali(GL_FRONT, GL_SHININESS, 128);
+        glMateriali(GL_FRONT, GL_SHININESS, 128);*/
 
         glutMainLoop();
 	}
