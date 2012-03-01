@@ -103,20 +103,11 @@ void simpleAI() {
             ai_chase();
             break;
     }
-    if(camcube->collidesWith(aitest)) {
-        aitest->position += right * movespeed;
-    }
-    for(int n = 0; n < pathlength; n++) {
-        if(cubes[n]->collidesWith(aitest)) {
-//			aitest->position.y += 1;
-            break;
-        }
-    } // moves ai
-    
+
     aitest->velocity += gravity;
 	if(aitest->velocity.y < termvel.y) aitest->velocity = termvel;
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
-		if(cubes[n]->collidesWith(aitest)) {
+		if(cubes[n]->collidesY(aitest)) {
 			aitest->velocity.y = 0;
 			break;
 		}
@@ -186,71 +177,24 @@ void motion(int x, int y) {
 void applyPhysics() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
-		camcube->velocity = termvel;
+		camcube->velocity.y = termvel.y;
 	}	
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
-		if(cubes[n]->collidesWith(camcube)) {
+		if(cubes[n]->collidesY(camcube)) {
 			camcube->velocity.y = 0;
 			jump = false;
 			break;
 		}
 	}
-	camcube->position += camcube->velocity;
-/*	for(int n = 0; n < pathlength/4; n++) {
-		if(aircubes[n]->collidesZ(camcube)) {
-			camcube->position -= camcube->velocity;
-			camcube->velocity = glm::vec3(0, 0, 0);
+	for(int n = 0; n < pathlength/16; n++) {
+		if(aircubes[n]->collidesY(camcube)) {
+			camcube->velocity.y = 0;
 			break;
 		} // collision from below
-	}*/
+	}
 } // moves by physics instead of input
 
-void moveCamera() {
-    if(keys['a']) {
-		camcube->position -= right * movespeed;
-		for(int n = 0; n < pathlength; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				camcube->position += right * movespeed;
-				break;
-			}
-		}
-	}
-	if(keys['d']) {
-		camcube->position += right * movespeed;
-		for(int n = 0; n < pathlength; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				camcube->position -= right * movespeed;
-				break;
-			}
-		}		
-	}
-	if(keys['w']) {
-		camcube->position += forward * movespeed;
-		for(int n = 0; n < pathlength; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				camcube->position -= forward * movespeed;
-				break;
-			}
-		}	
-	}
-	if(keys['s']) {
-		camcube->position -= forward * movespeed;
-		for(int n = 0; n < pathlength; n++) {
-			if(cubes[n]->collidesWith(camcube)) {
-				camcube->position += forward * movespeed;
-				break;
-			}
-		}		
-	}
-	if(keys[' '] && !jump) {
-		camcube->velocity = glm::vec3(0, jumpvel, 0);
-		jump = true;
-	}
-	
-	applyPhysics();
-	
-    simpleAI();
-    
+void setVectors() {
 	forward.x = sinf(angle.x);
 	forward.y = 0;
 	forward.z = cosf(angle.x);
@@ -274,6 +218,82 @@ void moveCamera() {
 #ifdef __linux__
 	glutWarpPointer(midwindowx, midwindowy);
 #endif
+} // sets player vectors and mouse location
+
+void moveCamera() {
+	setVectors();
+
+	camcube->velocity.x = 0;
+	camcube->velocity.z = 0;
+    if(keys['a']) {
+		camcube->velocity -= right * movespeed;
+		for(int n = 0; n < pathlength; n++) {
+			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
+				camcube->velocity += right * movespeed;
+				break;
+			}
+		}
+		for(int n = 0; n < pathlength/16; n++) {
+			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
+				camcube->velocity += right * movespeed;
+				break;
+			}
+		}
+	}
+	if(keys['d']) {
+		camcube->velocity += right * movespeed;
+		for(int n = 0; n < pathlength; n++) {
+			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
+				camcube->velocity -= right * movespeed;
+				break;
+			}
+		}		
+		for(int n = 0; n < pathlength/16; n++) {
+			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
+				camcube->velocity -= right * movespeed;
+				break;
+			}
+		}	
+	}
+	if(keys['w']) {
+		camcube->velocity += forward * movespeed;
+		for(int n = 0; n < pathlength; n++) {
+			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
+				camcube->velocity -= forward * movespeed;
+				break;
+			}
+		}	
+		for(int n = 0; n < pathlength/16; n++) {
+			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
+				camcube->velocity -= forward * movespeed;
+				break;
+			}
+		}
+	}
+	if(keys['s']) {
+		camcube->velocity -= forward * movespeed;
+		for(int n = 0; n < pathlength; n++) {
+			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
+				camcube->velocity += forward * movespeed;
+				break;
+			}
+		}		
+		for(int n = 0; n < pathlength/16; n++) {
+			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
+				camcube->velocity += forward * movespeed;
+				break;
+			}
+		}	
+	}
+	if(keys[' '] && !jump) {
+		camcube->velocity = glm::vec3(0, jumpvel, 0);
+		jump = true;
+	}
+	applyPhysics();
+	camcube->position += camcube->velocity;
+
+	
+    simpleAI();
 }
 
 void idle() {
@@ -329,7 +349,7 @@ void onDisplay() {
    // drawCube(camcube);
     drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
-    for(int n = 0; n < pathlength/4; n++) drawCube(aircubes[n]);
+    for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
     
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -423,8 +443,8 @@ int main(int argc, char* argv[]) {
             cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize,("groundblock"), cubesize);
 		}
 	}    
-    for (int n = 0; n < pathlength/4; n++) {
-        aircubes[n] = new Cube(cubesize*n*4, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
+    for (int n = 0; n < pathlength/16; n++) {
+        aircubes[n] = new Cube(cubesize*n*16, 4 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
