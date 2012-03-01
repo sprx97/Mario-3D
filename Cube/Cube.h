@@ -9,6 +9,9 @@
 class Cube {
 	public:
 		glm::vec3 position, velocity;
+		
+//		GLfloat specrefon[];
+//		GLfloat specrefoff[];
 		float size;
 		
 		GLfloat vertices[72]; // vertecies of each face
@@ -23,7 +26,9 @@ class Cube {
 		GLuint texture_id; // id code of the texture
 		GLint uniform_mvp, uniform_mytexture;
 		GLint attribute_coord3d, attribute_texcoord;
-
+    
+       // void setReflect(int);
+    
 		const char* texturename;
 
 		Cube(float, float, float, const char*, float);

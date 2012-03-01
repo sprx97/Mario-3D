@@ -15,8 +15,12 @@
 Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	position = glm::vec3(x, y, z);
 	velocity = glm::vec3(0.0, 0.0, 0.0);
+
+//	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+//	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	size = s;
 	texturename = texture;
+    //setReflect(0);
 
 	GLfloat tempverts[72] = {
 		// front face
@@ -246,6 +250,18 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 } // creates cube
+
+/*void Cube::setReflect(int reflect) {
+    switch (reflect) {
+        case 1: 
+            glMaterialfv(GL_FRONT, GL_SPECULAR, specrefon);
+            glMateriali(GL_FRONT, GL_SHININESS, 128);
+            break;
+        case 0:
+            glMaterialfv(GL_FRONT, GL_SPECULAR, specrefoff);
+            break;
+    }
+}*/ // 1 sets reflection to full, 0 turns off
 
 bool Cube::intersectsWith(float x, float y, float z) {
 	return x >= position.x-size/2 && x <= position.x+size/2

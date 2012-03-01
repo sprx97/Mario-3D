@@ -47,6 +47,7 @@ int pathwidthcheck = 1; // ai checks path width WIP
 bool fullscreen = true;
 bool mouseinit = false;
 bool jump = false;
+bool lighttest = false;
 float dist;
 
 static glm::vec3 angle;
@@ -69,6 +70,11 @@ Cube* aitest; // cube controlled by computer
 
 glm::mat4 view, projection;
 
+GLfloat diffuse[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+GLfloat ambient[] = { 0.7f, 0.7f, 0.7f, 1.0f };
+GLfloat specular[] = { 20 * cubesize, cubesize, -4 * cubesize, 1.0f }; // lighting coordinates and values
+GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 float movespeed = 0.005;
 float mousespeed = 0.001;
 float jumpvel = .0125;
@@ -86,23 +92,36 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
 }// distance between 2 points
 
-void ai_chase() {
-    aitest->position.z += 0; // placeholder
+void ai_chase(Cube* c) {
+    c->position -= forward * movespeed;
 }
 
-void simpleAI() {    
+void AIphysics(Cube* c) {
+    c->velocity += gravity;
+	c->position += c->velocity;
+	if(c->velocity.y < termvel.y) c->velocity = termvel;
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+		if(cubes[n]->collidesWith(c)) {
+			c->position -= c->velocity;
+			c->velocity = glm::vec3(0, 0, 0);
+			break;
+		}
+	}
+} // ai physics
+
+void simpleAI(Cube* c) {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
-    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, aitest->position.x, aitest->position.y, aitest->position.z);
+    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (5 * cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
         case 0:
-            aitest->position.z += pathwidthcheck * movespeed;
-            if(aitest->position.z > 0 || aitest->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
+            c->position.z += pathwidthcheck * movespeed;
+            if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
             break;
         case 1:
-            ai_chase();
+            ai_chase(c);
             break;
     }
 
@@ -121,6 +140,7 @@ int initShaders() {
 	GLuint vs, fs;
 	if((vs = create_shader("cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
 	if((fs = create_shader("cubeshader.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
+    //if((fs = create_shader("cartoonfrag.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
 	// creates shaders from my files
 	
 	GLint link_ok = GL_FALSE;
@@ -292,14 +312,14 @@ void moveCamera() {
 		camcube->velocity.y = jumpvel;
 		jump = true;
 	}
-	if(jump && !keys[' '] && camcube->velocity.y > 0) {
-		camcube->velocity.y = 0;
+	if(jump && !keys[' '] && camcube->velocity.y > .005) {
+		camcube->velocity.y = .005;
 	}
 	// key input
 	
 	camcube->position += camcube->velocity;
 
-    simpleAI();
+    simpleAI(aitest);
 }
 
 void idle() {
@@ -340,7 +360,7 @@ void drawCube(Cube* c) {
 } // draws a cube
 
 void onDisplay() {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // black
+	glClearColor(0.0, 0.0, 0.0, 1.0); // black
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// clears the screen
 	
@@ -356,7 +376,7 @@ void onDisplay() {
     drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
-    
+
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
@@ -392,11 +412,23 @@ void free_resources() {
 } // cleans up memory
 
 void toggleFullscreen() {
-	fullscreen = !fullscreen;
-	if(fullscreen) glutFullScreen();
-	else {
-		glutReshapeWindow(800, 600);
-		glutPositionWindow(0, 0);
+    switch(fullscreen){
+        case 1:	
+            glutReshapeWindow(800,600);
+            screen_width = glutGet(GLUT_WINDOW_X);
+            screen_height = glutGet(GLUT_WINDOW_Y);
+            midwindowx = screen_width / 2;
+            midwindowy = screen_height / 2;
+            fullscreen = false;
+            break;
+        case 0:
+            glutFullScreen();
+            screen_width = glutGet(GLUT_WINDOW_X);
+            screen_height = glutGet(GLUT_WINDOW_Y);
+            midwindowx = screen_width / 2;
+            midwindowy = screen_height / 2;
+            fullscreen = true;
+            break;
 	}
 }
 
@@ -456,7 +488,7 @@ int main(int argc, char* argv[]) {
     }
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
-    
+
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
@@ -476,18 +508,18 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
-  /*  /////////////////////////////////////////
-        float lightCol[4] = {1,1,1,1};
-        float ambientCol[4] = {1.0,1.0,1.0,1.0};
-        float lPosition[4] = {10,10,10,1};
-        glLightfv(GL_LIGHT0,GL_POSITION,lPosition);
-        glLightfv(GL_LIGHT0,GL_DIFFUSE,lightCol);
-        glLightfv(GL_LIGHT0,GL_AMBIENT,ambientCol);
-        glEnable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_3D);
+/*        glEnable(GL_LIGHTING);
+        glLightfv(GL_LIGHT0,GL_SPECULAR,specular);
+        glLightfv(GL_LIGHT0,GL_DIFFUSE,diffuse);
+        glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-     //////////////////////////////////////// */ 
+        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, specref);
+        glMateriali(GL_FRONT, GL_SHININESS, 128);*/
+
         glutMainLoop();
 	}
 	return 0;
