@@ -174,7 +174,7 @@ void motion(int x, int y) {
 	// sets last mouse position
 } // moves camera based on current key states
 
-void applyPhysics() {
+void applyGravity() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
 		camcube->velocity.y = termvel.y;
@@ -222,6 +222,7 @@ void setVectors() {
 
 void moveCamera() {
 	setVectors();
+	applyGravity();
 
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
@@ -289,10 +290,10 @@ void moveCamera() {
 		camcube->velocity = glm::vec3(0, jumpvel, 0);
 		jump = true;
 	}
-	applyPhysics();
+	// key input
+	
 	camcube->position += camcube->velocity;
 
-	
     simpleAI();
 }
 
