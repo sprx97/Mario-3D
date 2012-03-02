@@ -217,7 +217,7 @@ void applyGravity() {
 		}
 	}
 	for(int n = 0; n < pathlength/16; n++) {
-		if(aircubes[n]->collidesBottomY(camcube) || aircubes[n]->collidesTopY(camcube)) {
+		if(aircubes[n]->collidesY(camcube)) {
 			if(aircubes[n]->collidesTopY(camcube)) jump = false;
 			camcube->velocity.y = 0;
 			break;
