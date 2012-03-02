@@ -36,6 +36,8 @@ class Cube {
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);
+        bool collidesBottomY(Cube*);
+        bool collidesTopY(Cube*);
 		bool collidesZ(Cube*);
 		void move(float, float, float);
 		~Cube();
