@@ -44,6 +44,7 @@ int lasty = screen_height/2; // last mouse position
 int midwindowx = screen_width/2; // Middle of the window horizontally
 int midwindowy = screen_height/2; // Middle of the window vertically
 int pathwidthcheck = 1; // ai checks path width WIP
+int pathlengthcheck = 1; // ai checks path width WIP
 bool fullscreen = true;
 bool mouseinit = false;
 bool jump = false;
@@ -76,7 +77,8 @@ GLfloat ambient[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 GLfloat specular[] = { 20 * cubesize, cubesize, -4 * cubesize, 1.0f }; // lighting coordinates and values
 GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-float movespeed = 0.005;
+float movespeed = 0.004;
+float aimovespeed = movespeed * .5;
 float mushmovespeed = 0.0005;
 float mousespeed = 0.001;
 float jumpvel = .0125;
@@ -98,7 +100,7 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 }// distance between 2 points
 
 void ai_chase(Cube* c) {
-    c->position -= forward * movespeed;
+	c->position -= forward * aimovespeed;
 }
 
 void AIphysics(Cube* c) {
@@ -114,19 +116,28 @@ void AIphysics(Cube* c) {
 	}
 } // ai physics
 
+void destroy(Cube* c) {
+	c->destroyed = true;
+}
+
 void simpleAI(Cube* c) {    
     int behavior;   // state ai is in, 0 is normal patrol, 1 is chase
     dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
-    if (dist < (5 * cubesize)) behavior = 1;
+    if (dist < (10 * cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
         case 0:
-            c->position.z += pathwidthcheck * movespeed;
-            if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
-            break;
+			c->position.z += pathwidthcheck * (aimovespeed * .1f);
+			c->position.x += pathlengthcheck * (aimovespeed * .5f);
+			if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
+			if(c->position.x < 12 * cubesize) pathlengthcheck = 1;
+			if(c->position.x > 28 * cubesize) pathlengthcheck = -1;
+			break;
         case 1:
-            ai_chase(c);
+			if (c->position.z >= camcube->position.z) c->position.z -= aimovespeed;
+			if (c->position.z <= camcube->position.z) c->position.z += aimovespeed;
+			if (c->position.z == camcube->position.z) c->position.z += camcube->velocity.z;
             break;
     }
 
@@ -139,6 +150,11 @@ void simpleAI(Cube* c) {
 		}
 	} // ai physics
 	aitest->position += aitest->velocity;
+	if(camcube->collidesWith(c)) {
+		if(camcube->collidesTopY(c)) destroy(c);
+		else printf("You died\n");
+	}
+	
 } // Simple test AI
 
 void mushroomAI(Cube* c) {
@@ -217,7 +233,7 @@ void applyGravity() {
 		}
 	}
 	for(int n = 0; n < pathlength/16; n++) {
-		if(aircubes[n]->collidesY(camcube)) {
+		if(camcube->collidesY(aircubes[n])) {
 			if(camcube->collidesTopY(aircubes[n])) jump = false;
 			camcube->velocity.y = 0;
 			break;
@@ -391,7 +407,7 @@ void onDisplay() {
 
 	drawCube(bg);
    // drawCube(camcube);
-    drawCube(aitest);
+    if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
     if (mushdraw) {

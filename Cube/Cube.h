@@ -8,8 +8,8 @@
 
 class Cube {
 	public:
-		glm::vec3 position, velocity;
-		
+		glm::vec3 position, velocity;	
+	
 //		GLfloat specrefon[];
 //		GLfloat specrefoff[];
 		float size;
@@ -40,6 +40,7 @@ class Cube {
         bool collidesTopY(Cube*);
 		bool collidesZ(Cube*);
 		void move(float, float, float);
+		bool destroyed;
 		~Cube();
 };
 #endif
