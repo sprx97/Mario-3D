@@ -211,13 +211,14 @@ void applyGravity() {
 	}	
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
 		if(cubes[n]->collidesY(camcube)) {
-			camcube->velocity.y = 0;
 			jump = false;
+			camcube->velocity.y = 0;
 			break;
 		}
 	}
 	for(int n = 0; n < pathlength/16; n++) {
 		if(aircubes[n]->collidesY(camcube)) {
+			if(aircubes[n]->collidesTopY(camcube)) jump = false;
 			camcube->velocity.y = 0;
 			break;
 		} // collision from below
@@ -495,7 +496,7 @@ int main(int argc, char* argv[]) {
 
 	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
 
-	read_level("../todo.txt");
+		//read_level("../todo.txt");
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
