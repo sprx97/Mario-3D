@@ -16,7 +16,8 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	position = glm::vec3(x, y, z);
 	velocity = glm::vec3(0.0, 0.0, 0.0);
 	bool destroyed = false;
-
+	bool hit = false;
+	
 //	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 //	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	size = s;
@@ -287,16 +288,16 @@ bool Cube::collidesY(Cube* other) {
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
-/*
+
 bool Cube::collidesTopY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
-    return (other->position.y-position.y) > (size/2 + other->size/2)
-		&& (othernextpos.y-nextpos.y) <= (size/2 + other->size/2)
+    return position.y > other->position.y+size && position.y <= other->position.y+(2*size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
-}*/
+}
 
+/*
 bool Cube::collidesTopY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
@@ -305,24 +306,23 @@ bool Cube::collidesTopY(Cube* other) {
 	&& position.z >= other->position.z-size/2 && position.z <= other->position.z+size/2;
 	
 }
+*/
 
-/*
 bool Cube::collidesBottomY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
-    return (position.y-other->position.y) > (size/2 + other->size/2)
-		&& (nextpos.y-othernextpos.y) <= (size/2 + other->size/2)
+    return position.y <= other->position.y && position.y >= other->position.y-(2*size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
-}*/
-
+}
+/*
 bool Cube::collidesBottomY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
     return position.y <= other->position.y && position.y >= other->position.y-(2*size)
 	&& position.x >= other->position.x-size/2 && position.x <= other->position.x+size/2
 	&& position.z >= other->position.z-size/2 && position.z <= other->position.z+size/2;
-}
+}*/
 
 bool Cube::collidesZ(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
@@ -339,6 +339,14 @@ bool Cube::collidesWith(Cube* other) {
 
 void Cube::move(float x, float y, float z) {
 	position = glm::vec3(x, y, z);
+}
+
+void Cube::printPos() {
+	float x,y,z;
+	x = position.x;
+	y = position.y;
+	z = position.z;
+	printf("(%f, %f, %f)\n",x,y,z);
 }
 
 Cube::~Cube() {
