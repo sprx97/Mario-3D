@@ -41,6 +41,8 @@ class Cube {
 		bool collidesZ(Cube*);
 		void move(float, float, float);
 		bool destroyed;
+		bool hit;
+		void printPos();
 		~Cube();
 };
 #endif

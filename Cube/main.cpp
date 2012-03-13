@@ -68,7 +68,7 @@ Cube* aircubes[1000];
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
-Cube* mushroom[100]; // mushroom locations
+Cube* mushroom[11]; // mushroom locations
 
 glm::mat4 view, projection;
 
@@ -88,8 +88,9 @@ glm::vec3 termvel = glm::vec3(0, -.05, 0);
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
-int mushnum = -1;
+int mushnum = 0;
 bool mushdraw = false;
+int numlives = 3;
 
 void Astar() {
 
@@ -116,8 +117,26 @@ void AIphysics(Cube* c) {
 	}
 } // ai physics
 
+void setSize(Cube* c) {
+
+}
+
 void destroy(Cube* c) {
 	c->destroyed = true;
+}
+
+void reset() {
+	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
+	aitest->destroyed = false;
+	for (int n = 1; n < mushnum+1; n++) {
+		mushroom[n]->destroyed = false;
+	}
+	mushnum = 0;
+	mushdraw = false;
+	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
+	for (int n = 0; n < pathlength/16; n++) aircubes[n]->hit = false;
+	for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
 }
 
 void simpleAI(Cube* c) {    
@@ -137,7 +156,10 @@ void simpleAI(Cube* c) {
         case 1:
 			if (c->position.z >= camcube->position.z) c->position.z -= aimovespeed;
 			if (c->position.z <= camcube->position.z) c->position.z += aimovespeed;
-			if (c->position.z == camcube->position.z) c->position.z += camcube->velocity.z;
+				//if (c->position.z == camcube->position.z) c->position.z += camcube->velocity.z;
+			if (c->position.x >= camcube->position.x) c->position.x -= aimovespeed;
+			if (c->position.x <= camcube->position.x) c->position.x += aimovespeed;
+				//if (c->position.x == camcube->position.x) c->position.x += camcube->velocity.z;
             break;
     }
 
@@ -150,16 +172,36 @@ void simpleAI(Cube* c) {
 		}
 	} // ai physics
 	aitest->position += aitest->velocity;
-	if(camcube->collidesWith(c)) {
+	if(camcube->collidesWith(c) && !c->destroyed || c->collidesWith(camcube) && !c->destroyed){
 		if(camcube->collidesTopY(c)) destroy(c);
-		else printf("You died\n");
+		else{
+			if(camcube->size != cubesize) {
+				printf("Mushroom lost\n");
+				camcube->position.y -= camcube->size/2;
+				camcube->size = cubesize;
+				camcube->position.y += camcube->size/2;
+			}
+			else {
+				printf("You died\n");
+				numlives--;
+				reset();
+			}
+		}
 	}
-	
 } // Simple test AI
 
 void mushroomAI(Cube* c) {
     c->position.x += mushmovespeed;
+	if(camcube->collidesWith(c) && !c->destroyed) {
+		printf("Mushroom get\n");
+		camcube->position.y -= camcube->size/2;
+		camcube->size = cubesize*8;
+		camcube->position.y += camcube->size/2;
+		mushdraw = false;
+		destroy(c);
+	}
 }
+
 int initShaders() {
 	GLuint vs, fs;
 	if((vs = create_shader("cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
@@ -204,22 +246,6 @@ int initShaders() {
 	return 1;
 }
 
-void motion(int x, int y) {
-	angle.x -= (x - lastx) * mousespeed; // phi
-	angle.y -= (y - lasty) * mousespeed; // theta
-	// moves camera
-	
-	if(angle.x < -M_PI) angle.x += M_PI * 2;
-	if(angle.x > M_PI) angle.x -= M_PI * 2;
-	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
-	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
-	// keeps camera in range (can't do flips, etc)
-	
-	lastx = x;
-	lasty = y;
-	// sets last mouse position
-} // moves camera based on current key states
-
 void applyGravity() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
@@ -240,6 +266,22 @@ void applyGravity() {
 		} // collision from below
 	}
 } // moves by physics instead of input
+
+void motion(int x, int y) {
+	angle.x -= (x - lastx) * mousespeed; // phi
+	angle.y -= (y - lasty) * mousespeed; // theta
+	// moves camera
+	
+	if(angle.x < -M_PI) angle.x += M_PI * 2;
+	if(angle.x > M_PI) angle.x -= M_PI * 2;
+	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
+	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
+	// keeps camera in range (can't do flips, etc)
+	
+	lastx = x;
+	lasty = y;
+	// sets last mouse position
+} // moves camera based on current key states
 
 void setVectors() {
 	forward.x = sinf(angle.x);
@@ -285,16 +327,17 @@ void drawCube(Cube* c) {
 } // draws a cube
 
 void spawnsMushroom(Cube* c, Cube* Zoidberg) {
-    if (c->collidesBottomY(Zoidberg)) {
-        mushdraw = true;
-        if (mushnum < 100) mushnum++;
+    if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
+        if (mushnum < 11) mushnum++;
+		mushdraw = true;
+		Zoidberg->hit = true;
     }
 }
 
 void moveCamera() {
 	setVectors();
 	applyGravity();
-    spawnsMushroom(camcube, aircubes[0]);
+    if (!aircubes[0]->hit) spawnsMushroom(camcube, aircubes[0]);
 
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
@@ -368,9 +411,8 @@ void moveCamera() {
 	// key input
 	
 	camcube->position += camcube->velocity;
-
     simpleAI(aitest);
-    if (mushdraw) mushroomAI(mushroom[0]);
+    if(mushdraw) mushroomAI(mushroom[mushnum]);
 }
 
 void idle() {
@@ -410,8 +452,8 @@ void onDisplay() {
     if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
-    if (mushdraw) {
-        drawCube(mushroom[0]);
+	if (mushdraw && !mushroom[mushnum]->destroyed) {
+		drawCube(mushroom[mushnum]);
     }
 
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -428,7 +470,6 @@ void onDisplay() {
 	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
 	// posts FPS to screen
-    
 	glutSwapBuffers();
 } // displays to screen
 
@@ -481,8 +522,7 @@ void key_pressed(unsigned char key, int x, int y) {
 			exit(0);
 		}
 		if(key == 'r') {
-			camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-			aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
+			reset();
 		} // reset
 	}
 } // watches keyboard
@@ -510,7 +550,7 @@ int main(int argc, char* argv[]) {
 	}
 	// initializes GLEW and checks for errors
 
-	angle = glm::vec3(M_PI/2, -M_PI/8, 0);
+	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
 		//read_level("../todo.txt");
 
@@ -523,7 +563,7 @@ int main(int argc, char* argv[]) {
     for (int n = 0; n < pathlength/16; n++) {
         aircubes[n] = new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
-    for (int n = 0; n < 100; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
+    for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
