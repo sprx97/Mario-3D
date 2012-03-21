@@ -37,6 +37,16 @@ GLuint program;
 GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
+#define TITLE_STATE 0
+#define MENU_STATE 1
+#define GAME_STATE 2
+int state = TITLE_STATE;
+
+GLuint title_id;
+GLuint vbo_title_vertices;
+GLuint vbo_title_texcoords;
+GLuint ibo_title_elements;
+
 int windowid;
 int screen_width = 800, screen_height = 600; // screen size
 int lastx = screen_width/2;
@@ -65,6 +75,7 @@ int pathlength = 100;
 int pathwidth = 8; // actually means 7
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
+Cube* title; // title graphic
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
@@ -415,7 +426,7 @@ void moveCamera() {
     if(mushdraw) mushroomAI(mushroom[mushnum]);
 }
 
-void idle() {
+void gameIdle() {
 	if(!mouseinit) {
 		screen_width = glutGet(GLUT_WINDOW_WIDTH);
 		screen_height = glutGet(GLUT_WINDOW_HEIGHT);
@@ -428,6 +439,20 @@ void idle() {
 	}
     
 	moveCamera();
+} // idle function for when in game state
+
+void menuIdle() {
+
+} // idle function for menu state
+
+void titleIdle() {
+	
+} // idle function for title state
+
+void idle() {
+	if(state == TITLE_STATE) titleIdle();
+	else if(state == MENU_STATE) menuIdle();
+	else if(state == GAME_STATE) gameIdle();
 } // constantly calculates redraws
 
 void timer(int value) {
@@ -435,11 +460,7 @@ void timer(int value) {
 	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
 }
 
-void onDisplay() {
-	glClearColor(0.0, 0.0, 0.0, 1.0); // black
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// clears the screen
-	
+void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
@@ -459,6 +480,35 @@ void onDisplay() {
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
+} // display function for game state
+
+void menuDisplay() {
+
+} // display function for menu state
+
+void titleDisplay() {
+	view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+
+	glUseProgram(program);
+	glEnableVertexAttribArray(attribute_texcoord);
+	glEnableVertexAttribArray(attribute_coord3d);
+	
+	drawCube(title);
+
+	glDisableVertexAttribArray(attribute_coord3d);
+	glDisableVertexAttribArray(attribute_texcoord);
+	glUseProgram(0);
+} // display function for title state
+
+void onDisplay() {
+	glClearColor(0.0, 0.0, 0.0, 1.0); // black
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// clears the screen
+	
+	if(state == TITLE_STATE) titleDisplay();
+	else if (state == MENU_STATE) menuDisplay();
+	else if(state == GAME_STATE) gameDisplay();
     
     glColor3f(0.0f, 0.0f, 0.0f);
     glRasterPos2f(-1.0f, -1.0f);
@@ -511,10 +561,11 @@ void toggleFullscreen() {
 }
 
 void key_pressed(unsigned char key, int x, int y) {
-	if(key == GLUT_KEY_ESC) {
-		toggleFullscreen();
-	}
-	else {
+	if(key == GLUT_KEY_ESC) toggleFullscreen();
+	
+	if(state == TITLE_STATE) state = GAME_STATE; // next state
+	else if(state == MENU_STATE) {}
+	else if(state == GAME_STATE) {
 		keys[key] = 1; // key is pressed
 		if(key == 'q') {
 			glutDestroyWindow(windowid);
@@ -530,6 +581,12 @@ void key_pressed(unsigned char key, int x, int y) {
 void key_released(unsigned char key, int x, int y) {
 	keys[key] = 0; // key is no longer pressed
 } // watches keyboard
+
+void mouse_click(int button, int mstate, int x, int y) {
+	if(state == TITLE_STATE) state = GAME_STATE; // next state
+	else if(state == MENU_STATE) {}
+	else {}
+} // watches for mouse to be clicked
 
 int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
@@ -552,12 +609,12 @@ int main(int argc, char* argv[]) {
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
-		//read_level("../todo.txt");
+	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
         for (int n = (100*m); n < (m*100)+100; n++) {
-            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize,("groundblock"), cubesize);
+            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize);
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
@@ -579,6 +636,7 @@ int main(int argc, char* argv[]) {
 		glutReshapeFunc(reshape);
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
+		glutMouseFunc(mouse_click); // mouse buttons
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
