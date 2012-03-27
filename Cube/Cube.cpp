@@ -10,6 +10,13 @@
 #include "groundblock_texture.c"
 #include "skybox_texture.c"
 #include "title_texture.c"
+
+#include "start.c"
+#include "startl.c"
+#include "startq.c"
+#include "startn.c"
+#include "border.c"
+
 #include "../common/shader_utils.h"
 #include "Cube.h"
 
@@ -255,6 +262,158 @@ Cube::Cube(float x, float y, float z, const char* texture, float s) {
 			title_texture.pixel_data);
 			// texture object
 	}
+	else if(strcmp(texture, "start") == 0) {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+			0,
+			GL_RGB,
+			start.width,
+			start.height,
+			0,
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			start.pixel_data);
+		// texture object
+	}
+	else if(strcmp(texture, "quit") == 0) {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+					 0,
+					 GL_RGB,
+					 startq.width,
+					 startq.height,
+					 0,
+					 GL_RGB,
+					 GL_UNSIGNED_BYTE,
+					 startq.pixel_data);
+			// texture object
+	}
+	else if(strcmp(texture, "lowgrav") == 0) {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+					 0,
+					 GL_RGB,
+					 startl.width,
+					 startl.height,
+					 0,
+					 GL_RGB,
+					 GL_UNSIGNED_BYTE,
+					 startl.pixel_data);
+			// texture object
+	}
+	else if(strcmp(texture, "normgrav") == 0) {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+					 0,
+					 GL_RGB,
+					 startn.width,
+					 startn.height,
+					 0,
+					 GL_RGB,
+					 GL_UNSIGNED_BYTE,
+					 startn.pixel_data);
+			// texture object
+	}
+	
+	else if(strcmp(texture, "border") == 0) {
+		GLfloat tempcoords[48] = {
+			0.0, 0.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			0.0, 1.0,
+		}; // what part of the texture image is used
+		for(int n = 0 ; n < 8; n++) texcoords[n] = tempcoords[n];
+		for(int n = 1; n < 6; n++) memcpy(&texcoords[n*4*2], &texcoords[0], 2*4*sizeof(GLfloat));
+		glGenBuffers(1, &vbo_texcoords);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// binds texture coordinates
+		
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &texture_id);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 
+					 0,
+					 GL_RGB,
+					 border.width,
+					 border.height,
+					 0,
+					 GL_RGB,
+					 GL_UNSIGNED_BYTE,
+					 border.pixel_data);
+			// texture object
+	}
+	
 	else fprintf(stderr, "Texture %s not found.\n", texture);
 		
 	GLshort tempelements[36] = {

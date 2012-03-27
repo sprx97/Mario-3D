@@ -1,4 +1,4 @@
-// Jeremy Vercillo
+// Jeremy Vercillo and Ryan Liebscher (I want some damn credit :P )
 // 2/9/12
 // Final Project - Mario 3D
 // Main driver
@@ -76,6 +76,11 @@ int pathwidth = 8; // actually means 7
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
 Cube* title; // title graphic
+Cube* border; // menu graphic
+Cube* startbutton; // start button graphic
+Cube* quitbutton; // quit button graphic
+Cube* settings1; // normal gravity
+Cube* settings2; // low gravity
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
@@ -95,6 +100,7 @@ float mousespeed = 0.001;
 float jumpvel = .0125;
 glm::vec3 gravity = glm::vec3(0, -.000005, 0);
 glm::vec3 termvel = glm::vec3(0, -.05, 0);
+bool lowgrav = false;
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
@@ -113,6 +119,12 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 
 void ai_chase(Cube* c) {
 	c->position -= forward * aimovespeed;
+}
+
+void changegrav() {
+	lowgrav = !lowgrav;
+	if (!lowgrav) gravity = glm::vec3(0, -.000005, 0);
+	if (lowgrav) gravity = glm::vec3(0, -.0000025, 0);	
 }
 
 void AIphysics(Cube* c) {
@@ -422,8 +434,16 @@ void moveCamera() {
 	// key input
 	
 	camcube->position += camcube->velocity;
+	if (camcube->position.y < -50) {
+		numlives--;
+		reset();
+		}
     simpleAI(aitest);
     if(mushdraw) mushroomAI(mushroom[mushnum]);
+	if (numlives<0) {
+		numlives = 3;
+		state = MENU_STATE;
+	}
 }
 
 void gameIdle() {
@@ -483,7 +503,23 @@ void gameDisplay() {
 } // display function for game state
 
 void menuDisplay() {
-
+	view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+	
+	glUseProgram(program);
+	glEnableVertexAttribArray(attribute_texcoord);
+	glEnableVertexAttribArray(attribute_coord3d);
+	
+		//drawCube(title);
+	drawCube(border);
+	drawCube(startbutton);
+	drawCube(quitbutton);
+	if (lowgrav) drawCube(settings1);
+	else drawCube(settings2);
+	
+	glDisableVertexAttribArray(attribute_coord3d);
+	glDisableVertexAttribArray(attribute_texcoord);
+	glUseProgram(0);
 } // display function for menu state
 
 void titleDisplay() {
@@ -564,7 +600,14 @@ void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
 	
 	if(state == TITLE_STATE) state = GAME_STATE; // next state
-	else if(state == MENU_STATE) {}
+	else if(state == MENU_STATE) {
+		keys[key] = 1; // key is pressed
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
+	}
 	else if(state == GAME_STATE) {
 		keys[key] = 1; // key is pressed
 		if(key == 'q') {
@@ -583,9 +626,28 @@ void key_released(unsigned char key, int x, int y) {
 } // watches keyboard
 
 void mouse_click(int button, int mstate, int x, int y) {
-	if(state == TITLE_STATE) state = GAME_STATE; // next state
-	else if(state == MENU_STATE) {}
-	else {}
+	if (mstate == GLUT_DOWN) {
+		if(state == TITLE_STATE) state = MENU_STATE; // next state
+		else if(state == MENU_STATE) {
+			//printf("%d, %d\n", screen_width, screen_height);
+			//printf("%d, %d\n", x, y);
+			if(y>=305.0/900.0 * screen_height && y<=430.0/900.0 * screen_height) {
+				if(x>=555.0/1440.0 * screen_width && x<=690.0/1440.0 * screen_width) {
+					state = GAME_STATE;
+				}
+				if(x>=750.0/1440.0 * screen_width && x<=880.0/1440.0 * screen_width) {
+					glutDestroyWindow(windowid);
+					free_resources();
+					exit(0);
+				}
+			}
+			if (y>=500.0/900.0 * screen_height && y<=630.0/900.0 * screen_height && x>=650.0/1440.0 * screen_width && x<=790.0/1440.0 * screen_width) {
+				changegrav();
+				//printf("Gravity Changed\n");
+			}
+		}
+		else {}
+	}
 } // watches for mouse to be clicked
 
 int main(int argc, char* argv[]) {
@@ -610,6 +672,12 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
 	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
+
+	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits title screen
+	startbutton = new Cube(0.25, 0.2, 3.0, "start", 0.5f);
+	quitbutton = new Cube(-0.25, 0.2, 3.0, "quit", 0.5f);
+	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
+	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
