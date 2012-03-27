@@ -1,4 +1,4 @@
-// Jeremy Vercillo
+// Jeremy Vercillo and Ryan Liebscher (I want some damn credit :P )
 // 2/9/12
 // Final Project - Mario 3D
 // Main driver
@@ -37,6 +37,16 @@ GLuint program;
 GLint attribute_coord3d, attribute_texcoord;
 GLint uniform_mvp;
 
+#define TITLE_STATE 0
+#define MENU_STATE 1
+#define GAME_STATE 2
+int state = TITLE_STATE;
+
+GLuint title_id;
+GLuint vbo_title_vertices;
+GLuint vbo_title_texcoords;
+GLuint ibo_title_elements;
+
 int windowid;
 int screen_width = 800, screen_height = 600; // screen size
 int lastx = screen_width/2;
@@ -65,6 +75,12 @@ int pathlength = 100;
 int pathwidth = 8; // actually means 7
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
+Cube* title; // title graphic
+Cube* border; // menu graphic
+Cube* startbutton; // start button graphic
+Cube* quitbutton; // quit button graphic
+Cube* settings1; // normal gravity
+Cube* settings2; // low gravity
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
@@ -84,13 +100,13 @@ float mousespeed = 0.001;
 float jumpvel = .0125;
 glm::vec3 gravity = glm::vec3(0, -.000005, 0);
 glm::vec3 termvel = glm::vec3(0, -.05, 0);
+bool lowgrav = false;
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
 int mushnum = 0;
 bool mushdraw = false;
-int isbig = 0;
 int numlives = 3;
 
 void Astar() {
@@ -103,6 +119,12 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 
 void ai_chase(Cube* c) {
 	c->position -= forward * aimovespeed;
+}
+
+void changegrav() {
+	lowgrav = !lowgrav;
+	if (!lowgrav) gravity = glm::vec3(0, -.000005, 0);
+	if (lowgrav) gravity = glm::vec3(0, -.0000025, 0);	
 }
 
 void AIphysics(Cube* c) {
@@ -176,9 +198,13 @@ void simpleAI(Cube* c) {
 	if(camcube->collidesWith(c) && !c->destroyed || c->collidesWith(camcube) && !c->destroyed){
 		if(camcube->collidesTopY(c)) destroy(c);
 		else{
-			if(isbig != 0) {
-				isbig = 0;
-			}else{
+			if(camcube->size != cubesize) {
+				printf("Mushroom lost\n");
+				camcube->position.y -= camcube->size/2;
+				camcube->size = cubesize;
+				camcube->position.y += camcube->size/2;
+			}
+			else {
 				printf("You died\n");
 				numlives--;
 				reset();
@@ -190,12 +216,15 @@ void simpleAI(Cube* c) {
 void mushroomAI(Cube* c) {
     c->position.x += mushmovespeed;
 	if(camcube->collidesWith(c) && !c->destroyed) {
-		isbig = cubesize;
-			//setSize(camcube);
+		printf("Mushroom get\n");
+		camcube->position.y -= camcube->size/2;
+		camcube->size = cubesize*8;
+		camcube->position.y += camcube->size/2;
 		mushdraw = false;
 		destroy(c);
-		}
+	}
 }
+
 int initShaders() {
 	GLuint vs, fs;
 	if((vs = create_shader("cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
@@ -240,22 +269,6 @@ int initShaders() {
 	return 1;
 }
 
-void motion(int x, int y) {
-	angle.x -= (x - lastx) * mousespeed; // phi
-	angle.y -= (y - lasty) * mousespeed; // theta
-	// moves camera
-	
-	if(angle.x < -M_PI) angle.x += M_PI * 2;
-	if(angle.x > M_PI) angle.x -= M_PI * 2;
-	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
-	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
-	// keeps camera in range (can't do flips, etc)
-	
-	lastx = x;
-	lasty = y;
-	// sets last mouse position
-} // moves camera based on current key states
-
 void applyGravity() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
@@ -276,6 +289,22 @@ void applyGravity() {
 		} // collision from below
 	}
 } // moves by physics instead of input
+
+void motion(int x, int y) {
+	angle.x -= (x - lastx) * mousespeed; // phi
+	angle.y -= (y - lasty) * mousespeed; // theta
+	// moves camera
+	
+	if(angle.x < -M_PI) angle.x += M_PI * 2;
+	if(angle.x > M_PI) angle.x -= M_PI * 2;
+	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
+	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
+	// keeps camera in range (can't do flips, etc)
+	
+	lastx = x;
+	lasty = y;
+	// sets last mouse position
+} // moves camera based on current key states
 
 void setVectors() {
 	forward.x = sinf(angle.x);
@@ -405,11 +434,19 @@ void moveCamera() {
 	// key input
 	
 	camcube->position += camcube->velocity;
+	if (camcube->position.y < -50) {
+		numlives--;
+		reset();
+		}
     simpleAI(aitest);
-    if (mushdraw) mushroomAI(mushroom[mushnum]);
+    if(mushdraw) mushroomAI(mushroom[mushnum]);
+	if (numlives<0) {
+		numlives = 3;
+		state = MENU_STATE;
+	}
 }
 
-void idle() {
+void gameIdle() {
 	if(!mouseinit) {
 		screen_width = glutGet(GLUT_WINDOW_WIDTH);
 		screen_height = glutGet(GLUT_WINDOW_HEIGHT);
@@ -422,6 +459,20 @@ void idle() {
 	}
     
 	moveCamera();
+} // idle function for when in game state
+
+void menuIdle() {
+
+} // idle function for menu state
+
+void titleIdle() {
+	
+} // idle function for title state
+
+void idle() {
+	if(state == TITLE_STATE) titleIdle();
+	else if(state == MENU_STATE) menuIdle();
+	else if(state == GAME_STATE) gameIdle();
 } // constantly calculates redraws
 
 void timer(int value) {
@@ -429,11 +480,7 @@ void timer(int value) {
 	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
 }
 
-void onDisplay() {
-	glClearColor(0.0, 0.0, 0.0, 1.0); // black
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// clears the screen
-	
+void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
@@ -447,12 +494,57 @@ void onDisplay() {
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
     for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
-	drawCube(mushroom[mushnum]);
+		drawCube(mushroom[mushnum]);
     }
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
+} // display function for game state
+
+void menuDisplay() {
+	view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+	
+	glUseProgram(program);
+	glEnableVertexAttribArray(attribute_texcoord);
+	glEnableVertexAttribArray(attribute_coord3d);
+	
+		//drawCube(title);
+	drawCube(border);
+	drawCube(startbutton);
+	drawCube(quitbutton);
+	if (lowgrav) drawCube(settings1);
+	else drawCube(settings2);
+	
+	glDisableVertexAttribArray(attribute_coord3d);
+	glDisableVertexAttribArray(attribute_texcoord);
+	glUseProgram(0);
+} // display function for menu state
+
+void titleDisplay() {
+	view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+
+	glUseProgram(program);
+	glEnableVertexAttribArray(attribute_texcoord);
+	glEnableVertexAttribArray(attribute_coord3d);
+	
+	drawCube(title);
+
+	glDisableVertexAttribArray(attribute_coord3d);
+	glDisableVertexAttribArray(attribute_texcoord);
+	glUseProgram(0);
+} // display function for title state
+
+void onDisplay() {
+	glClearColor(0.0, 0.0, 0.0, 1.0); // black
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// clears the screen
+	
+	if(state == TITLE_STATE) titleDisplay();
+	else if (state == MENU_STATE) menuDisplay();
+	else if(state == GAME_STATE) gameDisplay();
     
     glColor3f(0.0f, 0.0f, 0.0f);
     glRasterPos2f(-1.0f, -1.0f);
@@ -505,10 +597,18 @@ void toggleFullscreen() {
 }
 
 void key_pressed(unsigned char key, int x, int y) {
-	if(key == GLUT_KEY_ESC) {
-		toggleFullscreen();
+	if(key == GLUT_KEY_ESC) toggleFullscreen();
+	
+	if(state == TITLE_STATE) state = GAME_STATE; // next state
+	else if(state == MENU_STATE) {
+		keys[key] = 1; // key is pressed
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
 	}
-	else {
+	else if(state == GAME_STATE) {
 		keys[key] = 1; // key is pressed
 		if(key == 'q') {
 			glutDestroyWindow(windowid);
@@ -524,6 +624,30 @@ void key_pressed(unsigned char key, int x, int y) {
 void key_released(unsigned char key, int x, int y) {
 	keys[key] = 0; // key is no longer pressed
 } // watches keyboard
+
+void mouse_click(int button, int mstate, int x, int y) {
+	if (mstate == GLUT_DOWN) {
+	if(state == TITLE_STATE) state = MENU_STATE; // next state
+	else if(state == MENU_STATE) {
+			//printf("%d, %d\n", x, y);
+		if(y>=305 && y<=430) {
+			if(x>=555 && x<=690) {
+				state = GAME_STATE;
+			}
+			if(x>=750 && x<=880) {
+				glutDestroyWindow(windowid);
+				free_resources();
+				exit(0);
+			}
+		}
+		if (y>=500 && y<=630 && x>=650 && x<=790) {
+			changegrav();
+			printf("Gravity Changed\n");
+		}
+	}
+	else {}
+	}
+} // watches for mouse to be clicked
 
 int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
@@ -546,12 +670,17 @@ int main(int argc, char* argv[]) {
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
-		//read_level("../todo.txt");
+	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
+	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits title screen
+	startbutton = new Cube(0.25, 0.2, 3.0, "start", 0.5f);
+	quitbutton = new Cube(-0.25, 0.2, 3.0, "quit", 0.5f);
+	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
+	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
         for (int n = (100*m); n < (m*100)+100; n++) {
-            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize,("groundblock"), cubesize);
+            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize);
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
@@ -573,6 +702,7 @@ int main(int argc, char* argv[]) {
 		glutReshapeFunc(reshape);
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
+		glutMouseFunc(mouse_click); // mouse buttons
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
