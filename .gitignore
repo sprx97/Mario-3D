@@ -3,3 +3,7 @@
 todo.txt
 Cube/*.o
 Cube/main
+objLoader/gallery
+objLoader/gallery.cpp
+objLoader/gallery.o
+

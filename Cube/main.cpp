@@ -23,6 +23,7 @@
 #include "Files.h"
 #include "Cube.h"
 #include "../common/shader_utils.h"
+#include "../objLoader/draw_flower.h"
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -85,6 +86,8 @@ Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
+
+draw_flower* flower;
 
 glm::mat4 view, projection;
 
@@ -484,19 +487,21 @@ void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
+	flower->draw();
+
 	glUseProgram(program);
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
 	drawCube(bg);
-   // drawCube(camcube);
-    if (!aitest->destroyed) drawCube(aitest);
+//	drawCube(camcube);
+	if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
-    for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
+	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
 		drawCube(mushroom[mushnum]);
-    }
-
+	}
+	
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
@@ -563,6 +568,15 @@ void reshape(int width, int height) {
 	screen_width = width;
 	screen_height = height;
 	glViewport(0, 0, screen_width, screen_height);
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	if (screen_width <= screen_height)
+	glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
+	else
+		glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -10.0, 10.0);
+	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
 void free_resources() {
@@ -650,6 +664,33 @@ void mouse_click(int button, int mstate, int x, int y) {
 	}
 } // watches for mouse to be clicked
 
+void initLighting() {
+	GLfloat ambient[] = {0.0, 0.0, 0.0, 1.0};
+	GLfloat diffuse[] = {1.0, 1.0, 1.0, 1.0};
+	GLfloat specular[] = {1.0, 1.0, 1.0, 1.0};
+	GLfloat position0[] = {0.0, 3.0, 3.0, 0.0};
+ 
+	GLfloat lmodel_ambient[] = {0.2, 0.2, 0.2, 1.0};
+	GLfloat local_view[] = {0.0};
+  
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+ 
+	glLightfv(GL_LIGHT0, GL_POSITION, position0);
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
+	glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, local_view);
+  
+ 
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_AUTO_NORMAL);
+	glEnable(GL_NORMALIZE);
+	glClearDepth(1.0);				
+	glDepthFunc(GL_LESS);                       
+	glEnable(GL_DEPTH_TEST); 
+}
+
 int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
@@ -692,11 +733,15 @@ int main(int argc, char* argv[]) {
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
+	flower = new draw_flower(12, 3, 2, 1, 1, 1, 0, 90, 0);
+	flower->load();
+
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
 	
 	if(initShaders()) {
+		initLighting();
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
@@ -711,18 +756,7 @@ int main(int argc, char* argv[]) {
 		
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_3D);
-/*        glEnable(GL_LIGHTING);
-        glLightfv(GL_LIGHT0,GL_SPECULAR,specular);
-        glLightfv(GL_LIGHT0,GL_DIFFUSE,diffuse);
-        glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, specref);
-        glMateriali(GL_FRONT, GL_SHININESS, 128);*/
 
         glutMainLoop();
 	}
