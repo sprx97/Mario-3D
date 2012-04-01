@@ -550,9 +550,10 @@ void onDisplay() {
 	if(state == TITLE_STATE) titleDisplay();
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
-    
-    glColor3f(0.0f, 0.0f, 0.0f);
-    glRasterPos2f(-1.0f, -1.0f);
+
+	glDisable(GL_LIGHTING);
+	glColor3f(0.0f, 0.0f, 0.0f);
+    glRasterPos2f(0.0f, 0.0f);
 
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
@@ -560,6 +561,8 @@ void onDisplay() {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
 	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
+	glEnable(GL_LIGHTING);
+	
 	// posts FPS to screen
 	glutSwapBuffers();
 } // displays to screen
@@ -572,10 +575,8 @@ void reshape(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	if (screen_width <= screen_height)
-	glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
-	else
-		glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -10.0, 10.0);
+	if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
+	else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -10.0, 10.0);
 	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
@@ -678,12 +679,11 @@ void initLighting() {
  
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
-	glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, local_view);
-  
+	glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, local_view);  
  
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	glEnable(GL_COLOR_MATERIAL);
+//	glEnable(GL_COLOR_MATERIAL); // this breaks stuff
 	glEnable(GL_AUTO_NORMAL);
 	glEnable(GL_NORMALIZE);
 	glClearDepth(1.0);				
