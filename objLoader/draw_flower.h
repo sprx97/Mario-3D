@@ -14,7 +14,9 @@ class draw_flower {
   
   void load();
   void draw();
-
+  void setLocation(float, float, float);
+  void setScale(float, float, float);
+  void setRotation(float, float, float);
 
   float xpos, ypos, zpos;
   float xscale, yscale, zscale;

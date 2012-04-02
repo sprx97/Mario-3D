@@ -6,60 +6,52 @@
 			     float xs, float ys, float zs,
 			     float xr, float yr, float zr) {
    //constructor initializes stuff!
-  xpos = xp;
-  ypos = yp;
-  zpos = zp;
-  xscale = xs;
-  yscale = ys;
-  zscale = zs;
-  xrot= xr;
-  yrot = yr;
-  zrot = zr;
+  setLocation(xp, yp, zp);
+  setScale(xs, ys, zs);
+  setRotation(xr, yr, zr);
 
-  //set the parameters of body
-  stem_leaves.setLocation(mPoint(xpos, ypos, zpos));
-  stem_leaves.setScale(mPoint(xscale, yscale, zscale));
-  
   stem_leaves.setMaterial(Material(mPoint(.1,1,0), mPoint(.1,1,0), mPoint(1,1,0)));
-  //set parameters of top
-  //this should be polka dot texture, but isnt working
-  center.setLocation(mPoint(xpos, ypos, zpos));
-  center.setScale(mPoint(xscale, yscale, zscale));
-  
   center.setMaterial(Material(mPoint(1,1,1), mPoint(1,1,1), mPoint(1,1,1)));
-  //set parameters of eyes
-  inner.setLocation(mPoint(xpos, ypos, zpos));
-  inner.setScale(mPoint(xscale, yscale, zscale));
-  
   inner.setMaterial(Material(mPoint(1,1,0), mPoint(1,1,1), mPoint(1,1,0)));
-//set parameters of eyes
-  outer.setLocation(mPoint(xpos, ypos, zpos));
-  outer.setScale(mPoint(xscale, yscale, zscale));
-  
   outer.setMaterial(Material(mPoint(1,0,0), mPoint(1,1,1), mPoint(1,0,0)));
- 
 }
 
+void draw_flower::setRotation(float x, float y, float z) {
+	xrot = x; yrot = y; zrot = z;
+	stem_leaves.setRotation(mPoint(xrot, yrot, zrot));
+	center.setRotation(mPoint(xrot, yrot, zrot));
+	inner.setRotation(mPoint(xrot, yrot, zrot));
+	outer.setRotation(mPoint(xrot, yrot, zrot));
+} // sets the new rotation for the flower
+
+void draw_flower::setLocation(float x, float y, float z) {
+	xpos = x; ypos = y; zpos = z;
+	stem_leaves.setLocation(mPoint(xpos, ypos, zpos));
+	center.setLocation(mPoint(xpos, ypos, zpos));
+	inner.setLocation(mPoint(xpos, ypos, zpos));
+	outer.setLocation(mPoint(xpos, ypos, zpos));
+} // sets the new location of the flower
+
+void draw_flower::setScale(float x, float y, float z) {
+	xscale = x; yscale = y; zscale = z;
+	stem_leaves.setScale(mPoint(xscale, yscale, zscale));
+	center.setScale(mPoint(xscale, yscale, zscale));
+	inner.setScale(mPoint(xscale, yscale, zscale));
+	outer.setScale(mPoint(xscale, yscale, zscale));
+}
 
 //load all three
 void draw_flower::load() {
-
   stem_leaves.loadOBJ("../objLoader/stem_leaves.obj");
   center.loadOBJ("../objLoader/flower_center.obj");
   inner.loadOBJ("../objLoader/flower_inner.obj");
   outer.loadOBJ("../objLoader/flower_outer.obj");
-
 }
 //draw all three in their respective colors/locations/textures
 void draw_flower::draw() {
-  center.setRotation(mPoint(xrot, yrot, zrot));
-  stem_leaves.setRotation(mPoint(xrot, yrot, zrot));
-  inner.setRotation(mPoint(xrot, yrot, zrot));
-  outer.setRotation(mPoint(xrot, yrot, zrot));
   stem_leaves.draw();
   center.draw();
   inner.draw();
   outer.draw();
-  yrot++;
 }
 

@@ -18,7 +18,7 @@ endif
 all: main
 
 main: ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o Cube.o main.o Files.o
-	$(COMPILER) $(LIBS) main.o Cube.o Files.o ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o -o main
+	$(COMPILER) main.o Cube.o Files.o ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o -o main $(LIBS)
 main.o: main.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c main.cpp
 Cube.o: Cube.cpp
