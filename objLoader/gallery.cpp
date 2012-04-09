@@ -1,3 +1,4 @@
+#include "Mesh.h"
 #include <iostream>
 //#include "drawableObj.h"
 //#include "coin.h"
@@ -7,16 +8,17 @@
 //#include "draw_star.h"
 #include <string>
 #include <stdlib.h>
-#include <GL/glew.h>
+
 #ifdef __linux__
 #include <GL/gl.h>
 #include <GL/glu.h>	    
 #include <GL/glut.h>
+//#include <GL/glew.h>
 #endif
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #endif
-#include "Mesh.h"
+
 #include "draw_flower.h"
 #include "../common/shader_utils.h"
 //#define p

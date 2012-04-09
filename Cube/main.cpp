@@ -12,6 +12,8 @@
 #include <QuartzCore/QuartzCore.h> // Apple pointer warp
 #endif
 #ifdef __linux__
+#include <GL/gl.h>
+#include <GL/glu.h>	    
 #include <GL/glut.h>
 #endif
 #include <math.h>

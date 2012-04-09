@@ -11,13 +11,13 @@ endif
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES =
-	LIBS = -lm -lGL -lglut -lGLEW
+	LIBS = -lm -lGL -lglut -lGLEW -lGLU 
 	FLAGS =
 endif
 
 all: main
 
-main: ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o Cube.o main.o Files.o
+main: main.o Cube.o Files.o ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o
 	$(COMPILER) main.o Cube.o Files.o ../common/shader_utils.o ../objLoader/draw_flower.o ../objLoader/Mesh.o ../objLoader/Material.o ../objLoader/helper.o ../objLoader/mpoint.o -o main $(LIBS)
 main.o: main.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c main.cpp

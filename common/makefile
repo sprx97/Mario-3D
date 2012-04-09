@@ -11,7 +11,7 @@ endif
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES =
-	LIBS = -lm -lGL -lglut -lGLEW
+	LIBS = -lm -lGL -lglut -lGLEW -lGLU
 	FLAGS =
 endif
 
