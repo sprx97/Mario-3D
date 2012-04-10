@@ -26,6 +26,7 @@
 #include "Cube.h"
 #include "../common/shader_utils.h"
 #include "../objLoader/draw_flower.h"
+#include "../objLoader/draw_mushroom.h"
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -94,8 +95,10 @@ Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
 Cube* flowercube;
+Cube* fireball;
 
 draw_flower* flower;
+draw_mushroom* mushgraph;
 
 glm::mat4 view, projection;
 
@@ -107,6 +110,7 @@ GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float movespeed = 0.004;
 float aimovespeed = movespeed * .5;
 float mushmovespeed = 0.0005;
+float firemovespeed = .1;
 float mousespeed = 0.001;
 float jumpvel = .0125;
 glm::vec3 gravity = glm::vec3(0, -.000005, 0);
@@ -117,7 +121,13 @@ float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
 int mushnum = 0;
+//stuff for fireball
 bool mushdraw = false;
+bool hasfire = true;
+bool firedraw = false;
+bool hasShot = false; //has fireball been shot
+
+
 int numlives = 3;
 
 void Astar() {
@@ -234,6 +244,24 @@ void mushroomAI(Cube* c) {
 		mushdraw = false;
 		destroy(c);
 	}
+}
+
+void fireballAI(Cube* c, Cube* enemy) {
+
+  if(hasShot == false && hasfire == true) {
+    c->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
+    hasShot = true;
+   
+  }
+  else{
+    c->position.x += firemovespeed;
+    if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
+      printf("Hit!\n");
+      firedraw = false;
+      //destroy(e);
+    }
+ 
+  }
 }
 
 int initShaders() {
@@ -451,10 +479,11 @@ void moveCamera() {
 		}
     simpleAI(aitest);
     if(mushdraw) mushroomAI(mushroom[mushnum]);
-	if (numlives<0) {
-		numlives = 3;
-		state = MENU_STATE;
-	}
+    if (numlives<0) {
+      numlives = 3;
+      state = MENU_STATE;
+    }
+    if(firedraw) fireballAI(fireball, aitest);
 }
 
 void gameIdle() {
@@ -514,6 +543,7 @@ void gameDisplay() {
 //	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
+	mushgraph->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -528,6 +558,12 @@ void gameDisplay() {
 	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
 		drawCube(mushroom[mushnum]);
+
+	}
+	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
+	
+	if(firedraw){
+	  drawCube(fireball);
 	}
 	
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -662,6 +698,7 @@ void key_pressed(unsigned char key, int x, int y) {
 			reset();
 		} // reset
 	}
+      
 } // watches keyboard
 
 void key_released(unsigned char key, int x, int y) {
@@ -689,7 +726,10 @@ void mouse_click(int button, int mstate, int x, int y) {
 				//printf("Gravity Changed\n");
 			}
 		}
-		else {}
+		else if( state == GAME_STATE) {
+		  cout << "mouse click!" << endl;
+		  firedraw = true;
+		}
 	}
 } // watches for mouse to be clicked
 
@@ -762,7 +802,9 @@ int main(int argc, char* argv[]) {
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
 	flower = new draw_flower(12, 4, -5, 1, 1, 1, 0, 90, 0);
+	mushgraph = new draw_mushroom(12, 4, -5, 1, 1, 1, 0, 90, 0);
 	flowercube = new Cube(12, 4, -5, "brickblock", 1);
+	fireball = new Cube(12, 3, -3, "questionblock", 1);
 	
 	flower->load();
 
