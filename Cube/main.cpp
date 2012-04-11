@@ -82,6 +82,7 @@ int keys[256] = {0}; // array of whether keys are pressed
 int cubesize = 2;
 int pathlength = 100;
 int pathwidth = 8; // actually means 7
+int ncubes = 0;
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
 Cube* title; // title graphic
@@ -183,9 +184,13 @@ void reset() {
 	}
 	mushnum = 0;
 	mushdraw = false;
+	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < pathlength/16; n++) aircubes[n]->hit = false;
 	for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
+
+	stardraw = false;
+	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
 }
 
 void simpleAI(Cube* c) {    
@@ -257,23 +262,36 @@ void starAI(Cube* c) {
   if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
   if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
 
+
 }
 void fireballAI(Cube* c, Cube* enemy) {
 
   if(hasShot == false && hasfire == true) {
     c->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
     hasShot = true;
+    hasfire == false;
    
   }
   else{
     c->velocity.x = firemovespeed;
-    c->position.x += firemovespeed;
+    c->position.x += firemovespeed*sinf(angle.x);
+    c->position.y += firemovespeed*(sinf(angle.y));
+    //x and y aims work, but z does not
+    // c->position.z += firemovespeed*(-cosf(angle.z));
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
       printf("Hit!\n");
       firedraw = false;
       destroy(enemy);
+      destroy(fireball);
     }
- 
+    //if path collision, fireball is destroyed
+    for(int i = 0; i < ncubes; i++) {
+      if(c->collidesWith(cubes[i]) && !c->destroyed) {
+	firedraw = false;
+	destroy(fireball);
+      }
+    }
+     
   }
 }
 
@@ -425,7 +443,8 @@ void moveCamera() {
 	applyGravity();
 	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
 	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
-
+	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	if (camcube->collidesWith(flowercube)) hasfire == true;
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
@@ -586,7 +605,7 @@ void gameDisplay() {
 		drawCube(mushroom[mushnum]);
 
 	}
-	//if (stardraw && !star->destroyed) drawCube(star);
+	if (stardraw && !star->destroyed) drawCube(star);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
 	
 	if(firedraw){
@@ -754,8 +773,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			}
 		}
 		else if( state == GAME_STATE) {
-		  cout << "mouse click!" << endl;
-		  firedraw = true;
+		  if(hasfire && !fireball->destroyed) firedraw = true;
 		}
 	}
 } // watches for mouse to be clicked
@@ -819,6 +837,7 @@ int main(int argc, char* argv[]) {
     for (int m = 0; m < pathwidth; m++) {
         for (int n = (100*m); n < (m*100)+100; n++) {
             cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize);
+	    ncubes++;
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
