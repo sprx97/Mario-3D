@@ -567,7 +567,7 @@ void timer(int value) {
 
 void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
-	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+       	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
 //	glm::vec4 flowerpos = glm::vec4(flower->xpos, flower->ypos, flower->zpos, 1.0);
 //	float dist = distance(flower->xpos, flower->ypos, flower->zpos, camcube->position.x, camcube->position.y, camcube->position.z);
@@ -685,8 +685,9 @@ void reshape(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
-	else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
+	//if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
+	//else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
+	gluPerspective(45.0, width / (float) height, 0.1, 100000);
 	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
@@ -744,6 +745,7 @@ void key_pressed(unsigned char key, int x, int y) {
 			reset();
 		} // reset
 	}
+	
       
 } // watches keyboard
 
@@ -847,7 +849,7 @@ int main(int argc, char* argv[]) {
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
-	flower = new draw_flower(12, 4, -5, 1, 1, 1, 0, 90, 0);
+	flower = new draw_flower(12, 4, -5, 2, 2, 2, 0, 0, 0);
 	mushgraph = new draw_mushroom(12, 4, -5, 1, 1, 1, 0, 90, 0);
 	flowercube = new Cube(12, 4, -5, "brickblock", 1);
 	fireball = new Cube(12, 3, -3, "questionblock", 1);
