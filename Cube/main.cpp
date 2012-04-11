@@ -96,6 +96,7 @@ Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
 Cube* flowercube;
 Cube* fireball;
+Cube* star;
 
 draw_flower* flower;
 draw_mushroom* mushgraph;
@@ -126,7 +127,11 @@ bool mushdraw = false;
 bool hasfire = true;
 bool firedraw = false;
 bool hasShot = false; //has fireball been shot
-
+//stuff for star
+float starmovespeed = .005;
+float starbouncespeed = .005;
+float starmaxheight = 5;
+bool stardraw = false;
 
 int numlives = 3;
 
@@ -245,7 +250,14 @@ void mushroomAI(Cube* c) {
 		destroy(c);
 	}
 }
+void starAI(Cube* c) {
+  //movement
+  c->position.x += starmovespeed;
+  c->position.y += starbouncespeed;
+  if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
+  if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
 
+}
 void fireballAI(Cube* c, Cube* enemy) {
 
   if(hasShot == false && hasfire == true) {
@@ -254,11 +266,12 @@ void fireballAI(Cube* c, Cube* enemy) {
    
   }
   else{
+    c->velocity.x = firemovespeed;
     c->position.x += firemovespeed;
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
       printf("Hit!\n");
       firedraw = false;
-      //destroy(e);
+      destroy(enemy);
     }
  
   }
@@ -388,18 +401,30 @@ void drawCube(Cube* c) {
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 } // draws a cube
 
-void spawnsMushroom(Cube* c, Cube* Zoidberg) {
+void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
     if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
+      switch (type) {
+
+      case 1 :
         if (mushnum < 11) mushnum++;
-		mushdraw = true;
-		Zoidberg->hit = true;
-    }
+	mushdraw = true;
+	Zoidberg->hit = true;
+	break;
+
+      case 2 :
+	stardraw = true;
+	Zoidberg->hit = true;
+	break;
+
+      }
+    }    
 }
 
 void moveCamera() {
 	setVectors();
 	applyGravity();
-    if (!aircubes[0]->hit) spawnsMushroom(camcube, aircubes[0]);
+	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
 
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
@@ -479,6 +504,7 @@ void moveCamera() {
 		}
     simpleAI(aitest);
     if(mushdraw) mushroomAI(mushroom[mushnum]);
+    //if(stardraw) starAI(star);
     if (numlives<0) {
       numlives = 3;
       state = MENU_STATE;
@@ -543,7 +569,7 @@ void gameDisplay() {
 //	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
-	mushgraph->draw();
+	//	mushgraph->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -560,6 +586,7 @@ void gameDisplay() {
 		drawCube(mushroom[mushnum]);
 
 	}
+	//if (stardraw && !star->destroyed) drawCube(star);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
 	
 	if(firedraw){
@@ -617,7 +644,7 @@ void onDisplay() {
 
 	glDisable(GL_LIGHTING);
 	glColor3f(0.0f, 0.0f, 0.0f);
-    glRasterPos2f(0.0f, 0.0f);
+	glRasterPos2f(0.0f, 0.0f);
 
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
