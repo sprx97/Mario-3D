@@ -566,26 +566,17 @@ void timer(int value) {
 }
 
 void gameDisplay() {
+  //clear model view at begginning of display
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
        	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
-
-//	glm::vec4 flowerpos = glm::vec4(flower->xpos, flower->ypos, flower->zpos, 1.0);
-//	float dist = distance(flower->xpos, flower->ypos, flower->zpos, camcube->position.x, camcube->position.y, camcube->position.z);
-//	flower->setScale(2.0/dist, 2.0/dist, 2.0/dist);
-	// resizes the object based on how far away it is
-
-//	float angletoobject = atan((camcube->position.z - flower->zpos) / (camcube->position.x - flower->xpos));
-//	if(angletoobject < -M_PI) angletoobject += M_PI * 2;
-//	if(angletoobject > M_PI) angletoobject -= M_PI * 2;	
-	// angle the object is being viewed at from the side
-	
-//	float angletoobject2 = atan((camcube->position.y - flower->ypos) / (camcube->position.x - flower->xpos));
-//	if(angletoobject2 < -M_PI) angletoobject2 += M_PI * 2;
-//	if(angletoobject2 > M_PI) angletoobject2 -= M_PI * 2;
-	// angle the object is being viewed at from the top
-//	flower->setRotation(-180*angletoobject2/M_PI, 0.0, 0.0);
-
-//	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+//NEEDED TO UNCOMMENT LOOK AT
+	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+	//then these two lines
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
 	//	mushgraph->draw();
@@ -849,7 +840,7 @@ int main(int argc, char* argv[]) {
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
-	flower = new draw_flower(12, 4, -5, 2, 2, 2, 0, 0, 0);
+	flower = new draw_flower(12, 4, -5, .5, .5, .5, 0, 0, 0);
 	mushgraph = new draw_mushroom(12, 4, -5, 1, 1, 1, 0, 90, 0);
 	flowercube = new Cube(12, 4, -5, "brickblock", 1);
 	fireball = new Cube(12, 3, -3, "questionblock", 1);
