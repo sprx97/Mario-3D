@@ -29,6 +29,11 @@
 #include "../objLoader/draw_mushroom.h"
 #include "../objLoader/draw_goomba.h"
 #include "../objLoader/draw_pipe.h"
+#include "../objLoader/draw_flag.h"
+#include "../objLoader/draw_star.h"
+#include "../objLoader/draw_coin.h"
+#include "../objLoader/draw_fireball.h"
+
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -106,6 +111,10 @@ draw_mushroom* mushgraph;
 draw_goomba* goomba;
 draw_pipe* xyz;
 draw_star* astar;
+draw_flag* flag;
+draw_coin* coin;
+draw_fireball* myfire;
+
 glm::mat4 view, projection;
 
 GLfloat diffuse[] = { 0.3f, 0.3f, 0.3f, 1.0f };
@@ -584,8 +593,12 @@ void gameDisplay() {
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
 	goomba->draw();
+	flag->draw();
 	xyz->draw();
 	astar->draw();
+	coin->draw();
+	myfire->draw();
+	mushgraph->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -845,17 +858,27 @@ int main(int argc, char* argv[]) {
     for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
-
+    flowercube = new Cube(12, 4, -5, "brickblock", 1);
+    fireball = new Cube(12, 3, -3, "questionblock", 1);
+    //these are all of the graphics. they can be easily modified so let me know
+    //xyz is a pipe...=/
+    //sorry the fireball is lame. i can work on it
 	flower = new draw_flower(12, 4, -5, .5, .5, .5, 0, 0, 0);
 	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
-	xyz = new draw_pipe(20, 5, -5, .05, .05, .05, 0, 0, 0);
-	flowercube = new Cube(12, 4, -5, "brickblock", 1);
-	fireball = new Cube(12, 3, -3, "questionblock", 1);
-	astar = new draw_star(4, 6, -2, 1, 1, 1, 0, 0, 0); 
+	xyz = new draw_pipe(20, 5, -8, .05, .05, .05, 0, 0, 0);
+	astar = new draw_star(12, 2, -4, .1, .1, .1, 0, -90, 0); 
+	flag = new draw_flag(12, 6, -2,.25, .25, .25, 0, 90, 0); 
+	coin = new draw_coin(10, 3,-7, .025, .025, .025, 0, 20, 90); 
+	myfire = new draw_fireball(15, 8, -5, .5, .5, .5, 0, 0, 0);
+	mushgraph = new draw_mushroom(8, 3, -4, .5, .5, .5, 0, -90, 0);
 	flower->load();
 	goomba->load();
+	flag->load();
 	xyz->load();
 	astar->load();
+	coin->load();
+	myfire->load();
+	mushgraph->load();
 
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
