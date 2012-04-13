@@ -27,6 +27,8 @@
 #include "../common/shader_utils.h"
 #include "../objLoader/draw_flower.h"
 #include "../objLoader/draw_mushroom.h"
+#include "../objLoader/draw_goomba.h"
+#include "../objLoader/draw_pipe.h"
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -101,7 +103,9 @@ Cube* star;
 
 draw_flower* flower;
 draw_mushroom* mushgraph;
-
+draw_goomba* goomba;
+draw_pipe* xyz;
+draw_star* astar;
 glm::mat4 view, projection;
 
 GLfloat diffuse[] = { 0.3f, 0.3f, 0.3f, 1.0f };
@@ -579,7 +583,9 @@ void gameDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
-	//	mushgraph->draw();
+	goomba->draw();
+	xyz->draw();
+	astar->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -596,7 +602,7 @@ void gameDisplay() {
 		drawCube(mushroom[mushnum]);
 
 	}
-	if (stardraw && !star->destroyed) drawCube(star);
+	//if (stardraw && !star->destroyed) drawCube(star);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
 	
 	if(firedraw){
@@ -841,11 +847,15 @@ int main(int argc, char* argv[]) {
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
 	flower = new draw_flower(12, 4, -5, .5, .5, .5, 0, 0, 0);
-	mushgraph = new draw_mushroom(12, 4, -5, 1, 1, 1, 0, 90, 0);
+	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
+	xyz = new draw_pipe(20, 5, -5, .05, .05, .05, 0, 0, 0);
 	flowercube = new Cube(12, 4, -5, "brickblock", 1);
 	fireball = new Cube(12, 3, -3, "questionblock", 1);
-	
+	astar = new draw_star(4, 6, -2, 1, 1, 1, 0, 0, 0); 
 	flower->load();
+	goomba->load();
+	xyz->load();
+	astar->load();
 
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
