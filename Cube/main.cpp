@@ -227,7 +227,7 @@ void mushroomAI(Cube* c) {
 	if(camcube->collidesWith(c) && !c->destroyed) {
 		printf("Mushroom get\n");
 		camcube->position.y -= camcube->size/2;
-		camcube->size = cubesize*8;
+		camcube->size = cubesize*2;
 		camcube->position.y += camcube->size/2;
 		mushdraw = false;
 		destroy(c);
@@ -493,24 +493,6 @@ void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
-//	glm::vec4 flowerpos = glm::vec4(flower->xpos, flower->ypos, flower->zpos, 1.0);
-//	float dist = distance(flower->xpos, flower->ypos, flower->zpos, camcube->position.x, camcube->position.y, camcube->position.z);
-//	flower->setScale(2.0/dist, 2.0/dist, 2.0/dist);
-	// resizes the object based on how far away it is
-
-//	float angletoobject = atan((camcube->position.z - flower->zpos) / (camcube->position.x - flower->xpos));
-//	if(angletoobject < -M_PI) angletoobject += M_PI * 2;
-//	if(angletoobject > M_PI) angletoobject -= M_PI * 2;	
-	// angle the object is being viewed at from the side
-	
-//	float angletoobject2 = atan((camcube->position.y - flower->ypos) / (camcube->position.x - flower->xpos));
-//	if(angletoobject2 < -M_PI) angletoobject2 += M_PI * 2;
-//	if(angletoobject2 > M_PI) angletoobject2 -= M_PI * 2;
-	// angle the object is being viewed at from the top
-//	flower->setRotation(-180*angletoobject2/M_PI, 0.0, 0.0);
-
-//	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
-//	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 	flower->draw();
 	// width and height of the plane that the object is in
 	
@@ -521,6 +503,7 @@ void gameDisplay() {
 	drawCube(flowercube);
 	drawCube(bg);
 //	drawCube(camcube);
+
 	if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
 	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
@@ -541,7 +524,7 @@ void menuDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-		//drawCube(title);
+//	drawCube(title);
 	drawCube(border);
 	drawCube(startbutton);
 	drawCube(quitbutton);
