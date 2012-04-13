@@ -10,11 +10,13 @@
 #include "groundblock_texture.c"
 #include "skybox_texture.c"
 #include "title_texture.c"
+
 #include "start.c"
 #include "startl.c"
 #include "startq.c"
 #include "startn.c"
 #include "border.c"
+
 #include "../common/shader_utils.h"
 #include "Cube.h"
 
@@ -462,10 +464,12 @@ bool Cube::intersectsWith(float x, float y, float z) {
 bool Cube::collidesX(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
-	return abs(position.x-other->position.x) > (size/2 + other->size/2)
-		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
+	return position.x > other->position.x+size && position.x <= other->position.x+(other->size+size)
 		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
-		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
+		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2) 
+		|| position.x <= other->position.x && position.x >= other->position.x-(size+other->size) 
+		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
+		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2) ;
 }
 
 bool Cube::collidesY(Cube* other) {
@@ -496,8 +500,10 @@ bool Cube::collidesBottomY(Cube* other) {
 bool Cube::collidesZ(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
-	return abs(position.z-other->position.z) > (size/2 + other->size/2)
-		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2)
+	return position.z > other->position.z+size && position.z <= other->position.z+(other->size+size)
+		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
+		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
+		|| position.z <= other->position.z && position.z >= other->position.z-(size+other->size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2);
 }

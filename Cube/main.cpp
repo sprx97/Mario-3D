@@ -23,13 +23,14 @@
 #include "Files.h"
 #include "Cube.h"
 #include "../common/shader_utils.h"
+#include "../objLoader/draw_flower.h"
 // local includes
 
 #ifndef GLUT_KEY_ESC
 #define GLUT_KEY_ESC 27
 #endif
 
-#define PI 3.1415926
+#define SKIP_MENUS
 
 using namespace std;
 
@@ -40,7 +41,12 @@ GLint uniform_mvp;
 #define TITLE_STATE 0
 #define MENU_STATE 1
 #define GAME_STATE 2
+
+#ifdef SKIP_MENUS
+int state = GAME_STATE;
+#else
 int state = TITLE_STATE;
+#endif
 
 GLuint title_id;
 GLuint vbo_title_vertices;
@@ -85,6 +91,9 @@ Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
+Cube* flowercube;
+
+draw_flower* flower;
 
 glm::mat4 view, projection;
 
@@ -218,7 +227,7 @@ void mushroomAI(Cube* c) {
 	if(camcube->collidesWith(c) && !c->destroyed) {
 		printf("Mushroom get\n");
 		camcube->position.y -= camcube->size/2;
-		camcube->size = cubesize*8;
+		camcube->size = cubesize*2;
 		camcube->position.y += camcube->size/2;
 		mushdraw = false;
 		destroy(c);
@@ -484,19 +493,41 @@ void gameDisplay() {
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
 
+//	glm::vec4 flowerpos = glm::vec4(flower->xpos, flower->ypos, flower->zpos, 1.0);
+//	float dist = distance(flower->xpos, flower->ypos, flower->zpos, camcube->position.x, camcube->position.y, camcube->position.z);
+//	flower->setScale(2.0/dist, 2.0/dist, 2.0/dist);
+	// resizes the object based on how far away it is
+
+//	float angletoobject = atan((camcube->position.z - flower->zpos) / (camcube->position.x - flower->xpos));
+//	if(angletoobject < -M_PI) angletoobject += M_PI * 2;
+//	if(angletoobject > M_PI) angletoobject -= M_PI * 2;	
+	// angle the object is being viewed at from the side
+	
+//	float angletoobject2 = atan((camcube->position.y - flower->ypos) / (camcube->position.x - flower->xpos));
+//	if(angletoobject2 < -M_PI) angletoobject2 += M_PI * 2;
+//	if(angletoobject2 > M_PI) angletoobject2 -= M_PI * 2;
+	// angle the object is being viewed at from the top
+//	flower->setRotation(-180*angletoobject2/M_PI, 0.0, 0.0);
+
+//	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+//	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
+	flower->draw();
+	// width and height of the plane that the object is in
+	
 	glUseProgram(program);
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
+	drawCube(flowercube);
 	drawCube(bg);
-   // drawCube(camcube);
-    if (!aitest->destroyed) drawCube(aitest);
+		//	drawCube(camcube);
+	if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
-    for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
+	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
 		drawCube(mushroom[mushnum]);
-    }
-
+	}
+	
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
@@ -545,9 +576,10 @@ void onDisplay() {
 	if(state == TITLE_STATE) titleDisplay();
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
-    
-    glColor3f(0.0f, 0.0f, 0.0f);
-    glRasterPos2f(-1.0f, -1.0f);
+
+	glDisable(GL_LIGHTING);
+	glColor3f(0.0f, 0.0f, 0.0f);
+    glRasterPos2f(0.0f, 0.0f);
 
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
@@ -555,6 +587,8 @@ void onDisplay() {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
 	}
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
+	glEnable(GL_LIGHTING);
+	
 	// posts FPS to screen
 	glutSwapBuffers();
 } // displays to screen
@@ -563,6 +597,13 @@ void reshape(int width, int height) {
 	screen_width = width;
 	screen_height = height;
 	glViewport(0, 0, screen_width, screen_height);
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
+	else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
+	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
 void free_resources() {
@@ -627,27 +668,54 @@ void key_released(unsigned char key, int x, int y) {
 
 void mouse_click(int button, int mstate, int x, int y) {
 	if (mstate == GLUT_DOWN) {
-	if(state == TITLE_STATE) state = MENU_STATE; // next state
-	else if(state == MENU_STATE) {
+		if(state == TITLE_STATE) state = MENU_STATE; // next state
+		else if(state == MENU_STATE) {
+			//printf("%d, %d\n", screen_width, screen_height);
 			//printf("%d, %d\n", x, y);
-		if(y>=305 && y<=430) {
-			if(x>=555 && x<=690) {
-				state = GAME_STATE;
+			if(y>=305.0/900.0 * screen_height && y<=430.0/900.0 * screen_height) {
+				if(x>=555.0/1440.0 * screen_width && x<=690.0/1440.0 * screen_width) {
+					state = GAME_STATE;
+				}
+				if(x>=750.0/1440.0 * screen_width && x<=880.0/1440.0 * screen_width) {
+					glutDestroyWindow(windowid);
+					free_resources();
+					exit(0);
+				}
 			}
-			if(x>=750 && x<=880) {
-				glutDestroyWindow(windowid);
-				free_resources();
-				exit(0);
+			if (y>=500.0/900.0 * screen_height && y<=630.0/900.0 * screen_height && x>=650.0/1440.0 * screen_width && x<=790.0/1440.0 * screen_width) {
+				changegrav();
+				//printf("Gravity Changed\n");
 			}
 		}
-		if (y>=500 && y<=630 && x>=650 && x<=790) {
-			changegrav();
-			printf("Gravity Changed\n");
-		}
-	}
-	else {}
+		else {}
 	}
 } // watches for mouse to be clicked
+
+void initLighting() {
+	GLfloat ambient[] = {0.0, 0.0, 0.0, 1.0};
+	GLfloat diffuse[] = {1.0, 1.0, 1.0, 1.0};
+	GLfloat specular[] = {1.0, 1.0, 1.0, 1.0};
+	GLfloat position0[] = {0.0, 3.0, 3.0, 0.0};
+ 
+	GLfloat lmodel_ambient[] = {0.2, 0.2, 0.2, 1.0};
+	GLfloat local_view[] = {0.0};
+  
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+ 
+	glLightfv(GL_LIGHT0, GL_POSITION, position0);
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
+	glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, local_view);  
+ 
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+//	glEnable(GL_COLOR_MATERIAL); // this breaks stuff
+	glEnable(GL_AUTO_NORMAL);
+	glEnable(GL_NORMALIZE);
+	glClearDepth(1.0);				
+	glDepthFunc(GL_LESS);                       
+	glEnable(GL_DEPTH_TEST); 
+}
 
 int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
@@ -671,6 +739,7 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
 	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
+
 	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits title screen
 	startbutton = new Cube(0.25, 0.2, 3.0, "start", 0.5f);
 	quitbutton = new Cube(-0.25, 0.2, 3.0, "quit", 0.5f);
@@ -690,11 +759,17 @@ int main(int argc, char* argv[]) {
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
 
+	flower = new draw_flower(12, 4, -5, 1, 1, 1, 0, 90, 0);
+	flowercube = new Cube(12, 4, -5, "brickblock", 1);
+	
+	flower->load();
+
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
 	
 	if(initShaders()) {
+		initLighting();
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
@@ -709,18 +784,7 @@ int main(int argc, char* argv[]) {
 		
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_3D);
-/*        glEnable(GL_LIGHTING);
-        glLightfv(GL_LIGHT0,GL_SPECULAR,specular);
-        glLightfv(GL_LIGHT0,GL_DIFFUSE,diffuse);
-        glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, specref);
-        glMateriali(GL_FRONT, GL_SHININESS, 128);*/
 
         glutMainLoop();
 	}
