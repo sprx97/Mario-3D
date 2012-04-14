@@ -282,13 +282,12 @@ void fireballAI(Cube* c, Cube* enemy) {
   if(hasShot == false && hasfire == true) {
     c->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
     hasShot = true;
-    hasfire == false;
-   
+    hasfire == false;   
   }
   else{
-    c->velocity.x = firemovespeed;
-    c->position.x += firemovespeed*sinf(angle.x);
-    c->position.y += firemovespeed*(sinf(angle.y));
+    c->position.x += c->velocity.x;
+    c->position.y += c->velocity.y;
+	c->position.z += c->velocity.z;
     //x and y aims work, but z does not
     // c->position.z += firemovespeed*(-cosf(angle.z));
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
@@ -787,7 +786,12 @@ void mouse_click(int button, int mstate, int x, int y) {
 			}
 		}
 		else if( state == GAME_STATE) {
-		  if(hasfire && !fireball->destroyed) firedraw = true;
+		  if(hasfire && !fireball->destroyed) {
+			firedraw = true;
+			fireball->velocity.x = forward.x*firemovespeed;
+			fireball->velocity.y = lookat.y*firemovespeed;
+			fireball->velocity.z = forward.z*firemovespeed;
+		  }
 		}
 	}
 } // watches for mouse to be clicked
