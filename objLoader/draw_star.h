@@ -2,8 +2,15 @@
 #define DRAW_STAR_H
 #include "Mesh.h"
 
-class draw_star {
+#include <vector>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "../Cube/Cube.h"
+
+class draw_star {
 
  public: 
 
@@ -22,7 +29,8 @@ class draw_star {
 
   Mesh star;
   Mesh eyes;
-
+  
+  vector<Cube*> hitboxes;
 };
 
 #endif

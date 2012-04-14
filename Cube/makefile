@@ -23,6 +23,22 @@ main.o: main.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c main.cpp
 Cube.o: Cube.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c Cube.cpp
+../objLoader/draw_star.o: ../objLoader/draw_star.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_star.cpp -o ../objLoader/draw_star.o
+../objLoader/draw_flower.o: ../objLoader/draw_flower.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_flower.cpp -o ../objLoader/draw_flower.o
+../objLoader/draw_mushroom.o: ../objLoader/draw_mushroom.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_mushroom.cpp -o ../objLoader/draw_mushroom.o
+../objLoader/draw_goomba.o: ../objLoader/draw_goomba.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_goomba.cpp -o ../objLoader/draw_goomba.o
+../objLoader/draw_flag.o: ../objLoader/draw_flag.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_flag.cpp -o ../objLoader/draw_flag.o
+../objLoader/draw_coin.o: ../objLoader/draw_coin.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_coin.cpp -o ../objLoader/draw_coin.o
+../objLoader/draw_fireball.o: ../objLoader/draw_fireball.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_fireball.cpp -o ../objLoader/draw_fireball.o
+../objLoader/draw_pipe.o: ../objLoader/draw_pipe.cpp
+	$(COMPILER) $(INCLUDES) $(FLAGS) -c ../objLoader/draw_pipe.cpp -o ../objLoader/draw_pipe.o
 Files.o: Files.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c Files.cpp
 

@@ -2,6 +2,14 @@
 #define DRAW_FLAG_H
 #include "Mesh.h"
 
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "../Cube/Cube.h"
+
 class draw_flag {
 
 
@@ -23,6 +31,7 @@ class draw_flag {
   Mesh flag;
   Mesh flagpole;
 
+	vector<Cube*> hitboxes;
 };
 
 #endif

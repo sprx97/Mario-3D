@@ -2,6 +2,14 @@
 #define DRAW_FLOWER_H
 #include "Mesh.h"
 
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "../Cube/Cube.h"
+
 class draw_flower {
 
 
@@ -26,6 +34,8 @@ class draw_flower {
   Mesh center;
   Mesh inner;
   Mesh outer;
+  
+  vector<Cube*> hitboxes;
 };
 
 #endif

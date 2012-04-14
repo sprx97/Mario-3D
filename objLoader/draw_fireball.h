@@ -2,6 +2,14 @@
 #define DRAW_FIREBALL_H
 #include "Mesh.h"
 
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "../Cube/Cube.h"
+
 class draw_fireball {
 
 
@@ -22,6 +30,7 @@ class draw_fireball {
 
   Mesh fireball;
   
+  vector<Cube*> hitboxes;
 };
 
 #endif
