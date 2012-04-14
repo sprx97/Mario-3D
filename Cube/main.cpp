@@ -280,30 +280,33 @@ void starAI(Cube* c) {
 void fireballAI(Cube* c, Cube* enemy) {
 
   if(hasShot == false && hasfire == true) {
-    c->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
+    c->move(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3);
     hasShot = true;
-    hasfire == false;   
+//    hasfire == false;   
   }
   else{
-    c->position.x += c->velocity.x;
-    c->position.y += c->velocity.y;
-	c->position.z += c->velocity.z;
+    c->position += c->velocity;
     //x and y aims work, but z does not
     // c->position.z += firemovespeed*(-cosf(angle.z));
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
       printf("Hit!\n");
       firedraw = false;
+	  hasShot = false;
       destroy(enemy);
-      destroy(fireball);
+//      destroy(fireball);
     }
     //if path collision, fireball is destroyed
     for(int i = 0; i < ncubes; i++) {
       if(c->collidesWith(cubes[i]) && !c->destroyed) {
-	firedraw = false;
-	destroy(fireball);
+		firedraw = false;
+		hasShot = false;
+//		destroy(fireball);
       }
     }
-     
+	if(!c->collidesWith(bg) && !c->destroyed) {
+		firedraw = false;
+		hasShot = false;
+	} // if it goes outside the bg, it resets
   }
 }
 
@@ -785,8 +788,8 @@ void mouse_click(int button, int mstate, int x, int y) {
 				//printf("Gravity Changed\n");
 			}
 		}
-		else if( state == GAME_STATE) {
-		  if(hasfire && !fireball->destroyed) {
+		else if(state == GAME_STATE) {
+		  if(hasfire && !firedraw) {
 			firedraw = true;
 			fireball->velocity.x = forward.x*firemovespeed;
 			fireball->velocity.y = lookat.y*firemovespeed;
