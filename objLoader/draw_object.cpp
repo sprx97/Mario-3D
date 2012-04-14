@@ -22,7 +22,7 @@ void draw_object::draw() {
 
 bool draw_object::collidesWith(Cube* c) {
 	for(int n = 0; n < hitboxes.size(); n++) {
-		if(c->collidesWith(hitboxes[n])) return true;
+		if(c->collidesWith(hitboxes[n]) || hitboxes[n]->collidesWith(c)) return true;
 	}
 	return false;
 }

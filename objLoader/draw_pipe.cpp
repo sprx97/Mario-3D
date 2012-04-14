@@ -12,6 +12,9 @@ draw_pipe::draw_pipe(float xp, float yp, float zp,
 						mPoint(xscale, yscale, zscale),
 						mPoint(xrot, yrot, zrot),
 						Material(mPoint(0,1,0), mPoint(1,1,0), mPoint(1,1,0))));
+
+  hitboxes.push_back(new Cube(xpos, ypos+1.0*20*yscale, zpos, "brickblock", 20*xscale));
+  hitboxes.push_back(new Cube(xpos, ypos+0.5*20*yscale, zpos, "brickblock", 20*xscale));
 }
 
 //load all three

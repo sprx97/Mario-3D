@@ -24,6 +24,8 @@
 						mPoint(xscale, yscale, zscale),
 						mPoint(xrot, yrot, zrot),
 						Material())); 
+  
+  hitboxes.push_back(new Cube(xpos, ypos+2*yscale, zpos+zscale, "brickblock", 2*xscale));
 }
 
 //load all three

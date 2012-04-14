@@ -12,6 +12,8 @@ draw_coin::draw_coin(float xp, float yp, float zp,
 						  mPoint(xscale, yscale, zscale),
 						  mPoint(xrot, yrot, zrot),
 						  Material(mPoint(1,1,0), mPoint(1,1,0), mPoint(1,1,0))));
+
+	hitboxes.push_back(new Cube(xpos, ypos, zpos, "brickblock", xscale*15));
 }
 
 //load all three

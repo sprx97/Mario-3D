@@ -585,16 +585,16 @@ void gameDisplay() {
   glLoadIdentity();
 
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
-       	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
-//NEEDED TO UNCOMMENT LOOK AT
+	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+
 	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
-	//then these two lines
+
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 
 	flower->draw();
-	goomba->draw();
+	goomba->draw();	
 	flag->draw();
 	xyz->draw();
 	astar->draw();
@@ -607,16 +607,31 @@ void gameDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
-//	drawCube(flower->hitboxes[0]);
+
+	// draws hitboxes; will be commented out in final program
+/*	drawCube(flower->hitboxes[0]);
+	drawCube(goomba->hitboxes[0]);
+	drawCube(astar->hitboxes[0]);
+	drawCube(coin->hitboxes[0]);
+	drawCube(myfire->hitboxes[0]);
+	drawCube(mushgraph->hitboxes[0]);
+	for(int n = 0; n < xyz->hitboxes.size(); n++) {
+		drawCube(xyz->hitboxes[n]);
+	} // need pipe extension thats just the cylinder
+	for(int n = 0; n < flag->hitboxes.size(); n++) {
+		drawCube(flag->hitboxes[n]);
+	} // needs to be taller
+*/
+
 	drawCube(bg);
 //	drawCube(camcube);
+
 
 	if (!aitest->destroyed) drawCube(aitest);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
 	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
 		drawCube(mushroom[mushnum]);
-
 	}
 	//if (stardraw && !star->destroyed) drawCube(star);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
@@ -875,7 +890,7 @@ int main(int argc, char* argv[]) {
 	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
 	xyz = new draw_pipe(20, 5, -8, .05, .05, .05, 0, 0, 0);
 	astar = new draw_star(12, 2, -4, .1, .1, .1, 0, -90, 0); 
-	flag = new draw_flag(12, 6, -2,.25, .25, .25, 0, 90, 0); 
+	flag = new draw_flag(12, 6, -2, .5, .5, .5, 0, 90, 0); 
 	coin = new draw_coin(10, 3,-7, .025, .025, .025, 0, 20, 90); 
 	myfire = new draw_fireball(15, 8, -5, .5, .5, .5, 0, 0, 0);
 	mushgraph = new draw_mushroom(8, 3, -4, .5, .5, .5, 0, -90, 0);

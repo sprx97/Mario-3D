@@ -18,7 +18,9 @@
 					    mPoint(xscale, yscale, zscale),
 					    mPoint(xrot, yrot, zrot),
 						Material(mPoint(0, 1, 0), mPoint(1, 1, 0), mPoint(1, 1, 0))));
- 
+  for(int n = -9; n < 10; n++) {
+	hitboxes.push_back(new Cube(xpos, ypos+yscale*n, zpos, "brickblock", xscale));
+  }
 }
 
 //load all three
