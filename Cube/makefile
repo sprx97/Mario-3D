@@ -27,4 +27,5 @@ Files.o: Files.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c Files.cpp
 
 clean:
-	rm -f *.o main
+	rm -f ../common/*.o ../objLoader/*.o *.o main
+
