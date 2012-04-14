@@ -102,7 +102,6 @@ Cube* bg; // background skycube
 Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
-Cube* flowercube;
 Cube* fireball;
 Cube* star;
 
@@ -459,7 +458,7 @@ void moveCamera() {
 	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
 	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
 	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
-	if (camcube->collidesWith(flowercube)) hasfire == true;
+	if (flower->collidesWith(camcube)) hasfire == true;
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
@@ -608,7 +607,7 @@ void gameDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
-	drawCube(flowercube);
+//	drawCube(flower->hitboxes[0]);
 	drawCube(bg);
 //	drawCube(camcube);
 
@@ -867,12 +866,12 @@ int main(int argc, char* argv[]) {
     for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
-    flowercube = new Cube(12, 4, -5, "brickblock", 1);
     fireball = new Cube(12, 3, -3, "questionblock", 1);
     //these are all of the graphics. they can be easily modified so let me know
     //xyz is a pipe...=/
     //sorry the fireball is lame. i can work on it
-	flower = new draw_flower(12, 4, -5, .5, .5, .5, 0, 0, 0);
+
+	flower = new draw_flower(12, 4, -5, .25, .25, .25, 0, 0, 0);
 	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
 	xyz = new draw_pipe(20, 5, -8, .05, .05, .05, 0, 0, 0);
 	astar = new draw_star(12, 2, -4, .1, .1, .1, 0, -90, 0); 

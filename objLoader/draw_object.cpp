@@ -19,3 +19,10 @@ void draw_object::draw() {
 		meshes[n].draw();
 	}
 }
+
+bool draw_object::collidesWith(Cube* c) {
+	for(int n = 0; n < hitboxes.size(); n++) {
+		if(c->collidesWith(hitboxes[n])) return true;
+	}
+	return false;
+}
