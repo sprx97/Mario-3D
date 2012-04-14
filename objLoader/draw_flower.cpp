@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include "draw_flower.h"
 #include <string>
-
+/*add get location function*/
  draw_flower::draw_flower(float xp, float yp, float zp,
 			     float xs, float ys, float zs,
 			     float xr, float yr, float zr) {
@@ -23,6 +23,8 @@ void draw_flower::setRotation(float x, float y, float z) {
 	inner.setRotation(mPoint(xrot, yrot, zrot));
 	outer.setRotation(mPoint(xrot, yrot, zrot));
 } // sets the new rotation for the flower
+
+//void draw_flower::getLocation(){
 
 void draw_flower::setLocation(float x, float y, float z) {
 	xpos = x; ypos = y; zpos = z;
@@ -54,4 +56,3 @@ void draw_flower::draw() {
   inner.draw();
   outer.draw();
 }
-

@@ -2,5 +2,9 @@
 */.DS_Store
 todo.txt
 Cube/*.o
+shader_utils/*.o
+objLoader/*.o
 Cube/main
+PerspectiveExample/*
+objLoader/gallery
 

@@ -1,6 +1,6 @@
-#include "Mesh.h"
 #ifndef DRAW_FLOWER_H
 #define DRAW_FLOWER_H
+#include "Mesh.h"
 
 class draw_flower {
 

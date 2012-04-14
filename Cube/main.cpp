@@ -12,6 +12,8 @@
 #include <QuartzCore/QuartzCore.h> // Apple pointer warp
 #endif
 #ifdef __linux__
+#include <GL/gl.h>
+#include <GL/glu.h>	    
 #include <GL/glut.h>
 #endif
 #include <math.h>
@@ -24,6 +26,14 @@
 #include "Cube.h"
 #include "../common/shader_utils.h"
 #include "../objLoader/draw_flower.h"
+#include "../objLoader/draw_mushroom.h"
+#include "../objLoader/draw_goomba.h"
+#include "../objLoader/draw_pipe.h"
+#include "../objLoader/draw_flag.h"
+#include "../objLoader/draw_star.h"
+#include "../objLoader/draw_coin.h"
+#include "../objLoader/draw_fireball.h"
+
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -79,6 +89,7 @@ int keys[256] = {0}; // array of whether keys are pressed
 int cubesize = 2;
 int pathlength = 100;
 int pathwidth = 8; // actually means 7
+int ncubes = 0;
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
 Cube* title; // title graphic
@@ -92,8 +103,17 @@ Cube* camcube; // player "model"
 Cube* aitest; // cube controlled by computer
 Cube* mushroom[11]; // mushroom locations
 Cube* flowercube;
+Cube* fireball;
+Cube* star;
 
 draw_flower* flower;
+draw_mushroom* mushgraph;
+draw_goomba* goomba;
+draw_pipe* xyz;
+draw_star* astar;
+draw_flag* flag;
+draw_coin* coin;
+draw_fireball* myfire;
 
 glm::mat4 view, projection;
 
@@ -105,6 +125,7 @@ GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float movespeed = 0.004;
 float aimovespeed = movespeed * .5;
 float mushmovespeed = 0.0005;
+float firemovespeed = .1;
 float mousespeed = 0.001;
 float jumpvel = .0125;
 glm::vec3 gravity = glm::vec3(0, -.000005, 0);
@@ -115,7 +136,17 @@ float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
 int mushnum = 0;
+//stuff for fireball
 bool mushdraw = false;
+bool hasfire = true;
+bool firedraw = false;
+bool hasShot = false; //has fireball been shot
+//stuff for star
+float starmovespeed = .005;
+float starbouncespeed = .005;
+float starmaxheight = 5;
+bool stardraw = false;
+
 int numlives = 3;
 
 void Astar() {
@@ -166,9 +197,13 @@ void reset() {
 	}
 	mushnum = 0;
 	mushdraw = false;
+	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < pathlength/16; n++) aircubes[n]->hit = false;
 	for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
+
+	stardraw = false;
+	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
 }
 
 void simpleAI(Cube* c) {    
@@ -232,6 +267,45 @@ void mushroomAI(Cube* c) {
 		mushdraw = false;
 		destroy(c);
 	}
+}
+void starAI(Cube* c) {
+  //movement
+  c->position.x += starmovespeed;
+  c->position.y += starbouncespeed;
+  if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
+  if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
+
+
+}
+void fireballAI(Cube* c, Cube* enemy) {
+
+  if(hasShot == false && hasfire == true) {
+    c->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
+    hasShot = true;
+    hasfire == false;
+   
+  }
+  else{
+    c->velocity.x = firemovespeed;
+    c->position.x += firemovespeed*sinf(angle.x);
+    c->position.y += firemovespeed*(sinf(angle.y));
+    //x and y aims work, but z does not
+    // c->position.z += firemovespeed*(-cosf(angle.z));
+    if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
+      printf("Hit!\n");
+      firedraw = false;
+      destroy(enemy);
+      destroy(fireball);
+    }
+    //if path collision, fireball is destroyed
+    for(int i = 0; i < ncubes; i++) {
+      if(c->collidesWith(cubes[i]) && !c->destroyed) {
+	firedraw = false;
+	destroy(fireball);
+      }
+    }
+     
+  }
 }
 
 int initShaders() {
@@ -358,19 +432,32 @@ void drawCube(Cube* c) {
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 } // draws a cube
 
-void spawnsMushroom(Cube* c, Cube* Zoidberg) {
+void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
     if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
+      switch (type) {
+
+      case 1 :
         if (mushnum < 11) mushnum++;
-		mushdraw = true;
-		Zoidberg->hit = true;
-    }
+	mushdraw = true;
+	Zoidberg->hit = true;
+	break;
+
+      case 2 :
+	stardraw = true;
+	Zoidberg->hit = true;
+	break;
+
+      }
+    }    
 }
 
 void moveCamera() {
 	setVectors();
 	applyGravity();
-    if (!aircubes[0]->hit) spawnsMushroom(camcube, aircubes[0]);
-
+	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
+	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	if (camcube->collidesWith(flowercube)) hasfire == true;
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
@@ -449,10 +536,12 @@ void moveCamera() {
 		}
     simpleAI(aitest);
     if(mushdraw) mushroomAI(mushroom[mushnum]);
-	if (numlives<0) {
-		numlives = 3;
-		state = MENU_STATE;
-	}
+    //if(stardraw) starAI(star);
+    if (numlives<0) {
+      numlives = 3;
+      state = MENU_STATE;
+    }
+    if(firedraw) fireballAI(fireball, aitest);
 }
 
 void gameIdle() {
@@ -490,10 +579,27 @@ void timer(int value) {
 }
 
 void gameDisplay() {
+  //clear model view at begginning of display
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
-	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+       	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+//NEEDED TO UNCOMMENT LOOK AT
+	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+	//then these two lines
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 
 	flower->draw();
+	goomba->draw();
+	flag->draw();
+	xyz->draw();
+	astar->draw();
+	coin->draw();
+	myfire->draw();
+	mushgraph->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -509,6 +615,13 @@ void gameDisplay() {
 	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
 		drawCube(mushroom[mushnum]);
+
+	}
+	//if (stardraw && !star->destroyed) drawCube(star);
+	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
+	
+	if(firedraw){
+	  drawCube(fireball);
 	}
 	
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -562,7 +675,7 @@ void onDisplay() {
 
 	glDisable(GL_LIGHTING);
 	glColor3f(0.0f, 0.0f, 0.0f);
-    glRasterPos2f(0.0f, 0.0f);
+	glRasterPos2f(0.0f, 0.0f);
 
 	char* s = new char[20];
 	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
@@ -584,8 +697,9 @@ void reshape(int width, int height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
-	else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
+	//if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
+	//else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
+	gluPerspective(45.0, width / (float) height, 0.1, 100000);
 	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
@@ -643,6 +757,8 @@ void key_pressed(unsigned char key, int x, int y) {
 			reset();
 		} // reset
 	}
+	
+      
 } // watches keyboard
 
 void key_released(unsigned char key, int x, int y) {
@@ -670,7 +786,9 @@ void mouse_click(int button, int mstate, int x, int y) {
 				//printf("Gravity Changed\n");
 			}
 		}
-		else {}
+		else if( state == GAME_STATE) {
+		  if(hasfire && !fireball->destroyed) firedraw = true;
+		}
 	}
 } // watches for mouse to be clicked
 
@@ -733,6 +851,7 @@ int main(int argc, char* argv[]) {
     for (int m = 0; m < pathwidth; m++) {
         for (int n = (100*m); n < (m*100)+100; n++) {
             cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize);
+	    ncubes++;
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
@@ -741,11 +860,27 @@ int main(int argc, char* argv[]) {
     for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
-
-	flower = new draw_flower(12, 4, -5, 1, 1, 1, 0, 90, 0);
-	flowercube = new Cube(12, 4, -5, "brickblock", 1);
-	
+    flowercube = new Cube(12, 4, -5, "brickblock", 1);
+    fireball = new Cube(12, 3, -3, "questionblock", 1);
+    //these are all of the graphics. they can be easily modified so let me know
+    //xyz is a pipe...=/
+    //sorry the fireball is lame. i can work on it
+	flower = new draw_flower(12, 4, -5, .5, .5, .5, 0, 0, 0);
+	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
+	xyz = new draw_pipe(20, 5, -8, .05, .05, .05, 0, 0, 0);
+	astar = new draw_star(12, 2, -4, .1, .1, .1, 0, -90, 0); 
+	flag = new draw_flag(12, 6, -2,.25, .25, .25, 0, 90, 0); 
+	coin = new draw_coin(10, 3,-7, .025, .025, .025, 0, 20, 90); 
+	myfire = new draw_fireball(15, 8, -5, .5, .5, .5, 0, 0, 0);
+	mushgraph = new draw_mushroom(8, 3, -4, .5, .5, .5, 0, -90, 0);
 	flower->load();
+	goomba->load();
+	flag->load();
+	xyz->load();
+	astar->load();
+	coin->load();
+	myfire->load();
+	mushgraph->load();
 
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working

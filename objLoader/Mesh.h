@@ -1,6 +1,7 @@
 #ifndef _MESH_H_
 #define _MESH_H_
 
+#include <GL/glew.h>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #endif

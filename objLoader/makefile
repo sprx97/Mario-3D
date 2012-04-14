@@ -11,14 +11,14 @@ endif
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES =
-	LIBS = -lm -lGL -lglut -lGLEW
+	LIBS = -lm -lGL -lglut -lGLEW -lGLU
 	FLAGS =
 endif
 
 all: gallery
 
 gallery: gallery.o Mesh.o helper.o mpoint.o Material.o draw_flower.o
-	$(COMPILER) $(LIBS) gallery.o Mesh.o helper.o mpoint.o Material.o draw_flower.o -o gallery
+	$(COMPILER) gallery.o Mesh.o helper.o mpoint.o Material.o draw_flower.o -o gallery $(LIBS)
 
 gallery.o: gallery.cpp
 	$(COMPILER) $(INCLUDES) $(FLAGS) -c gallery.cpp
