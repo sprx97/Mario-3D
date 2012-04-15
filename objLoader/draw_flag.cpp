@@ -2,24 +2,22 @@
 #include "draw_flag.h"
 #include <string>
 
- draw_flag::draw_flag(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr) 
-				 : draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+ draw_flag::draw_flag(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				 : draw_object(p, s, r) {
 				 
   //set the parameters of body
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-				   mPoint(xscale, yscale, zscale),
-				   mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+				   mPoint(scale.x, scale.y, scale.z),
+				   mPoint(rot.x, rot.y, rot.z),
 				   Material(mPoint(1,1,1), mPoint(1,1,1), mPoint(1,1,1))));
   
   //set parameters of eyes
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-					    mPoint(xscale, yscale, zscale),
-					    mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+					    mPoint(scale.x, scale.y, scale.z),
+					    mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(0, 1, 0), mPoint(1, 1, 0), mPoint(1, 1, 0))));
   for(int n = -9; n < 10; n++) {
-	hitboxes.push_back(new Cube(xpos, ypos+yscale*n, zpos, "brickblock", xscale));
+	hitboxes.push_back(new Cube(position.x, position.y+scale.y*n, position.z, "brickblock", scale.x));
   }
 }
 

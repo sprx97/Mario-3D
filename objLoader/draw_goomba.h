@@ -4,9 +4,9 @@
 
 class draw_goomba : public draw_object {
  public: 
-  draw_goomba(float, float, float, 
-			  float, float, float, 
-			  float, float, float);
+  draw_goomba(glm::vec3,
+			  glm::vec3,
+			  glm::vec3);
   void load();
 };
 #endif

@@ -2,19 +2,17 @@
 #include "draw_pipe.h"
 #include <string>
 
-draw_pipe::draw_pipe(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr)
-				: draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				: draw_object(p, s, r) {
 				
   //set the parameters of body
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(0,1,0), mPoint(1,1,0), mPoint(1,1,0))));
 
-  hitboxes.push_back(new Cube(xpos, ypos+1.0*20*yscale, zpos, "brickblock", 20*xscale));
-  hitboxes.push_back(new Cube(xpos, ypos+0.5*20*yscale, zpos, "brickblock", 20*xscale));
+  hitboxes.push_back(new Cube(position.x, position.y+1.0*20*scale.y, position.z, "brickblock", 20*scale.x));
+  hitboxes.push_back(new Cube(position.x, position.y+0.5*20*scale.y, position.z, "brickblock", 20*scale.x));
 }
 
 //load all three

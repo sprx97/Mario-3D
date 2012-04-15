@@ -2,18 +2,16 @@
 #include "draw_coin.h"
 #include <string>
 
-draw_coin::draw_coin(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr) 
-				 : draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+draw_coin::draw_coin(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				 : draw_object(p, s, r) {
 
 	//set the parameters of body
-	meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						  mPoint(xscale, yscale, zscale),
-						  mPoint(xrot, yrot, zrot),
+	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						  mPoint(scale.x, scale.y, scale.z),
+						  mPoint(rot.x, rot.y, rot.z),
 						  Material(mPoint(1,1,0), mPoint(1,1,0), mPoint(1,1,0))));
 
-	hitboxes.push_back(new Cube(xpos, ypos, zpos, "brickblock", xscale*15));
+	hitboxes.push_back(new Cube(position.x, position.y, position.z, "brickblock", scale.x*15));
 }
 
 //load all three

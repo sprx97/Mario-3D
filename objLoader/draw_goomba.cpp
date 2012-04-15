@@ -2,42 +2,40 @@
 #include "draw_goomba.h"
 #include <string>
 
- draw_goomba::draw_goomba(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr) 
-				 : draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+ draw_goomba::draw_goomba(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				 : draw_object(p, s, r) {
 
   //set the parameters of white
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(1,1,1), mPoint(1,1,1), mPoint(1,1,1))));
 
   // black
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material()));
  
   // head
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(.4,.13,.01), mPoint(.2,.1,0), mPoint(.2,.1,0))));
 
   // body
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(.8,.7,.5), mPoint(.8,.5,.4), mPoint(.8,.5, .4))));
 
   //feet of goomba
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(.09,.05, .05), mPoint(.1,.1,.1), mPoint(0,0,0))));
 
-  hitboxes.push_back(new Cube(xpos, ypos+2*yscale, zpos, "brickblock", 2*xscale));
+  hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z, "brickblock", 2*scale.x));
 }
 
 //load all three

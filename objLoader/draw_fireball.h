@@ -4,9 +4,9 @@
 
 class draw_fireball : public draw_object {
  public: 
-  draw_fireball(float, float, float, 
-				float, float, float, 
-				float, float, float);
+  draw_fireball(glm::vec3,
+			    glm::vec3,
+				glm::vec3);
   void load();
 };
 #endif

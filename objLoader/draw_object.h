@@ -14,13 +14,14 @@ using namespace std;
 
 class draw_object {
 	public:
-		draw_object(float, float, float,
-					float, float, float,
-					float, float, float);
+		draw_object(glm::vec3,
+					glm::vec3,
+					glm::vec3);
 		
-		float xpos, ypos, zpos;
-		float xscale, yscale, zscale;
-		float xrot, yrot, zrot;
+		glm::vec3 position;
+		glm::vec3 velocity;
+		glm::vec3 scale;
+		glm::vec3 rot;
 		
 		vector<Mesh> meshes;
 		

@@ -2,30 +2,28 @@
 #include "draw_mushroom.h"
 #include <string>
 
- draw_mushroom::draw_mushroom(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr)
-				: draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+ draw_mushroom::draw_mushroom(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				: draw_object(p, s, r) {
   
   //set the parameters of body
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(1,1,0), mPoint(1,1,1), mPoint(1,0,1))));
 
   //this should be polka dot texture, but isnt working
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material(mPoint(1,0,0), mPoint(1,1,1), mPoint(1,0,0))));
 
   //set parameters of eyes
-  meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						mPoint(xscale, yscale, zscale),
-						mPoint(xrot, yrot, zrot),
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						mPoint(scale.x, scale.y, scale.z),
+						mPoint(rot.x, rot.y, rot.z),
 						Material())); 
   
-  hitboxes.push_back(new Cube(xpos, ypos+2*yscale, zpos+zscale, "brickblock", 2*xscale));
+  hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z+scale.z, "brickblock", 2*scale.x));
 }
 
 //load all three

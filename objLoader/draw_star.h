@@ -4,9 +4,9 @@
 
 class draw_star : public draw_object {
  public: 
-  draw_star(float, float, float, 
-			float, float, float, 
-			float, float, float);
+  draw_star(glm::vec3, 
+			glm::vec3, 
+			glm::vec3);
   void load();
 };
 #endif

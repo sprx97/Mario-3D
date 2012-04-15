@@ -886,14 +886,14 @@ int main(int argc, char* argv[]) {
     //xyz is a pipe...=/
     //sorry the fireball is lame. i can work on it
 
-	flower = new draw_flower(12, 4, -5, .25, .25, .25, 0, 0, 0);
-	goomba = new draw_goomba(7, 2, -5, .5, .5, .5, 0, -90, 0);
-	xyz = new draw_pipe(20, 5, -8, .05, .05, .05, 0, 0, 0);
-	astar = new draw_star(12, 2, -4, .1, .1, .1, 0, -90, 0); 
-	flag = new draw_flag(12, 6, -2, .5, .5, .5, 0, 90, 0); 
-	coin = new draw_coin(10, 3,-7, .025, .025, .025, 0, 20, 90); 
-	myfire = new draw_fireball(15, 8, -5, .5, .5, .5, 0, 0, 0);
-	mushgraph = new draw_mushroom(8, 3, -4, .5, .5, .5, 0, -90, 0);
+	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
+	goomba = new draw_goomba(glm::vec3(7, 2, -5), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
+	xyz = new draw_pipe(glm::vec3(20, 5, -8), glm::vec3(.05, .05, .05), glm::vec3(0, 0, 0));
+	astar = new draw_star(glm::vec3(12, 2, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
+	flag = new draw_flag(glm::vec3(12, 6, -2), glm::vec3(.5, .5, .5), glm::vec3(0, 90, 0)); 
+	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
+	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
+	mushgraph = new draw_mushroom(glm::vec3(8, 3, -4), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	flower->load();
 	goomba->load();
 	flag->load();

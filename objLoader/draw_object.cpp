@@ -2,12 +2,11 @@
 #include <vector>
 #include <iostream>
 
-draw_object::draw_object(float xp, float yp, float zp,
-						 float xs, float ys, float zs,
-						 float xr, float yr, float zr) {
-	xpos = xp; ypos = yp; zpos = zp;
-	xscale = xs; yscale = ys; zscale = zs;
-	xrot = xr; yrot = yr; zrot = zr;
+draw_object::draw_object(glm::vec3 p, glm::vec3 s, glm::vec3 r) {
+	position = p;
+	scale = s;
+	rot = r;
+	velocity = glm::vec3(0.0, 0.0, 0.0);
 }
 
 void draw_object::draw() {

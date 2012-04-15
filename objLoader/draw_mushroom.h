@@ -4,9 +4,9 @@
 
 class draw_mushroom : public draw_object {
  public: 
-  draw_mushroom(float, float, float, 
-				float, float, float, 
-				float, float, float);
+  draw_mushroom(glm::vec3,
+				glm::vec3,
+				glm::vec3);
   void load();
 };
 #endif

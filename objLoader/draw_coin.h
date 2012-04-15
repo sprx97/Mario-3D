@@ -4,9 +4,9 @@
 
 class draw_coin : public draw_object {
  public: 
-  draw_coin(float, float, float, 
-			float, float, float, 
-			float, float, float);
+  draw_coin(glm::vec3,
+			glm::vec3,
+			glm::vec3);
   void load();
 };
 #endif

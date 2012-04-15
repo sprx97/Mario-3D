@@ -2,29 +2,27 @@
 #include "draw_flower.h"
 #include <string>
 /*add get location function*/
- draw_flower::draw_flower(float xp, float yp, float zp,
-			     float xs, float ys, float zs,
-			     float xr, float yr, float zr) 
-				 : draw_object(xp, yp, zp, xs, ys, zs, xr, yr, zr) {
+ draw_flower::draw_flower(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+				 : draw_object(p, s, r) {
 
-	meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						  mPoint(xscale, yscale, zscale),
-					      mPoint(xrot, yrot, zrot),
+	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						  mPoint(scale.x, scale.y, scale.z),
+					      mPoint(rot.x, rot.y, rot.z),
 						  Material(mPoint(.1,1,0), mPoint(.1,1,0), mPoint(1,1,0))));
-	meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						  mPoint(xscale, yscale, zscale),
-					      mPoint(xrot, yrot, zrot),
+	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						  mPoint(scale.x, scale.y, scale.z),
+					      mPoint(rot.x, rot.y, rot.z),
 						  Material(mPoint(1,1,1), mPoint(1,1,1), mPoint(1,1,1))));
-	meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						  mPoint(xscale, yscale, zscale),
-					      mPoint(xrot, yrot, zrot),
+	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						  mPoint(scale.x, scale.y, scale.z),
+					      mPoint(rot.x, rot.y, rot.z),
 						  Material(mPoint(1,1,0), mPoint(1,1,1), mPoint(1,1,0))));
-	meshes.push_back(Mesh(mPoint(xpos, ypos, zpos),
-						  mPoint(xscale, yscale, zscale),
-					      mPoint(xrot, yrot, zrot),
+	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+						  mPoint(scale.x, scale.y, scale.z),
+					      mPoint(rot.x, rot.y, rot.z),
 						  Material(mPoint(1,0,0), mPoint(1,1,1), mPoint(1,0,0))));
 
-	hitboxes.push_back(new Cube(xpos, ypos, zpos, "brickblock", xscale*4));
+	hitboxes.push_back(new Cube(position.x, position.y, position.z, "brickblock", scale.x*4));
 }
 
 //load all three

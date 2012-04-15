@@ -4,9 +4,9 @@
 
 class draw_pipe : public draw_object {
  public: 
-  draw_pipe(float, float, float, 
-			float, float, float, 
-			float, float, float);
+  draw_pipe(glm::vec3,
+			glm::vec3,
+			glm::vec3);
   void load();
 };
 #endif

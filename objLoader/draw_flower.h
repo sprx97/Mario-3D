@@ -4,9 +4,9 @@
 
 class draw_flower : public draw_object {
  public: 
-  draw_flower(float, float, float, 
-			  float, float, float, 
-			  float, float, float);
+  draw_flower(glm::vec3,
+			  glm::vec3,
+			  glm::vec3);
   void load();
 };
 #endif

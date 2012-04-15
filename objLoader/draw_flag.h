@@ -4,9 +4,9 @@
 
 class draw_flag : public draw_object {
  public: 
-	draw_flag(float, float, float, 
-			  float, float, float, 
-			  float, float, float);
+	draw_flag(glm::vec3,
+			  glm::vec3,
+			  glm::vec3);
 	void load();
 };
 #endif
