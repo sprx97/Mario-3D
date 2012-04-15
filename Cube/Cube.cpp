@@ -4,7 +4,22 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
+
+#include <GL/glew.h>
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#include <QuartzCore/QuartzCore.h> // Apple pointer warp
+#endif
+#ifdef __linux__
+#include <GL/gl.h>
+#include <GL/glu.h>	    
+#include <GL/glut.h>
+#endif
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "questionblock_texture.c"
 #include "brickblock_texture.c"
 #include "groundblock_texture.c"
@@ -19,6 +34,8 @@
 
 #include "../common/shader_utils.h"
 #include "Cube.h"
+
+using namespace std;
 
 Cube::Cube(float x, float y, float z, const char* texture, float s) {
 	position = glm::vec3(x, y, z);
@@ -484,7 +501,7 @@ bool Cube::collidesY(Cube* other) {
 bool Cube::collidesTopY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
-    return position.y > other->position.y+size && position.y <= other->position.y+(other->size+size)
+    return position.y > other->position.y+size && position.y <= other->position.y+(other->size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
@@ -522,6 +539,23 @@ void Cube::printPos() {
 	y = position.y;
 	z = position.z;
 	printf("(%f, %f, %f)\n",x,y,z);
+}
+
+void Cube::draw(glm::mat4 view, glm::mat4 projection, GLint attribute_coord3d, GLint attribute_texcoord, GLint uniform_mvp) {	
+	glBindTexture(GL_TEXTURE_2D, texture_id);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
+	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
+	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_elements);
+	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, position.z));
+	// translate to position from origin
+	glm::mat4 mvp = projection * view * model;	
+	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 }
 
 Cube::~Cube() {

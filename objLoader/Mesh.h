@@ -1,6 +1,7 @@
 #ifndef _MESH_H_
 #define _MESH_H_
 
+#include <GL/glew.h>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #endif
@@ -36,14 +37,15 @@ class Mesh {
 		
 		// The display list that the mesh calls to draw itself
 		GLuint objectDisplayList;
+
+		// Material mesh is made of
+		Material material;
 		
 		// Location and such of the mesh
 		mPoint location;
 		mPoint scale;
 		mPoint rotation;
-		
-		// Material mesh is made of
-		Material material;
+				
 
 	public:
 		// Constructors
@@ -69,7 +71,7 @@ class Mesh {
 		mPoint getScale() const;
 		mPoint getRotation() const;
 		Material getMaterial() const;
-		
+
 };
 
 #endif

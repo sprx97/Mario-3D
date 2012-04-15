@@ -5,6 +5,9 @@
 #define _CREATE_SHADER_H
 
 #include <GL/glew.h>
+//#include <GL/glut.h>
+//#include <GL/gl.h>
+//#include <GL/glu.h>
 
 char* file_read(const char* filename);
 void print_log(GLuint object);

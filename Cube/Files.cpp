@@ -4,6 +4,7 @@
 // File loader - for levels
 
 #include <iostream>
+#include <stdio.h>
 #include "Files.h"
 #include "../common/shader_utils.h"
 

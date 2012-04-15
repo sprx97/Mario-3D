@@ -24,8 +24,6 @@ class Cube {
 		GLuint ibo_elements; // IBO of elements
 		
 		GLuint texture_id; // id code of the texture
-		GLint uniform_mvp, uniform_mytexture;
-		GLint attribute_coord3d, attribute_texcoord;
     
        // void setReflect(int);
     
@@ -36,10 +34,12 @@ class Cube {
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);
-        bool collidesBottomY(Cube*);
-        bool collidesTopY(Cube*);
+		bool collidesBottomY(Cube*);
+		bool collidesTopY(Cube*);
 		bool collidesZ(Cube*);
 		void move(float, float, float);
+		void draw(glm::mat4, glm::mat4, GLint, GLint, GLint);
+		
 		bool destroyed;
 		bool hit;
 		void printPos();
