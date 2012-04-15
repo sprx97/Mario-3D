@@ -28,6 +28,13 @@
   load();
 }
 
+void draw_mushroom::setHitboxes() {
+	hitboxes[0]->move(position.x, position.y+2*scale.y, position.z+scale.z);
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 //load all three
 void draw_mushroom::load() {
   meshes[0].loadOBJ("../objLoader/mushroom_body.obj");

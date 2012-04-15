@@ -8,5 +8,6 @@ class draw_star : public draw_object {
 			glm::vec3, 
 			glm::vec3);
   void load();
+  void setHitboxes();
 };
 #endif

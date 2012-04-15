@@ -23,6 +23,15 @@
   load();
 }
 
+void draw_flag::setHitboxes() {
+	for(int n = -9; n < 10; n++) {
+		hitboxes[n+9]->move(position.x, position.y+scale.y*n, position.z);
+	}
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 //load all three
 void draw_flag::load() {
   meshes[0].loadOBJ("../objLoader/flag.obj");

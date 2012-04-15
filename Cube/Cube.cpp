@@ -541,7 +541,7 @@ void Cube::printPos() {
 	printf("(%f, %f, %f)\n",x,y,z);
 }
 
-void Cube::draw(glm::mat4 view, glm::mat4 projection, GLint attribute_coord3d, GLint attribute_texcoord, GLint uniform_mvp) {
+void Cube::draw(glm::mat4 view, glm::mat4 projection, GLint attribute_coord3d, GLint attribute_texcoord, GLint uniform_mvp) {	
 	glBindTexture(GL_TEXTURE_2D, texture_id);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_texcoords);
@@ -556,7 +556,6 @@ void Cube::draw(glm::mat4 view, glm::mat4 projection, GLint attribute_coord3d, G
 	glm::mat4 mvp = projection * view * model;	
 	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
 }
 
 Cube::~Cube() {

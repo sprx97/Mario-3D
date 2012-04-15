@@ -27,6 +27,13 @@
 	load();
 }
 
+void draw_flower::setHitboxes() {
+	hitboxes[0]->move(position.x, position.y, position.z);
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 //load all three
 void draw_flower::load() {
   meshes[0].loadOBJ("../objLoader/stem_leaves.obj");

@@ -41,6 +41,7 @@
 #endif
 
 #define SKIP_MENUS
+#define DRAW_HITBOXES
 
 using namespace std;
 
@@ -590,20 +591,20 @@ void gameDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
-	// draws hitboxes; will be commented out in final program
-/*	(flower->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
-	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
-	(astar->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
-	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
-	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
-	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+#ifdef DRAW_HITBOXES
+	(flower->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	(astar->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < xyz->hitboxes.size(); n++) {
-		(xyz->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+		(xyz->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	} // need pipe extension thats just the cylinder
 	for(int n = 0; n < flag->hitboxes.size(); n++) {
-		(flag->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+		(flag->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	} // needs to be taller
-*/
+#endif
 
 	bg->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 //	camcube->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
@@ -671,7 +672,7 @@ void onDisplay() {
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
 
-	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHTING);	
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glRasterPos2f(0.0f, 0.0f);
 

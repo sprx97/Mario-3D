@@ -40,6 +40,13 @@
   load();
 }
 
+void draw_goomba::setHitboxes() {
+	hitboxes[0]->move(position.x, position.y+2*scale.y, position.z);
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 //load all three
 void draw_goomba::load() {
   meshes[0].loadOBJ("../objLoader/goombawhite.obj");

@@ -16,6 +16,13 @@ draw_coin::draw_coin(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 	load();
 }
 
+void draw_coin::setHitboxes() {
+	hitboxes[0]->move(position.x, position.y, position.z);
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 //load all three
 void draw_coin::load() {
   meshes[0].loadOBJ("../objLoader/coinfinal.obj");
