@@ -24,9 +24,9 @@ void draw_object::draw() {
 void draw_object::move(glm::vec3 newpos) {
 	position = newpos;
 	for(int n = 0; n < meshes.size(); n++) {
-		meshes[n].setLocation(mPoint(meshes[n].getLocation().x,
-									 meshes[n].getLocation().y,
-									 meshes[n].getLocation().z));
+		meshes[n].setLocation(mPoint(position.x,
+									 position.y,
+									 position.z));
 	}
 	setHitboxes();
 }
