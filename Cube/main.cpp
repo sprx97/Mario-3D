@@ -416,23 +416,6 @@ void setVectors() {
 #endif
 } // sets player vectors and mouse location
 
-void drawCube(Cube* c) {
-	glBindTexture(GL_TEXTURE_2D, c->texture_id);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_texcoords);
-	glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, c->vbo_vertices);
-	glVertexAttribPointer(attribute_coord3d, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->ibo_elements);
-	int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(c->position.x, c->position.y, c->position.z));
-	// translate to position from origin
-	glm::mat4 mvp = projection * view * model;	
-	glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-} // draws a cube
-
 void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
     if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
       switch (type) {
@@ -607,37 +590,36 @@ void gameDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
-
 	// draws hitboxes; will be commented out in final program
-/*	drawCube(flower->hitboxes[0]);
-	drawCube(goomba->hitboxes[0]);
-	drawCube(astar->hitboxes[0]);
-	drawCube(coin->hitboxes[0]);
-	drawCube(myfire->hitboxes[0]);
-	drawCube(mushgraph->hitboxes[0]);
+/*	(flower->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+	(astar->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
+	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
 	for(int n = 0; n < xyz->hitboxes.size(); n++) {
-		drawCube(xyz->hitboxes[n]);
+		(xyz->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
 	} // need pipe extension thats just the cylinder
 	for(int n = 0; n < flag->hitboxes.size(); n++) {
-		drawCube(flag->hitboxes[n]);
+		(flag->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);;
 	} // needs to be taller
 */
 
-	drawCube(bg);
-//	drawCube(camcube);
+	bg->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+//	camcube->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 
-	if (!aitest->destroyed) drawCube(aitest);
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) drawCube(cubes[n]);
-	for(int n = 0; n < pathlength/16; n++) drawCube(aircubes[n]);
+	if (!aitest->destroyed) aitest->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < pathlength/16; n++) aircubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	if (mushdraw && !mushroom[mushnum]->destroyed) {
-		drawCube(mushroom[mushnum]);
+		mushroom[mushnum]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	}
-	//if (stardraw && !star->destroyed) drawCube(star);
+	//if (stardraw && !star->destroyed) (star)->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
 	
 	if(firedraw){
-	  drawCube(fireball);
+	  fireball->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	}
 	
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -653,12 +635,12 @@ void menuDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-//	drawCube(title);
-	drawCube(border);
-	drawCube(startbutton);
-	drawCube(quitbutton);
-	if (lowgrav) drawCube(settings1);
-	else drawCube(settings2);
+//	title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	border->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	startbutton->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	quitbutton->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	if(lowgrav) settings1->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	else settings2->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -673,7 +655,7 @@ void titleDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-	drawCube(title);
+	title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
