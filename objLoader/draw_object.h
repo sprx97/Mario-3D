@@ -27,6 +27,8 @@ class draw_object {
 		
 		vector<Cube*> hitboxes;
 		
+		void setHitboxes();
+
 		virtual void load() = 0; // pure virtual
 		void draw();
 		bool collidesWith(Cube*); // collision

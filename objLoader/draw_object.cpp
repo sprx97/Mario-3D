@@ -10,7 +10,15 @@ draw_object::draw_object(glm::vec3 p, glm::vec3 s, glm::vec3 r) {
 	destroyed = false;
 }
 
+void draw_object::setHitboxes() {
+	for(int n = 0; n < hitboxes.size(); n++) {
+		hitboxes[n]->position = position;
+		hitboxes[n]->velocity = velocity;
+	}
+}
+
 void draw_object::draw() {
+	setHitboxes();
 	if(meshes.size() == 0) {
 		cout << "Zero meshes found. Object probably has not been initialized." << endl;
 		return;
@@ -21,6 +29,7 @@ void draw_object::draw() {
 }
 
 bool draw_object::collidesWith(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesWith(hitboxes[n]) || hitboxes[n]->collidesWith(c)) return true;
 	}
@@ -28,6 +37,7 @@ bool draw_object::collidesWith(Cube* c) {
 }
 
 bool draw_object::collidesX(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesX(hitboxes[n]) || hitboxes[n]->collidesX(c)) return true;
 	}
@@ -35,6 +45,7 @@ bool draw_object::collidesX(Cube* c) {
 }
 
 bool draw_object::collidesY(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesY(hitboxes[n]) || hitboxes[n]->collidesY(c)) return true;
 	}
@@ -42,6 +53,7 @@ bool draw_object::collidesY(Cube* c) {
 }
 
 bool draw_object::collidesZ(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesZ(hitboxes[n]) || hitboxes[n]->collidesZ(c)) return true;
 	}
@@ -49,6 +61,7 @@ bool draw_object::collidesZ(Cube* c) {
 }
 
 bool draw_object::collidesBottomY(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesBottomY(hitboxes[n]) || hitboxes[n]->collidesBottomY(c)) return true;
 	}
@@ -56,6 +69,7 @@ bool draw_object::collidesBottomY(Cube* c) {
 }
 
 bool draw_object::collidesTopY(Cube* c) {
+	setHitboxes();
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesTopY(hitboxes[n]) || hitboxes[n]->collidesTopY(c)) return true;
 	}
