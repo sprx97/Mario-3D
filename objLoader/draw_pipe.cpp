@@ -13,6 +13,8 @@ draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 
   hitboxes.push_back(new Cube(position.x, position.y+1.0*20*scale.y, position.z, "brickblock", 20*scale.x));
   hitboxes.push_back(new Cube(position.x, position.y+0.5*20*scale.y, position.z, "brickblock", 20*scale.x));
+
+  load();
 }
 
 //load all three

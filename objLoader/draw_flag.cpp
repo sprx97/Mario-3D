@@ -19,6 +19,8 @@
   for(int n = -9; n < 10; n++) {
 	hitboxes.push_back(new Cube(position.x, position.y+scale.y*n, position.z, "brickblock", scale.x));
   }
+
+  load();
 }
 
 //load all three

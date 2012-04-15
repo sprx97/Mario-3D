@@ -12,6 +12,8 @@ draw_coin::draw_coin(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 						  Material(mPoint(1,1,0), mPoint(1,1,0), mPoint(1,1,0))));
 
 	hitboxes.push_back(new Cube(position.x, position.y, position.z, "brickblock", scale.x*15));
+
+	load();
 }
 
 //load all three

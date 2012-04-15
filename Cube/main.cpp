@@ -894,14 +894,6 @@ int main(int argc, char* argv[]) {
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
 	mushgraph = new draw_mushroom(glm::vec3(8, 3, -4), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-	flower->load();
-	goomba->load();
-	flag->load();
-	xyz->load();
-	astar->load();
-	coin->load();
-	myfire->load();
-	mushgraph->load();
 
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
