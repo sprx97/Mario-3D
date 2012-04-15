@@ -29,6 +29,13 @@ class draw_object {
 		
 		virtual void load() = 0; // pure virtual
 		void draw();
-		bool collidesWith(Cube* c); // collision
+		bool collidesWith(Cube*); // collision
+		bool collidesX(Cube*);
+		bool collidesY(Cube*);
+		bool collidesZ(Cube*);
+		bool collidesBottomY(Cube*);
+		bool collidesTopY(Cube*);
+		
+		bool destroyed;
 };
 #endif
