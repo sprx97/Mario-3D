@@ -89,7 +89,7 @@ int keys[256] = {0}; // array of whether keys are pressed
 
 int cubesize = 2;
 int pathlength = 100;
-int pathwidth = 8; // actually means 7
+double pathwidth = 8; // actually means 7
 int ncubes = 0;
 Cube* cubes[1000]; // array of cubes
 Cube* aircubes[1000];
@@ -268,7 +268,6 @@ void simpleAI(draw_object* c) {
 	c->move(newpos);
 	
 	float angletouser = 180/M_PI*atan((newpos.z-camcube->position.z)/(newpos.x-camcube->position.x));
-	cout << -90-angletouser << endl;
 	if(newpos.x-camcube->position.x > 0) c->rotate(glm::vec3(0, -90-angletouser, 0));
 	else c->rotate(glm::vec3(0, 90-angletouser, 0));
 } // Simple test AI
@@ -777,9 +776,9 @@ void key_pressed(unsigned char key, int x, int y) {
 			free_resources();
 			exit(0);
 		}
-		if(key == 'r') {
-			reset();
-		} // reset
+//		if(key == 'r') {
+//			reset();
+//		} // reset
 	}
 	
       
@@ -901,7 +900,7 @@ int main(int argc, char* argv[]) {
 	flag = new draw_flag(glm::vec3(12, 6, -2), glm::vec3(.5, .5, .5), glm::vec3(0, 90, 0)); 
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
-	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-1)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
+	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	mushgraph->destroyed = true;
 	
 #ifdef __APPLE__
