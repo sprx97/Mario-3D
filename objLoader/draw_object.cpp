@@ -24,9 +24,7 @@ void draw_object::draw() {
 void draw_object::move(glm::vec3 newpos) {
 	position = newpos;
 	for(int n = 0; n < meshes.size(); n++) {
-		meshes[n].setLocation(mPoint(position.x,
-									 position.y,
-									 position.z));
+		meshes[n].setLocation(mPoint(position.x, position.y, position.z));
 	}
 	setHitboxes();
 }
@@ -61,14 +59,14 @@ bool draw_object::collidesZ(Cube* c) {
 
 bool draw_object::collidesBottomY(Cube* c) {
 	for(int n = 0; n < hitboxes.size(); n++) {
-		if(c->collidesBottomY(hitboxes[n]) || hitboxes[n]->collidesBottomY(c)) return true;
+		if(hitboxes[n]->collidesBottomY(c)) return true;
 	}
 	return false;
 }
 
 bool draw_object::collidesTopY(Cube* c) {
 	for(int n = 0; n < hitboxes.size(); n++) {
-		if(c->collidesTopY(hitboxes[n]) || hitboxes[n]->collidesTopY(c)) return true;
+		if(hitboxes[n]->collidesTopY(c)) return true;
 	}
 	return false;
 }

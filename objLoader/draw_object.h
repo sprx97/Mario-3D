@@ -38,8 +38,7 @@ class draw_object {
 		bool collidesTopY(Cube*);
 		
 		bool destroyed;
-	protected:
-		glm::vec3 position;
 
+		glm::vec3 position;
 };
 #endif
