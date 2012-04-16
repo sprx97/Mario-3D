@@ -41,7 +41,7 @@
 #endif
 
 #define SKIP_MENUS
-#define DRAW_HITBOXES
+// #define DRAW_HITBOXES
 
 using namespace std;
 
@@ -264,8 +264,13 @@ void simpleAI(draw_object* c) {
 			}
 		}
 	}
-	glm::vec3 newpos (c->position.x,c->position.y,c->position.z);
+	glm::vec3 newpos(c->position.x,c->position.y,c->position.z);
 	c->move(newpos);
+	
+	float angletouser = 180/M_PI*atan((newpos.z-camcube->position.z)/(newpos.x-camcube->position.x));
+	cout << -90-angletouser << endl;
+	if(newpos.x-camcube->position.x > 0) c->rotate(glm::vec3(0, -90-angletouser, 0));
+	else c->rotate(glm::vec3(0, 90-angletouser, 0));
 } // Simple test AI
 
 void mushroomAI(draw_object* c) {
