@@ -7,4 +7,8 @@ objLoader/*.o
 Cube/main
 PerspectiveExample/*
 objLoader/gallery
+objLoader/*~
+Cube/#*
+objLoader/#*
+objLoader/star.obj
 
