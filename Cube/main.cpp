@@ -210,27 +210,83 @@ void reset() {
 	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
 }
 
+void rotateToFaceCamAI(draw_object *c) {
+		//We want ai to face camcube->position.x
+		//Use P.T. to find hypot then rotate using angle between hypot and dist of x
+	float asplusbs, rootc, rotangle;
+	float rotx = 8;
+	if (c->position.x > camcube->position.x && abs(c->position.x - camcube->position.x) > abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.x - camcube->position.x)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,-90+(rotx * (camcube->position.z - c->position.z))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+	if (c->position.x > camcube->position.x && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.z - camcube->position.z)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,-180+(rotx * (c->position.x - camcube->position.x))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+	if (c->position.x < camcube->position.x && c->position.z > camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.x - camcube->position.x)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,-180+(rotx * (c->position.x - camcube->position.x))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+	if (c->position.x < camcube->position.x && abs(c->position.x - camcube->position.x) > abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.x - camcube->position.x)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,-270+(rotx * (c->position.z - camcube->position.z))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+	if (c->position.x < camcube->position.x && c->position.z < camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.z - camcube->position.z)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,(rotx * (camcube->position.x - c->position.x))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+	if (c->position.x > camcube->position.x && c->position.z < camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)) {
+		asplusbs = pow((c->position.x - camcube->position.x),2) + pow((c->position.z - camcube->position.z),2);
+		rootc = sqrt(asplusbs);
+		rotangle = cosf((((c->position.x - camcube->position.x)/rootc)*M_PI)/180);
+		glm::vec3 newrot (0.0f,(rotx * (camcube->position.x - c->position.x))*rotangle,0.0f);
+		c->rotate(newrot);
+	}
+}
+
 void simpleAI(draw_object* c) {    
 	int behavior;   // state ai is in, 0 is normal patrol, 1 is chase 
     dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
-    if (dist < (10 * cubesize)) behavior = 1;
+    if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
     
     switch (behavior){
         case 0:
 			c->position.z += pathwidthcheck * (aimovespeed * .1f);
-			c->position.x += pathlengthcheck * (aimovespeed * .5f);
+			c->position.x -= pathlengthcheck * (aimovespeed * .25f);
 			if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
-			if(c->position.x < 12 * cubesize) pathlengthcheck = 1;
-			if(c->position.x > 28 * cubesize) pathlengthcheck = -1;
+			if(c->position.x < 12 * cubesize) {
+				pathlengthcheck = -1;
+				c->rotate(glm::vec3(0,-270,0));
+			}
+			if(c->position.x > 28 * cubesize) {
+				pathlengthcheck = 1;
+				c->rotate(glm::vec3(0,-90,0));
+			}
 			break;
         case 1:
-			if (c->position.z >= camcube->position.z) c->position.z -= aimovespeed;
-			if (c->position.z <= camcube->position.z) c->position.z += aimovespeed;
+			if (c->position.z >= camcube->position.z) c->position.z -= aimovespeed * .5f;
+			if (c->position.z <= camcube->position.z) c->position.z += aimovespeed * .5f;
 				//if (c->position.z == camcube->position.z) c->position.z += camcube->velocity.z;
-			if (c->position.x >= camcube->position.x) c->position.x -= aimovespeed;
-			if (c->position.x <= camcube->position.x) c->position.x += aimovespeed;
+			if (c->position.x >= camcube->position.x) c->position.x -= aimovespeed * .5f;
+			if (c->position.x <= camcube->position.x) c->position.x += aimovespeed * .5f;
 				//if (c->position.x == camcube->position.x) c->position.x += camcube->velocity.z;
+			rotateToFaceCamAI(c);
             break;
     }
 	
@@ -243,7 +299,12 @@ void simpleAI(draw_object* c) {
 		}
 	} // ai physics
 	if(c->velocity.x > 0) c->velocity.x -= .0005*aimovespeed;
-	if(c->velocity.x < 0) c->velocity.x = 0;
+	if(c->velocity.x < -.0005*aimovespeed) c->velocity.x += .0005*aimovespeed;
+	if(c->velocity.x >= -.0005*aimovespeed && c->velocity.x < 0) c->velocity.x = 0;
+	if(c->velocity.z > 0) c->velocity.z -= .0005*aimovespeed;
+	if(c->velocity.z < -.0005*aimovespeed) c->velocity.z += .0005*aimovespeed;
+	if(c->velocity.z >= -.0005*aimovespeed && c->velocity.z < 0) c->velocity.z = 0;
+
 	c->position += c->velocity;
 	if(c->collidesWith(camcube) && !c->destroyed){
 		if(c->collidesBottomY(camcube)) c->destroyed = true;
@@ -253,8 +314,24 @@ void simpleAI(draw_object* c) {
 				camcube->position.y -= camcube->size/2;
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
-				c->velocity.y += .004;
-				c->velocity.x += 3*aimovespeed;
+				if (camcube->position.x < c->position.x){
+					c->velocity.y += .004;
+					c->velocity.x += 3*aimovespeed;
+				}
+				if (camcube->position.x > c->position.x){
+					c->velocity.y += .004;
+					c->velocity.x += -3*aimovespeed;
+				}
+				if (c->position.z > camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)){
+					c->velocity.y += .004;
+					c->velocity.z += 2*aimovespeed;
+					c->velocity.x = 0;
+				}
+				if (c->position.z < camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)){
+					c->velocity.y += .004;
+					c->velocity.z += -2*aimovespeed;
+					c->velocity.x = 0;
+				}
 				c->position += c->velocity;
 			}
 			else {
@@ -288,18 +365,9 @@ void mushroomAI(draw_object* c) {
 		}
 	glm::vec3 newposmush (c->position.x,c->position.y,c->position.z);
 	c->move(newposmush);
-}	
-void starAI(Cube* c) {
-  //movement
-  c->position.x += starmovespeed;
-  c->position.y += starbouncespeed;
-  if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
-  if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
-
-
 }
+	
 void fireballAI(Cube* c, Cube* enemy) {
-
   if(hasShot == false && hasfire == true) {
     c->move(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3);
     hasShot = true;
@@ -329,6 +397,14 @@ void fireballAI(Cube* c, Cube* enemy) {
 		hasShot = false;
 	} // if it goes outside the bg, it resets
   }
+}
+
+void starAI(Cube* c) {
+  //movement
+  c->position.x += starmovespeed;
+  c->position.y += starbouncespeed;
+  if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
+  if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
 }
 
 int initShaders() {
@@ -406,7 +482,6 @@ void motion(int x, int y) {
 	if(angle.y < -M_PI * 0.49) angle.y = -M_PI * 0.49;
 	if(angle.y > M_PI * 0.49) angle.y = M_PI * 0.49;
 	// keeps camera in range (can't do flips, etc)
-	
 	lastx = x;
 	lasty = y;
 	// sets last mouse position
@@ -540,15 +615,16 @@ void moveCamera() {
 	if (camcube->position.y < -50) {
 		numlives--;
 		reset();
-		}
-    simpleAI(goomba);
+	}
+    simpleAI(goomba);	
     if(mushdraw) mushroomAI(mushgraph);
+
     //if(stardraw) starAI(star);
     if (numlives<0) {
       numlives = 3;
       state = MENU_STATE;
     }
-		//if(firedraw) fireballAI(fireball, goomba);
+//    if(firedraw) fireballAI(fireball, aitest);
 }
 
 void gameIdle() {
@@ -632,9 +708,10 @@ void gameDisplay() {
 //	camcube->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 
-		//if (!aitest->destroyed) aitest->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	//if (!aitest->destroyed) aitest->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < pathlength*(pathwidth-1); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < pathlength/16; n++) aircubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+
 	//if (stardraw && !star->destroyed) (star)->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
 	
@@ -882,7 +959,7 @@ int main(int argc, char* argv[]) {
     }
     for (int n = 1; n < 11; n++) mushroom[n] = new Cube(4,cubesize,-(pathwidth-1)/2*cubesize, "brickblock", cubesize);
     camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-		//aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
+	//aitest = new Cube(20 * cubesize, 3*cubesize, -4 * cubesize, "questionblock", cubesize);
     fireball = new Cube(12, 3, -3, "questionblock", 1);
     //these are all of the graphics. they can be easily modified so let me know
     //xyz is a pipe...=/

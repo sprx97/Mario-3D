@@ -29,6 +29,7 @@ class draw_object {
 		virtual void setHitboxes() = 0;
 		virtual void load() = 0; // pure virtual
 		void move(glm::vec3);
+		void rotate(glm::vec3);
 		void draw();
 		bool collidesWith(Cube*); // collision
 		bool collidesX(Cube*);
@@ -38,8 +39,7 @@ class draw_object {
 		bool collidesTopY(Cube*);
 		
 		bool destroyed;
-		//protected:
-		glm::vec3 position;
 
+		glm::vec3 position;
 };
 #endif

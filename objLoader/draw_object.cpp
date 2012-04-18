@@ -25,7 +25,15 @@ void draw_object::move(glm::vec3 newpos) {
 	position = newpos;
 	for(int n = 0; n < meshes.size(); n++) {
 		meshes[n].setLocation(mPoint(position.x, position.y, position.z));
-		}
+	}
+	setHitboxes();
+}
+
+void draw_object::rotate(glm::vec3 newrot) {
+	rot = newrot;
+	for(int n = 0; n < meshes.size(); n++) {
+		meshes[n].setRotation(mPoint(rot.x,rot.y,rot.z));
+	}
 	setHitboxes();
 }
 
