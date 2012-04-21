@@ -41,7 +41,7 @@
 #endif
 
 #define SKIP_MENUS
-// #define DRAW_HITBOXES
+#define DRAW_HITBOXES
 
 using namespace std;
 
@@ -107,7 +107,7 @@ Cube* star;
 draw_flower* flower;
 draw_mushroom* mushgraph;
 draw_goomba* goomba;
-draw_pipe* xyz;
+draw_pipe* xyz[1000];
 draw_star* astar;
 draw_flag* flag;
 draw_coin* coin;
@@ -364,7 +364,17 @@ void mushroomAI(draw_object* c) {
 		}
 	glm::vec3 newposmush (c->position.x,c->position.y,c->position.z);
 	c->move(newposmush);
-}	
+}
+
+void pipeAI(draw_object* c) {
+  for(int n = 0; n < pathlength/32; n++) {
+    if(c->collidesBottomY(camcube)) {
+      camcube->velocity.y = 0;
+      cout << "BANG!" << endl;
+      break;
+    }
+  }
+}
 
 void fireballAI(Cube* c, Cube* enemy) {
   if(hasShot == false && hasfire == true) {
@@ -379,8 +389,9 @@ void fireballAI(Cube* c, Cube* enemy) {
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
       printf("Hit!\n");
       firedraw = false;
-	  hasShot = false;
-      destroy(enemy);
+      hasShot = false;
+      //destroy(enemy);
+      enemy->destroyed = true;
 //      destroy(fireball);
     }
     //if path collision, fireball is destroyed
@@ -388,7 +399,8 @@ void fireballAI(Cube* c, Cube* enemy) {
       if(c->collidesWith(cubes[i]) && !c->destroyed) {
 		firedraw = false;
 		hasShot = false;
-//		destroy(fireball);
+		//destroy(fireball);
+		c->destroyed = true;
       }
     }
 	if(!c->collidesWith(bg) && !c->destroyed) {
@@ -469,6 +481,9 @@ void applyGravity() {
 			break;
 		} // collision from below
 	}
+       
+	
+	    
 } // moves by physics instead of input
 
 void motion(int x, int y) {
@@ -535,6 +550,9 @@ void moveCamera() {
 	setVectors();
 	applyGravity();
 	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	for(int i = 0; i < pathlength/32; i++) {
+	  pipeAI(xyz[i]);
+	}
 	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
 	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
 	if (flower->collidesWith(camcube)) hasfire == true;
@@ -622,7 +640,7 @@ void moveCamera() {
       numlives = 3;
       state = MENU_STATE;
     }
-//    if(firedraw) fireballAI(fireball, aitest);
+    // if(firedraw) fireballAI(fireball, draw_goomba);
 }
 
 void gameIdle() {
@@ -676,7 +694,9 @@ void gameDisplay() {
 	flower->draw();
 	if (goomba->destroyed == false) goomba->draw();	
 	flag->draw();
-	xyz->draw();
+	for( int i = 0; i < pathlength/32; i++) {     
+	  xyz[i]->draw();
+	}
 	astar->draw();
 	coin->draw();
 	myfire->draw();
@@ -694,11 +714,13 @@ void gameDisplay() {
 	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	for(int n = 0; n < xyz->hitboxes.size(); n++) {
-		(xyz->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	} // need pipe extension thats just the cylinder
+	for(int l = 0; l < pathlength/32; l++) {
+	  for(int m = 0; m < xyz[l]->hitboxes.size(); m++) {
+	    (xyz[l]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	  } // need pipe extension thats just the cylinder
+	}
 	for(int n = 0; n < flag->hitboxes.size(); n++) {
-		(flag->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	  (flag->hitboxes[n])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	} // needs to be taller
 #endif
 
@@ -883,6 +905,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			fireball->velocity.x = forward.x*firemovespeed;
 			fireball->velocity.y = lookat.y*firemovespeed;
 			fireball->velocity.z = forward.z*firemovespeed;
+			cout << "mouse click" <<endl;
 		  }
 		}
 	}
@@ -953,17 +976,20 @@ int main(int argc, char* argv[]) {
     for (int n = 0; n < pathlength/16; n++) {
         aircubes[n] = new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
     }
-    camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-    fireball = new Cube(12, 3, -3, "questionblock", 1);
+    for( int o = 0; o < pathlength/32; o++) {
+      xyz[o] = new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0));	    
+    }
+	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	fireball = new Cube(12, 3, -3, "questionblock", 1);
     //these are all of the graphics. they can be easily modified so let me know
     //xyz is a pipe...=/
     //sorry the fireball is lame. i can work on it
 
 	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-	xyz = new draw_pipe(glm::vec3(20, 5, -8), glm::vec3(.05, .05, .05), glm::vec3(0, 0, 0));
+
 	astar = new draw_star(glm::vec3(12, 2, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
-	flag = new draw_flag(glm::vec3(12, 6, -2), glm::vec3(.5, .5, .5), glm::vec3(0, 90, 0)); 
+	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
