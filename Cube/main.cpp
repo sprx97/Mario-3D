@@ -41,7 +41,7 @@
 #endif
 
 #define SKIP_MENUS
-#define DRAW_HITBOXES
+//#define DRAW_HITBOXES
 
 using namespace std;
 
@@ -143,6 +143,10 @@ float starmovespeed = .005;
 float starbouncespeed = .005;
 float starmaxheight = 5;
 bool stardraw = false;
+//stuff for coin
+float coinmovespeed = .005;
+bool coindraw = false;
+float coinangle = 0;
 
 int numlives = 3;
 
@@ -192,13 +196,16 @@ void reset() {
 	goomba->destroyed = false;
 
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-1)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
+	astar = new draw_star(glm::vec3(cubesize*2*16, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 	
+	stardraw = false;
+	astar->destroyed = true;
 	mushdraw = false;
 	mushgraph->destroyed = true;
 	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < pathlength/16; n++) aircubes[n]->hit = false;
 
-	stardraw = false;
+	
 	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
 }
 
@@ -410,12 +417,54 @@ void fireballAI(Cube* c, Cube* enemy) {
   }
 }
 
-void starAI(Cube* c) {
+void starAI(draw_object* c) {
   //movement
-  c->position.x += starmovespeed;
-  c->position.y += starbouncespeed;
-  if(c->position.y >= starmaxheight) starbouncespeed = -starbouncespeed;
-  if(c->position.y <= 1) starbouncespeed = -starbouncespeed;
+ c->position.x += starmovespeed;
+	c->velocity += (gravity*.5f);
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+		if(c->collidesTopY(cubes[n])) {
+			c->velocity.y = 0;
+			break;
+		}
+	}
+	c->position += c->velocity;
+	if(c->collidesWith(camcube) && c->destroyed==false) {
+		printf("star get\n");
+		//camcube->position.y -= camcube->size/2;
+		//camcube->size = cubesize*2;
+		//camcube->position.y += camcube->size/2;
+		stardraw = false;
+		c->destroyed = true;
+		}
+	glm::vec3 newposstar (c->position.x,c->position.y,c->position.z);
+	c->move(newposstar);
+}
+
+void coinAI(draw_object* c) {
+
+   c->position.x += coinmovespeed;
+	c->velocity += (gravity*.5f);
+	if(coinangle >=359) {
+	  coinangle = 0;
+	}
+	else coinangle++;
+	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+		if(c->collidesTopY(cubes[n])) {
+			c->velocity.y = 0;
+			break;
+		}
+	}
+	c->position += c->velocity;
+	if(c->collidesWith(camcube) && c->destroyed==false) {
+		printf("star get\n");
+		//camcube->position.y -= camcube->size/2;
+		//camcube->size = cubesize*2;
+		//camcube->position.y += camcube->size/2;
+		stardraw = false;
+		c->destroyed = true;
+		}
+	glm::vec3 newposcoin (c->position.x,c->position.y,c->position.z);
+	c->move(newposcoin);
 }
 
 int initShaders() {
@@ -539,9 +588,15 @@ void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
 
       case 2 :
 	stardraw = true;
+	astar->destroyed = false;
 	Zoidberg->hit = true;
 	break;
 
+      case 3 :
+	coindraw = true;
+	coin->destroyed = false;
+	Zoidberg->hit = true;
+	break;
       }
     }    
 }
@@ -550,6 +605,8 @@ void moveCamera() {
 	setVectors();
 	applyGravity();
 	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2);
+	if (!aircubes[3]->hit) spawnsPrize(camcube, aircubes[3], 3); //spawns coin
 	for(int i = 0; i < pathlength/32; i++) {
 	  pipeAI(xyz[i]);
 	}
@@ -634,8 +691,8 @@ void moveCamera() {
 	}
     simpleAI(goomba);	
     if(mushdraw) mushroomAI(mushgraph);
-
-    //if(stardraw) starAI(star);
+    if(stardraw) starAI(astar);
+    if(coindraw) coinAI(coin);
     if (numlives<0) {
       numlives = 3;
       state = MENU_STATE;
@@ -697,10 +754,12 @@ void gameDisplay() {
 	for( int i = 0; i < pathlength/32; i++) {     
 	  xyz[i]->draw();
 	}
-	astar->draw();
+	if (astar->destroyed == false) astar->draw();
+	if (coin->destroyed == false) coin->draw();
 	coin->draw();
 	myfire->draw();
 	if (mushgraph->destroyed == false) mushgraph->draw();
+	if (astar->destroyed == false) astar->draw();
 	// width and height of the plane that the object is in
 	
 	glUseProgram(program);
@@ -988,13 +1047,14 @@ int main(int argc, char* argv[]) {
 	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 
-	astar = new draw_star(glm::vec3(12, 2, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
+	astar = new draw_star(glm::vec3(cubesize*16, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
 	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
-	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
+	coin = new draw_coin(glm::vec3(cubesize*3*16, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(0, coinangle, 90)); 
 	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	mushgraph->destroyed = true;
-	
+	astar->destroyed = true;
+	coin->destroyed = true;
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
