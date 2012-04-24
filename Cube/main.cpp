@@ -385,12 +385,10 @@ void fireballAI(draw_object* c) {
   if(hasShot == false && hasfire == true) {
     c->move(glm::vec3(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3));
     hasShot = true;
-//    hasfire == false;   
+	c->destroyed = false;
   }
   else{
     c->position += c->velocity;
-    //x and y aims work, but z does not
-    // c->position.z += firemovespeed*(-cosf(angle.z));
     if((c->collidesWith(goomba) && !c->destroyed) || (goomba->collidesWith(c) && !goomba->destroyed)) {
 //      printf("Hit!\n");
       firedraw = false;
@@ -398,17 +396,32 @@ void fireballAI(draw_object* c) {
 	  goomba->destroyed = true;
     }
     //if path collision, fireball is destroyed
-    for(int i = 0; i < ncubes; i++) {
+    for(int i = 0; i < cubes.size(); i++) {
       if(c->collidesWith(cubes[i]) && !c->destroyed) {
 		firedraw = false;
 		hasShot = false;
 		c->destroyed = true;
       }
     }
+	for(int n = 0; n < aircubes.size(); n++) {
+		if(c->collidesWith(aircubes[n]) && !c->destroyed) {
+			firedraw = false;
+			hasShot = false;
+			c->destroyed = true;
+		}
+	}
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesWith(pipes[n]) && !c->destroyed) {
+			firedraw = false;
+			hasShot = false;
+			c->destroyed = true;
+		}
+	}
 	if(!c->collidesWith(bg) && !c->destroyed) {
 		firedraw = false;
 		hasShot = false;
 	} // if it goes outside the bg, it resets
+	c->move(c->position);
   }
 }
 
