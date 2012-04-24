@@ -6,9 +6,13 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+class draw_object;
+
 class Cube {
 	public:
-		glm::vec3 position, velocity;	
+		glm::vec3 position, velocity;
+		
+		draw_object* goodie;
 	
 //		GLfloat specrefon[];
 //		GLfloat specrefoff[];
@@ -29,7 +33,7 @@ class Cube {
     
 		const char* texturename;
 
-		Cube(float, float, float, const char*, float);
+		Cube(float, float, float, const char*, float, draw_object* = NULL);
 		bool intersectsWith(float, float, float);
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);

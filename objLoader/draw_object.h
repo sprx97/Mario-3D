@@ -37,6 +37,13 @@ class draw_object {
 		bool collidesZ(Cube*);
 		bool collidesBottomY(Cube*);
 		bool collidesTopY(Cube*);
+
+		bool collidesWith(draw_object*); // collision
+		bool collidesX(draw_object*);
+		bool collidesY(draw_object*);
+		bool collidesZ(draw_object*);
+		bool collidesBottomY(draw_object*);
+		bool collidesTopY(draw_object*);
 		
 		bool destroyed;
 
