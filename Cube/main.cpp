@@ -256,11 +256,14 @@ void simpleAI(draw_object* c) {
     dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
+
+	c->velocity = glm::vec3(0, c->velocity.y, 0);
+	glm::vec3 oldvelocity = c->velocity;
     
     switch (behavior){
         case 0:
-			c->position.z += pathwidthcheck * (aimovespeed * .1f);
-			c->position.x -= pathlengthcheck * (aimovespeed * .25f);
+			c->velocity.z += pathwidthcheck * (aimovespeed * .1f);
+			c->velocity.x -= pathlengthcheck * (aimovespeed * .25f);
 			if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
 			if(c->position.x < 12 * cubesize) {
 				pathlengthcheck = -1;
@@ -272,12 +275,30 @@ void simpleAI(draw_object* c) {
 			}
 			break;
         case 1:
-			if (c->position.z >= camcube->position.z) c->position.z -= aimovespeed * .5f;
-			if (c->position.z <= camcube->position.z) c->position.z += aimovespeed * .5f;
-				//if (c->position.z == camcube->position.z) c->position.z += camcube->velocity.z;
-			if (c->position.x >= camcube->position.x) c->position.x -= aimovespeed * .5f;
-			if (c->position.x <= camcube->position.x) c->position.x += aimovespeed * .5f;
-				//if (c->position.x == camcube->position.x) c->position.x += camcube->velocity.z;
+			if (c->position.z >= camcube->position.z) {
+				c->velocity.z -= aimovespeed * .5f;
+				for(int n = 0; n < pipes.size(); n++) {
+					if(c->collidesZ(pipes[n])) c->velocity.z += (aimovespeed+.01f)*.5f;
+				}
+			}
+			if (c->position.z <= camcube->position.z) {
+				c->velocity.z += aimovespeed * .5f;
+				for(int n = 0; n < pipes.size(); n++) {
+					if(c->collidesZ(pipes[n])) c->velocity.z -= (aimovespeed+.01f)*.5f;
+				}
+			}
+			if (c->position.x >= camcube->position.x) {
+				c->velocity.x -= aimovespeed * .5f;
+				for(int n = 0; n < pipes.size(); n++) {
+					if(c->collidesX(pipes[n])) c->velocity.x += (aimovespeed+.01f)*.5f;
+				}
+			}
+			if (c->position.x <= camcube->position.x) {
+				c->velocity.x += aimovespeed * .5f;
+				for(int n = 0; n < pipes.size(); n++) {
+					if(c->collidesX(pipes[n])) c->velocity.x -= (aimovespeed+.01f)*.5f;
+				}
+			}
 			rotateToFaceCamAI(c);
             break;
     }
@@ -290,15 +311,9 @@ void simpleAI(draw_object* c) {
 			break;
 		}
 	} // ai physics
-		
-	if(c->velocity.x > 0) c->velocity.x -= .0005*aimovespeed;
-	if(c->velocity.x < -.0005*aimovespeed) c->velocity.x += .0005*aimovespeed;
-	if(c->velocity.x >= -.0005*aimovespeed && c->velocity.x < 0) c->velocity.x = 0;
-	if(c->velocity.z > 0) c->velocity.z -= .0005*aimovespeed;
-	if(c->velocity.z < -.0005*aimovespeed) c->velocity.z += .0005*aimovespeed;
-	if(c->velocity.z >= -.0005*aimovespeed && c->velocity.z < 0) c->velocity.z = 0;
 
-	c->position += c->velocity;
+	c->position += c->velocity;	
+
 	if(c->collidesWith(camcube) && !c->destroyed){
 		if(c->collidesBottomY(camcube)) {
 			camcube->velocity.y = jumpvel/2;
