@@ -41,7 +41,7 @@
 #endif
 
 #define SKIP_MENUS
-#define DRAW_HITBOXES
+//#define DRAW_HITBOXES
 
 using namespace std;
 
@@ -91,8 +91,8 @@ int cubesize = 2;
 int pathlength = 100;
 double pathwidth = 8; // actually means 7
 int ncubes = 0;
-Cube* cubes[1000]; // array of cubes
-Cube* aircubes[1000];
+vector<Cube*> cubes; // array of cubes
+vector<Cube*> aircubes;
 Cube* title; // title graphic
 Cube* border; // menu graphic
 Cube* startbutton; // start button graphic
@@ -107,7 +107,7 @@ Cube* star;
 draw_flower* flower;
 draw_mushroom* mushgraph;
 draw_goomba* goomba;
-draw_pipe* xyz[1000];
+vector<draw_pipe*> pipes;
 draw_star* astar;
 draw_flag* flag;
 draw_coin* coin;
@@ -120,14 +120,14 @@ GLfloat ambient[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 GLfloat specular[] = { 20 * cubesize, cubesize, -4 * cubesize, 1.0f }; // lighting coordinates and values
 GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-float movespeed = 0.004;
+float movespeed = 0.008;
 float aimovespeed = movespeed * .5;
-float mushmovespeed = 0.0005;
-float firemovespeed = .1;
-float mousespeed = 0.001;
-float jumpvel = .0125;
-glm::vec3 gravity = glm::vec3(0, -.000005, 0);
-glm::vec3 termvel = glm::vec3(0, -.05, 0);
+float mushmovespeed = 0.001;
+float firemovespeed = .2;
+float mousespeed = 0.002;
+float jumpvel = .025;
+glm::vec3 gravity = glm::vec3(0, -.00001, 0);
+glm::vec3 termvel = glm::vec3(0, -.1, 0);
 bool lowgrav = false;
 
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
@@ -139,8 +139,8 @@ bool hasfire = true;
 bool firedraw = false;
 bool hasShot = false; //has fireball been shot
 //stuff for star
-float starmovespeed = .005;
-float starbouncespeed = .005;
+float starmovespeed = .01;
+float starbouncespeed = .01;
 float starmaxheight = 5;
 bool stardraw = false;
 
@@ -168,7 +168,7 @@ void AIphysics(Cube* c) {
     c->velocity += gravity;
 	c->position += c->velocity;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesWith(c)) {
 			c->position -= c->velocity;
 			c->velocity = glm::vec3(0, 0, 0);
@@ -196,10 +196,10 @@ void reset() {
 	mushgraph->destroyed = true;
 	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
-	for (int n = 0; n < pathlength/16; n++) aircubes[n]->hit = false;
+	for (int n = 0; n < aircubes.size(); n++) aircubes[n]->hit = false;
 
 	stardraw = false;
-	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
+//	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
 }
 
 void rotateToFaceCamAI(draw_object *c) {
@@ -284,7 +284,7 @@ void simpleAI(draw_object* c) {
 	
     c->velocity += gravity;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n])) {
 			c->velocity.y = 0;
 			break;
@@ -305,7 +305,7 @@ void simpleAI(draw_object* c) {
 		}
 		else{
 			if(camcube->size != cubesize) {
-				printf("Mushroom lost\n");
+//				printf("Mushroom lost\n");
 				camcube->position.y -= camcube->size/2;
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
@@ -330,7 +330,7 @@ void simpleAI(draw_object* c) {
 				c->position += c->velocity;
 			}
 			else {
-				printf("You died\n");
+//				printf("You died\n");
 				numlives--;
 				reset();
 			}
@@ -347,7 +347,7 @@ void simpleAI(draw_object* c) {
 void mushroomAI(draw_object* c) {
     c->position.x += mushmovespeed;
 	c->velocity += (gravity*.5f);
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n])) {
 			c->velocity.y = 0;
 			break;
@@ -355,7 +355,7 @@ void mushroomAI(draw_object* c) {
 	}
 	c->position += c->velocity;
 	if(c->collidesWith(camcube) && c->destroyed==false) {
-		printf("Mushroom get\n");
+//		printf("Mushroom get\n");
 		camcube->position.y -= camcube->size/2;
 		camcube->size = cubesize*2;
 		camcube->position.y += camcube->size/2;
@@ -364,16 +364,6 @@ void mushroomAI(draw_object* c) {
 		}
 	glm::vec3 newposmush (c->position.x,c->position.y,c->position.z);
 	c->move(newposmush);
-}
-
-void pipeAI(draw_object* c) {
-  for(int n = 0; n < pathlength/32; n++) {
-    if(c->collidesBottomY(camcube)) {
-      camcube->velocity.y = 0;
-      cout << "BANG!" << endl;
-      break;
-    }
-  }
 }
 
 void fireballAI(Cube* c, Cube* enemy) {
@@ -387,7 +377,7 @@ void fireballAI(Cube* c, Cube* enemy) {
     //x and y aims work, but z does not
     // c->position.z += firemovespeed*(-cosf(angle.z));
     if((c->collidesWith(enemy) && !c->destroyed) || (enemy->collidesWith(c) && !enemy->destroyed)) {
-      printf("Hit!\n");
+//      printf("Hit!\n");
       firedraw = false;
       hasShot = false;
       //destroy(enemy);
@@ -467,23 +457,27 @@ void applyGravity() {
 	if(camcube->velocity.y < termvel.y) {
 		camcube->velocity.y = termvel.y;
 	}	
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesY(camcube)) {
 			jump = false;
 			camcube->velocity.y = 0;
 			break;
 		}
 	}
-	for(int n = 0; n < pathlength/16; n++) {
+	for(int n = 0; n < aircubes.size(); n++) {
 		if(camcube->collidesY(aircubes[n])) {
 			if(aircubes[n]->collidesBottomY(camcube)) jump = false;
 			camcube->velocity.y = 0;
 			break;
 		} // collision from below
 	}
-       
-	
-	    
+	for(int n = 0; n < pipes.size(); n++) {
+		if(pipes[n]->collidesBottomY(camcube)) {
+			jump = false;
+			camcube->velocity.y = 0;
+			break;
+		}		
+	}		
 } // moves by physics instead of input
 
 void motion(int x, int y) {
@@ -550,9 +544,6 @@ void moveCamera() {
 	setVectors();
 	applyGravity();
 	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
-	for(int i = 0; i < pathlength/32; i++) {
-	  pipeAI(xyz[i]);
-	}
 	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
 	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
 	if (flower->collidesWith(camcube)) hasfire == true;
@@ -560,63 +551,87 @@ void moveCamera() {
 	camcube->velocity.z = 0;
     if(keys['a']) {
 		camcube->velocity -= rightvec * movespeed;
-		for(int n = 0; n < pathlength; n++) {
+		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
 				camcube->velocity += rightvec * movespeed;
 				break;
 			}
 		}
-		for(int n = 0; n < pathlength/16; n++) {
+		for(int n = 0; n < aircubes.size(); n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity += rightvec * movespeed;
 				break;
 			}
+		}
+		for(int n = 0; n < pipes.size(); n++) {
+			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
+				camcube->velocity += rightvec*movespeed;
+				break;
+			}		
 		}
 	}
 	if(keys['d']) {
 		camcube->velocity += rightvec * movespeed;
-		for(int n = 0; n < pathlength; n++) {
+		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
 				camcube->velocity -= rightvec * movespeed;
 				break;
 			}
 		}		
-		for(int n = 0; n < pathlength/16; n++) {
+		for(int n = 0; n < aircubes.size(); n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity -= rightvec * movespeed;
 				break;
 			}
 		}	
+		for(int n = 0; n < pipes.size(); n++) {
+			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
+				camcube->velocity -= rightvec*movespeed;
+				break;
+			}		
+		}
 	}
 	if(keys['w']) {
 		camcube->velocity += forward * movespeed;
-		for(int n = 0; n < pathlength; n++) {
+		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
 				camcube->velocity -= forward * movespeed;
 				break;
 			}
 		}	
-		for(int n = 0; n < pathlength/16; n++) {
+		for(int n = 0; n < aircubes.size(); n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity -= forward * movespeed;
 				break;
 			}
 		}
+		for(int n = 0; n < pipes.size(); n++) {
+			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
+				camcube->velocity -= forward*movespeed;
+				break;
+			}		
+		}
 	}
 	if(keys['s']) {
 		camcube->velocity -= forward * movespeed;
-		for(int n = 0; n < pathlength; n++) {
+		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
 				camcube->velocity += forward * movespeed;
 				break;
 			}
 		}		
-		for(int n = 0; n < pathlength/16; n++) {
+		for(int n = 0; n < aircubes.size(); n++) {
 			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity += forward * movespeed;
 				break;
 			}
 		}	
+		for(int n = 0; n < pipes.size(); n++) {
+			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
+				camcube->velocity += forward*movespeed;
+				break;
+			}		
+		}
 	}
 	if(keys[' '] && !jump) {
 		camcube->velocity.y = jumpvel;
@@ -694,8 +709,8 @@ void gameDisplay() {
 	flower->draw();
 	if (goomba->destroyed == false) goomba->draw();	
 	flag->draw();
-	for( int i = 0; i < pathlength/32; i++) {     
-	  xyz[i]->draw();
+	for( int i = 0; i < pipes.size(); i++) {     
+	  pipes[i]->draw();
 	}
 	astar->draw();
 	coin->draw();
@@ -714,9 +729,9 @@ void gameDisplay() {
 	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	for(int l = 0; l < pathlength/32; l++) {
-	  for(int m = 0; m < xyz[l]->hitboxes.size(); m++) {
-	    (xyz[l]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int l = 0; l < pipes.size(); l++) {
+	  for(int m = 0; m < pipes[l]->hitboxes.size(); m++) {
+	    (pipes[l]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	  } // need pipe extension thats just the cylinder
 	}
 	for(int n = 0; n < flag->hitboxes.size(); n++) {
@@ -727,8 +742,8 @@ void gameDisplay() {
 	bg->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 //	camcube->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	for(int n = 0; n < pathlength/16; n++) aircubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < cubes.size(); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < aircubes.size(); n++) aircubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	//if (stardraw && !star->destroyed) (star)->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	//fireball->move(camcube->position.x+3, camcube->position.y, camcube->position.z);
@@ -818,8 +833,10 @@ void reshape(int width, int height) {
 
 void free_resources() {
 	glDeleteProgram(program);
-	for(int n = 0; n < pathlength*(pathwidth-1); n++) {
+	for(int n = 0; n < cubes.size(); n++) {
 		delete cubes[n];
+	}
+	for(int n = 0; n < aircubes.size(); n++) {
         delete aircubes[n];
 	}
     delete camcube;
@@ -905,7 +922,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			fireball->velocity.x = forward.x*firemovespeed;
 			fireball->velocity.y = lookat.y*firemovespeed;
 			fireball->velocity.z = forward.z*firemovespeed;
-			cout << "mouse click" <<endl;
+//			cout << "mouse click" <<endl;
 		  }
 		}
 	}
@@ -969,20 +986,20 @@ int main(int argc, char* argv[]) {
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
         for (int n = (100*m); n < (m*100)+100; n++) {
-            cubes[n] = new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize);
-	    ncubes++;
+            cubes.push_back(new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize));
+			ncubes++;
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        aircubes[n] = new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize);
+        aircubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize));
     }
     for( int o = 0; o < pathlength/32; o++) {
-      xyz[o] = new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0));	    
+      pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
     }
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 	fireball = new Cube(12, 3, -3, "questionblock", 1);
     //these are all of the graphics. they can be easily modified so let me know
-    //xyz is a pipe...=/
+    //pipes is a pipe...=/
     //sorry the fireball is lame. i can work on it
 
 	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
