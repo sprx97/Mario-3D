@@ -290,6 +290,7 @@ void simpleAI(draw_object* c) {
 			break;
 		}
 	} // ai physics
+		
 	if(c->velocity.x > 0) c->velocity.x -= .0005*aimovespeed;
 	if(c->velocity.x < -.0005*aimovespeed) c->velocity.x += .0005*aimovespeed;
 	if(c->velocity.x >= -.0005*aimovespeed && c->velocity.x < 0) c->velocity.x = 0;
@@ -565,7 +566,7 @@ void moveCamera() {
 		}
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity += rightvec*movespeed;
+				camcube->velocity += rightvec*((float)(movespeed+.01));
 				break;
 			}		
 		}
@@ -586,7 +587,7 @@ void moveCamera() {
 		}	
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity -= rightvec*movespeed;
+				camcube->velocity -= rightvec*((float)(movespeed+.01));
 				break;
 			}		
 		}
@@ -607,7 +608,7 @@ void moveCamera() {
 		}
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity -= forward*movespeed;
+				camcube->velocity -= forward*((float)(movespeed+.01));
 				break;
 			}		
 		}
@@ -628,7 +629,7 @@ void moveCamera() {
 		}	
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity += forward*movespeed;
+				camcube->velocity += forward*((float)(movespeed+.01));
 				break;
 			}		
 		}
