@@ -243,9 +243,8 @@ void simpleAI(draw_object* c) {
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
 
-	c->velocity = glm::vec3(0, c->velocity.y, 0);
-	glm::vec3 oldvelocity = c->velocity;
     if(destroycountdown < 0) {
+		c->velocity = glm::vec3(0, c->velocity.y, 0);
 		switch (behavior){
 			case 0:
 				c->velocity.z += pathwidthcheck * (aimovespeed * .1f);
@@ -289,26 +288,6 @@ void simpleAI(draw_object* c) {
 				break;
 		}
 	}
-	else {
-		if (camcube->position.x < c->position.x) {
-			c->position.y += .01;
-			c->position.x += 4*aimovespeed;
-		}
-		if (camcube->position.x > c->position.x) {
-			c->position.y += .01;
-			c->position.x += -4*aimovespeed;
-		}
-//		if (c->position.z > camcube->position.z) {
-//			c->position.y += .01;
-//			c->position.z += 4*aimovespeed;
-//			c->position.x = 0;
-//		}
-//		if (c->position.z < camcube->position.z) {
-//			c->position.y += .01;
-//			c->position.z += -4*aimovespeed;
-//			c->position.x = 0;
-//		}
-	} // gets kicked back - manual movement (ignores physics/collison)
 	
     c->velocity += gravity;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
@@ -319,16 +298,14 @@ void simpleAI(draw_object* c) {
 		}
 	} // ai physics
 
-	c->position += c->velocity;	
 	if(destroycountdown > 0) {
 		destroycountdown--;
 		if(destroycountdown == 0) {
 			c->destroyed = true;
-			c->velocity = glm::vec3(4*aimovespeed, .01, 0);
 			destroycountdown--;
 		}
 	}
-	if(c->collidesWith(camcube) && !c->destroyed && destroycountdown < 0){
+	else if(c->collidesWith(camcube) && !c->destroyed && destroycountdown < 0){
 		if(c->collidesBottomY(camcube) && !c->collidesX(camcube) && !c->collidesZ(camcube)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
 			c->destroyed = true;
@@ -336,6 +313,18 @@ void simpleAI(draw_object* c) {
 		else {
 			if(invincible) {
 				destroycountdown = 1000;
+				// angle between user and gooma
+				float dx = abs(c->position.x - camcube->position.x);
+				float dz = abs(c->position.z - camcube->position.z);
+				float anglebetween = atan(dz/dx);
+				
+				int modz = 1; // modifies to make up for losing part of circle in atan
+				int modx = 1;
+				if(c->position.z-camcube->position.z < 0) modz = -1;
+				if(c->position.x-camcube->position.x < 0) modx = -1;
+				c->velocity.y = .01;
+				c->velocity.x = 4*modx*aimovespeed*cos(anglebetween);
+				c->velocity.z = 4*modz*aimovespeed*sin(anglebetween);
 			}
 			else if(camcube->size != cubesize) {
 //				printf("Mushroom lost\n");
@@ -369,6 +358,7 @@ void simpleAI(draw_object* c) {
 			}
 		}
 	}
+	c->position += c->velocity;	
 	glm::vec3 newpos(c->position.x,c->position.y,c->position.z);
 	c->move(newpos);
 	
