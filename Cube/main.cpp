@@ -121,10 +121,10 @@ GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float movespeed = 0.008;
 float aimovespeed = movespeed * .5;
 float mushmovespeed = 0.001;
-float firemovespeed = .2;
+float firemovespeed = .1;
 float mousespeed = 0.002;
 float jumpvel = .025;
-glm::vec3 gravity = glm::vec3(0, -.00001, 0);
+glm::vec3 gravity = glm::vec3(0, -.00002, 0);
 glm::vec3 termvel = glm::vec3(0, -.1, 0);
 bool lowgrav = false;
 
@@ -367,22 +367,51 @@ void mushroomAI(draw_object* c) {
 }
 
 bool fireballAI(draw_fireball* c) {
-  if(c->distancetraveled > 200) return true;
+  if(c->distancetraveled > 1000) return true;
   else{
 	c->distancetraveled += 1;
-	c->position += c->velocity;
-    if((c->collidesWith(goomba) && !c->destroyed) || (goomba->collidesWith(c) && !goomba->destroyed)) {
+	c->velocity.y += 10*gravity.y;
+
+    if(c->collidesWith(goomba)) {
 	  goomba->destroyed = true;
 	  return true;
     }
-	
     //if path collision, fireball is destroyed
     for(int i = 0; i < cubes.size(); i++) {
-      if(c->collidesWith(cubes[i]) && !c->destroyed) return true;
+		if(c->collidesWith(cubes[i])) {
+			if(c->collidesY(cubes[i])) {
+				c->velocity.y *= -.75;
+				break;
+			}
+			else if(c->collidesX(cubes[i])) {
+				c->velocity.x *= -.75;
+				break;
+			}
+			else if(c->collidesZ(cubes[i])) {
+				c->velocity.z *= -.75;
+				break;
+			}
+		}
     }
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n]) && !c->destroyed) return true;
+		if(c->collidesWith(pipes[n])) {
+			if(c->collidesWith(pipes[n])) {
+				if(c->collidesY(pipes[n])) {
+					c->velocity.y *= -.75;
+					break;
+				}
+				else if(c->collidesX(pipes[n])) {
+					c->velocity.x *= -.75;
+					break;
+				}
+				else if(c->collidesZ(pipes[n])) {
+					c->velocity.z *= -.75;
+					break;
+				}
+			}
+		}
 	}
+	c->position += c->velocity;
 	c->move(c->position);
 	return false;
   }
@@ -436,7 +465,7 @@ void applyGravity() {
 	camcube->velocity += gravity;
 	if(camcube->velocity.y < termvel.y) {
 		camcube->velocity.y = termvel.y;
-	}	
+	}
 	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesY(camcube)) {
 			if(cubes[n]->collidesBottomY(camcube)) jump = false;
