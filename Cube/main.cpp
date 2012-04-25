@@ -891,12 +891,12 @@ void mouse_click(int button, int mstate, int x, int y) {
 		}
 		else if(state == GAME_STATE) {
 		  if(hasfire) {
-			draw_fireball* newfire = new draw_fireball(glm::vec3(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3), 
+			draw_fireball* newfire = new draw_fireball(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
 													   glm::vec3(.5, .5, .5), 
 													   glm::vec3(0, 0, 0));
-			newfire->velocity.x = forward.x*firemovespeed;
-			newfire->velocity.y = lookat.y*firemovespeed;
-			newfire->velocity.z = forward.z*firemovespeed;
+			newfire->velocity.x = (lookat.x)*firemovespeed;
+			newfire->velocity.y = (lookat.y)*firemovespeed;
+			newfire->velocity.z = (lookat.z)*firemovespeed;
 			fireballs.push_back(newfire);
 //			cout << "mouse click" <<endl;
 		  }
