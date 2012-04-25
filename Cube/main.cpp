@@ -138,7 +138,7 @@ float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
 //stuff for fireball
 bool mushdraw = false;
-bool hasfire = true;
+bool hasfire = false;
 
 int numlives = 3;
 
@@ -389,7 +389,7 @@ void mushroomAI(draw_object* c) {
 
 bool fireballAI(draw_fireball* c) {
   if(c->distancetraveled > 1000) return true;
-  else{
+  else {
 	c->distancetraveled += 1;
 	c->velocity.y += 10*gravity.y;
 
@@ -400,35 +400,19 @@ bool fireballAI(draw_fireball* c) {
     //if path collision, fireball is destroyed
     for(int i = 0; i < cubes.size(); i++) {
 		if(c->collidesWith(cubes[i])) {
-			if(c->collidesY(cubes[i])) {
-				c->velocity.y *= -.75;
-				break;
-			}
-			else if(c->collidesX(cubes[i])) {
-				c->velocity.x *= -.75;
-				break;
-			}
-			else if(c->collidesZ(cubes[i])) {
-				c->velocity.z *= -.75;
-				break;
-			}
+			if(c->collidesY(cubes[i])) c->velocity.y *= -.75;
+			else if(c->collidesX(cubes[i])) c->velocity.x *= -.75;
+			else if(c->collidesZ(cubes[i])) c->velocity.z *= -.75;
+			break;
 		}
     }
 	for(int n = 0; n < pipes.size(); n++) {
 		if(c->collidesWith(pipes[n])) {
 			if(c->collidesWith(pipes[n])) {
-				if(c->collidesY(pipes[n])) {
-					c->velocity.y *= -.75;
-					break;
-				}
-				else if(c->collidesX(pipes[n])) {
-					c->velocity.x *= -.75;
-					break;
-				}
-				else if(c->collidesZ(pipes[n])) {
-					c->velocity.z *= -.75;
-					break;
-				}
+				if(c->collidesY(pipes[n])) c->velocity.y *= -.75;
+				else if(c->collidesX(pipes[n])) c->velocity.x *= -.75;
+				else if(c->collidesZ(pipes[n])) c->velocity.z *= -.75;
+				break;
 			}
 		}
 	}
@@ -567,10 +551,11 @@ void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
 void moveCamera() {
 	setVectors();
 	applyGravity();
+	
 	for(int n = 0; n < cubes.size(); n++) {
 		if(!cubes[n]->hit) spawnsPrize(camcube, cubes[n], 1);
 	}
-	if (flower->collidesWith(camcube)) hasfire == true;
+
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
@@ -643,6 +628,10 @@ void moveCamera() {
 	// key input
 
 	if(flag->collidesWith(camcube)) state = MENU_STATE; // win the level!
+	if(flower->collidesWith(camcube)) {
+		hasfire = true;
+		flower->destroyed = true;
+	}
 	
 	camcube->position += camcube->velocity;
 	if (camcube->position.y < -50) {
@@ -713,8 +702,8 @@ void gameDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 
-	flower->draw();
-	if(goomba->destroyed == false) goomba->draw();	
+	if(!flower->destroyed) flower->draw();
+	if(!goomba->destroyed) goomba->draw();	
 	flag->draw();
 	for( int i = 0; i < pipes.size(); i++) pipes[i]->draw();
 	star->draw();
