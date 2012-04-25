@@ -42,6 +42,7 @@
 
 #define SKIP_MENUS
 //#define DRAW_HITBOXES
+//#define PRINT_FPS
 
 using namespace std;
 
@@ -99,6 +100,10 @@ Cube* settings1; // normal gravity
 Cube* settings2; // low gravity
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
+
+#define MUSHROOM 0
+#define FLOWER 1
+#define STARMAN 2 
 
 vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
@@ -163,10 +168,6 @@ void AIphysics(Cube* c) {
 		}
 	}
 } // ai physics
-
-void setSize(Cube* c) {
-
-}
 
 void destroy(Cube* c) {
 	c->destroyed = true;
@@ -345,15 +346,35 @@ void simpleAI(draw_object* c) {
 } // Simple test AI
 
 void mushroomAI(draw_object* c) {
-    c->position.x += mushmovespeed;
 	c->velocity += (gravity*.5f);
 	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n])) {
 			c->velocity.y = 0;
 			break;
 		}
+		else if(c->collidesX(cubes[n])) {
+			c->velocity.x *= -1;
+			break;
+		}
+		else if(c->collidesZ(cubes[n])) {
+			c->velocity.z *= -1;
+			break;
+		}
 	}
-	c->position += c->velocity;
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesTopY(pipes[n])) {
+			c->velocity.y = 0;
+			break;
+		}
+		else if(c->collidesX(pipes[n])) {
+			c->velocity.x *= -1;
+			break;
+		}
+		else if(c->collidesZ(pipes[n])) {
+			c->velocity.z *= -1;
+			break;
+		}
+	}
 	if(c->collidesWith(camcube) && c->destroyed==false) {
 //		printf("Mushroom get\n");
 		camcube->position.y -= camcube->size/2;
@@ -361,9 +382,9 @@ void mushroomAI(draw_object* c) {
 		camcube->position.y += camcube->size/2;
 		mushdraw = false;
 		c->destroyed = true;
-		}
-	glm::vec3 newposmush (c->position.x,c->position.y,c->position.z);
-	c->move(newposmush);
+	}
+	c->position += c->velocity;
+	c->move(c->position);
 }
 
 bool fireballAI(draw_fireball* c) {
@@ -529,6 +550,7 @@ void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
 
       case 1 :
 	mushdraw = true;
+	mushgraph->velocity = glm::vec3(mushmovespeed, 0, 0);
 	mushgraph->destroyed = false;
 	Zoidberg->hit = true;
 	break;
@@ -781,11 +803,14 @@ void onDisplay() {
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glRasterPos2f(0.0f, 0.0f);
 
-	char* s = new char[20];
-	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
-	for (int n = 0; n < strlen(s); n++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
-	}
+//	char* s = new char[20];
+//	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+//	for (int n = 0; n < strlen(s); n++) {
+//		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
+//	}
+#ifdef PRINT_FPS
+	cout << 1000.0/(glutGet(GLUT_ELAPSED_TIME)-lastframe) << endl;
+#endif
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
 	glEnable(GL_LIGHTING);
 	
@@ -968,10 +993,12 @@ int main(int argc, char* argv[]) {
 	}    
     for (int n = 0; n < pathlength/16; n++) {
         cubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize));
-    } // floating ? cubes
+		cubes[n]->prizetype = rand()%3;
+	} // floating ? cubes
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
     }
+	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
@@ -979,7 +1006,6 @@ int main(int argc, char* argv[]) {
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 
 	star = new draw_star(glm::vec3(12, 2, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
-	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	mushgraph->destroyed = true;
@@ -987,6 +1013,8 @@ int main(int argc, char* argv[]) {
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
+	
+	srand(time(NULL));
 	
 	if(initShaders()) {
 		initLighting();
