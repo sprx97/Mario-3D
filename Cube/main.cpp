@@ -92,7 +92,6 @@ int pathlength = 100;
 double pathwidth = 8; // actually means 7
 int ncubes = 0;
 vector<Cube*> cubes; // array of cubes
-vector<Cube*> aircubes;
 Cube* title; // title graphic
 Cube* border; // menu graphic
 Cube* startbutton; // start button graphic
@@ -195,7 +194,7 @@ void reset() {
 	mushgraph->destroyed = true;
 	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
-	for (int n = 0; n < aircubes.size(); n++) aircubes[n]->hit = false;
+	for (int n = 0; n < cubes.size(); n++) cubes[n]->hit = false;
 
 	stardraw = false;
 //	new Cube(4, cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize);
@@ -403,13 +402,6 @@ void fireballAI(draw_object* c) {
 		c->destroyed = true;
       }
     }
-	for(int n = 0; n < aircubes.size(); n++) {
-		if(c->collidesWith(aircubes[n]) && !c->destroyed) {
-			firedraw = false;
-			hasShot = false;
-			c->destroyed = true;
-		}
-	}
 	for(int n = 0; n < pipes.size(); n++) {
 		if(c->collidesWith(pipes[n]) && !c->destroyed) {
 			firedraw = false;
@@ -484,17 +476,10 @@ void applyGravity() {
 	}	
 	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesY(camcube)) {
-			jump = false;
+			if(cubes[n]->collidesBottomY(camcube)) jump = false;
 			camcube->velocity.y = 0;
 			break;
 		}
-	}
-	for(int n = 0; n < aircubes.size(); n++) {
-		if(camcube->collidesY(aircubes[n])) {
-			if(aircubes[n]->collidesBottomY(camcube)) jump = false;
-			camcube->velocity.y = 0;
-			break;
-		} // collision from below
 	}
 	for(int n = 0; n < pipes.size(); n++) {
 		if(pipes[n]->collidesBottomY(camcube)) {
@@ -568,9 +553,9 @@ void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
 void moveCamera() {
 	setVectors();
 	applyGravity();
-	if (!aircubes[0]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
-	//	if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[1], 2); //will spawn type star
-	//if (!aircubes[1]->hit) spawnsPrize(camcube, aircubes[0], 1); //will spawn type mushroom
+	for(int n = 0; n < cubes.size(); n++) {
+		if(!cubes[n]->hit) spawnsPrize(camcube, cubes[n], 1);
+	}
 	if (flower->collidesWith(camcube)) hasfire == true;
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
@@ -578,12 +563,6 @@ void moveCamera() {
 		camcube->velocity -= rightvec * movespeed;
 		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity += rightvec * movespeed;
-				break;
-			}
-		}
-		for(int n = 0; n < aircubes.size(); n++) {
-			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity += rightvec * movespeed;
 				break;
 			}
@@ -603,12 +582,6 @@ void moveCamera() {
 				break;
 			}
 		}		
-		for(int n = 0; n < aircubes.size(); n++) {
-			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= rightvec * movespeed;
-				break;
-			}
-		}	
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
 				camcube->velocity -= rightvec*((float)(movespeed+.01));
@@ -620,12 +593,6 @@ void moveCamera() {
 		camcube->velocity += forward * movespeed;
 		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= forward * movespeed;
-				break;
-			}
-		}	
-		for(int n = 0; n < aircubes.size(); n++) {
-			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
 				camcube->velocity -= forward * movespeed;
 				break;
 			}
@@ -645,12 +612,6 @@ void moveCamera() {
 				break;
 			}
 		}		
-		for(int n = 0; n < aircubes.size(); n++) {
-			if(aircubes[n]->collidesX(camcube) || aircubes[n]->collidesZ(camcube)) {
-				camcube->velocity += forward * movespeed;
-				break;
-			}
-		}	
 		for(int n = 0; n < pipes.size(); n++) {
 			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
 				camcube->velocity += forward*((float)(movespeed+.01));
@@ -769,8 +730,6 @@ void gameDisplay() {
 //	camcube->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	for(int n = 0; n < cubes.size(); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	for(int n = 0; n < aircubes.size(); n++) aircubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-
 	//if (stardraw && !star->destroyed) (star)->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -856,9 +815,6 @@ void free_resources() {
 	glDeleteProgram(program);
 	for(int n = 0; n < cubes.size(); n++) {
 		delete cubes[n];
-	}
-	for(int n = 0; n < aircubes.size(); n++) {
-        delete aircubes[n];
 	}
     delete camcube;
     delete bg;
@@ -1012,8 +968,8 @@ int main(int argc, char* argv[]) {
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        aircubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize));
-    }
+        cubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize));
+    } // floating ? cubes
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
     }
