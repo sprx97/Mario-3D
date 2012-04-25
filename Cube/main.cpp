@@ -76,7 +76,6 @@ bool fullscreen = true;
 bool mouseinit = false;
 bool jump = false;
 bool lighttest = false;
-float dist;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -103,6 +102,7 @@ Cube* camcube; // player "model"
 
 vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
+vector<draw_fireball*> fireballs;
 draw_goomba* goomba; // will be vector of goomba called enemies
 
 draw_flower* flower;
@@ -110,7 +110,6 @@ draw_mushroom* mushgraph;
 draw_star* star;
 draw_flag* flag;
 draw_coin* coin;
-draw_fireball* myfire;
 
 glm::mat4 view, projection;
 
@@ -135,8 +134,6 @@ int test = 0;
 //stuff for fireball
 bool mushdraw = false;
 bool hasfire = true;
-bool firedraw = false;
-bool hasShot = false; //has fireball been shot
 
 int numlives = 3;
 
@@ -240,7 +237,7 @@ void rotateToFaceCamAI(draw_object *c) {
 
 void simpleAI(draw_object* c) {    
 	int behavior;   // state ai is in, 0 is normal patrol, 1 is chase 
-    dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
+    float dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
 
@@ -369,45 +366,25 @@ void mushroomAI(draw_object* c) {
 	c->move(newposmush);
 }
 
-void fireballAI(draw_fireball* c) {
-  if(hasShot == false && hasfire == true) {
-    c->move(glm::vec3(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3));
-    c->distancetraveled = 0;
-	hasShot = true;
-	c->destroyed = false;
-  }
-  else if(c->distancetraveled > 200) {
-	firedraw = false;
-	hasShot = false;
-	c->destroyed = true;
-  }
+bool fireballAI(draw_fireball* c) {
+  if(c->distancetraveled > 200) return true;
   else{
 	c->distancetraveled += 1;
-    cout << c->distancetraveled << endl;
 	c->position += c->velocity;
     if((c->collidesWith(goomba) && !c->destroyed) || (goomba->collidesWith(c) && !goomba->destroyed)) {
-//      printf("Hit!\n");
-      firedraw = false;
-      hasShot = false;
 	  goomba->destroyed = true;
+	  return true;
     }
 	
     //if path collision, fireball is destroyed
     for(int i = 0; i < cubes.size(); i++) {
-      if(c->collidesWith(cubes[i]) && !c->destroyed) {
-		firedraw = false;
-		hasShot = false;
-		c->destroyed = true;
-      }
+      if(c->collidesWith(cubes[i]) && !c->destroyed) return true;
     }
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n]) && !c->destroyed) {
-			firedraw = false;
-			hasShot = false;
-			c->destroyed = true;
-		}
+		if(c->collidesWith(pipes[n]) && !c->destroyed) return true;
 	}
 	c->move(c->position);
+	return false;
   }
 }
 
@@ -624,7 +601,12 @@ void moveCamera() {
     
 	simpleAI(goomba);	
     if(mushdraw) mushroomAI(mushgraph);
-	if(firedraw) fireballAI(myfire);
+	for(int n = 0; n < fireballs.size(); n++) {
+		if(fireballAI(fireballs[n])) {
+			fireballs.erase(fireballs.begin()+n, fireballs.begin()+n+1);
+			n--;
+		}
+	}
 
     if (numlives<0) {
       numlives = 3;
@@ -686,7 +668,7 @@ void gameDisplay() {
 	for( int i = 0; i < pipes.size(); i++) pipes[i]->draw();
 	star->draw();
 	coin->draw();
-	if(firedraw) myfire->draw();
+	for(int n = 0; n < fireballs.size(); n++) fireballs[n]->draw();
 	if (mushgraph->destroyed == false) mushgraph->draw();
 	// put this shit into an array!
 	
@@ -699,7 +681,8 @@ void gameDisplay() {
 	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(star->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	(myfire->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < fireballs.size(); n++)
+		(fireballs[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(mushgraph->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int l = 0; l < pipes.size(); l++) {
 	  for(int m = 0; m < pipes[l]->hitboxes.size(); m++) {
@@ -878,11 +861,14 @@ void mouse_click(int button, int mstate, int x, int y) {
 			}
 		}
 		else if(state == GAME_STATE) {
-		  if(hasfire && !firedraw) {
-			firedraw = true;
-			myfire->velocity.x = forward.x*firemovespeed;
-			myfire->velocity.y = lookat.y*firemovespeed;
-			myfire->velocity.z = forward.z*firemovespeed;
+		  if(hasfire) {
+			draw_fireball* newfire = new draw_fireball(glm::vec3(camcube->position.x+forward.x*3, camcube->position.y+lookat.y*3, camcube->position.z+forward.z*3), 
+													   glm::vec3(.5, .5, .5), 
+													   glm::vec3(0, 0, 0));
+			newfire->velocity.x = forward.x*firemovespeed;
+			newfire->velocity.y = lookat.y*firemovespeed;
+			newfire->velocity.z = forward.z*firemovespeed;
+			fireballs.push_back(newfire);
 //			cout << "mouse click" <<endl;
 		  }
 		}
@@ -966,7 +952,6 @@ int main(int argc, char* argv[]) {
 	star = new draw_star(glm::vec3(12, 2, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
 	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
-	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	mushgraph->destroyed = true;
 	
