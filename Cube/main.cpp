@@ -89,7 +89,7 @@ int keys[256] = {0}; // array of whether keys are pressed
 
 int cubesize = 2;
 int pathlength = 100;
-double pathwidth = 8; // actually means 7
+double pathwidth = 8;
 int ncubes = 0;
 vector<Cube*> cubes; // array of cubes
 Cube* title; // title graphic
@@ -140,6 +140,7 @@ int test = 0;
 bool hasfire = false;
 bool invincible = false;
 int destroycountdown = -1;
+int knockbackcountdown = -1;
 
 int numlives = 3;
 
@@ -243,7 +244,7 @@ void simpleAI(draw_object* c) {
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
 
-    if(destroycountdown < 0) {
+    if(destroycountdown < 0 && knockbackcountdown < 0) {
 		c->velocity = glm::vec3(0, c->velocity.y, 0);
 		switch (behavior){
 			case 0:
@@ -305,6 +306,9 @@ void simpleAI(draw_object* c) {
 			destroycountdown--;
 		}
 	}
+	else if(knockbackcountdown >= 0) {
+		knockbackcountdown--;
+	}
 	else if(c->collidesWith(camcube) && !c->destroyed && destroycountdown < 0){
 		if(c->collidesBottomY(camcube) && !c->collidesX(camcube) && !c->collidesZ(camcube)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
@@ -331,25 +335,21 @@ void simpleAI(draw_object* c) {
 				camcube->position.y -= camcube->size/2;
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
-				if (camcube->position.x < c->position.x){
-					c->velocity.y += .004;
-					c->velocity.x += 3*aimovespeed;
-				}
-				if (camcube->position.x > c->position.x){
-					c->velocity.y += .004;
-					c->velocity.x += -3*aimovespeed;
-				}
-				if (c->position.z > camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)){
-					c->velocity.y += .004;
-					c->velocity.z += 2*aimovespeed;
-					c->velocity.x = 0;
-				}
-				if (c->position.z < camcube->position.z && abs(c->position.x - camcube->position.x) < abs(c->position.z - camcube->position.z)){
-					c->velocity.y += .004;
-					c->velocity.z += -2*aimovespeed;
-					c->velocity.x = 0;
-				}
-				c->position += c->velocity;
+				
+				knockbackcountdown = 1000;
+				
+				// angle between user and gooma
+				float dx = abs(c->position.x - camcube->position.x);
+				float dz = abs(c->position.z - camcube->position.z);
+				float anglebetween = atan(dz/dx);
+				
+				int modz = 1; // modifies to make up for losing part of circle in atan
+				int modx = 1;
+				if(c->position.z-camcube->position.z < 0) modz = -1;
+				if(c->position.x-camcube->position.x < 0) modx = -1;
+				c->velocity.y = .01;
+				c->velocity.x = 2*modx*aimovespeed*cos(anglebetween);
+				c->velocity.z = 2*modz*aimovespeed*sin(anglebetween);
 			}
 			else {
 //				printf("You died\n");
