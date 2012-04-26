@@ -42,7 +42,7 @@
 
 #define SKIP_MENUS
 //#define DRAW_HITBOXES
-//#define PRINT_FPS
+#define PRINT_FPS
 
 using namespace std;
 
@@ -840,22 +840,33 @@ void onDisplay() {
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
 
-	glDisable(GL_LIGHTING);	
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRasterPos2f(0.0f, 0.0f);
-
-//	char* s = new char[20];
-//	sprintf(s, "%.2f FPS\n", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
-//	for (int n = 0; n < strlen(s); n++) {
-//		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[n]);
-//	}
 #ifdef PRINT_FPS
-	cout << 1000.0/(glutGet(GLUT_ELAPSED_TIME)-lastframe) << endl;
-#endif
-	lastframe = glutGet(GLUT_ELAPSED_TIME);
-	glEnable(GL_LIGHTING);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+
+    //set the projection matrix to be orthographic, but save the old one first...
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0,1,0,1);
 	
-	// posts FPS to screen
+    //clear the model-view matrix before we render that quad...
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	char* s = new char[20];
+	sprintf(s, "%.2f FPS\0", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+	renderGLUTText(0.0, 0.0, s, mPoint(0, 0, 0)); // x, y, string, color
+
+	lastframe = glutGet(GLUT_ELAPSED_TIME);
+   
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+	
+	glEnable(GL_LIGHTING);
+	glEnable(GL_DEPTH_TEST);
+#endif // posts FPS to screen
+	
 	glutSwapBuffers();
 } // displays to screen
 

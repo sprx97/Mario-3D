@@ -17,6 +17,8 @@
 #include <GL/glut.h>
 #endif
 
+#include "mPoint.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -30,6 +32,7 @@ using std::string;
 using std::vector;
 
 // Texturing helpers
+void renderGLUTText(float, float, const char*, mPoint);
 bool readTGA(const std::string filename, int &imageWidth, int &imageHeight, unsigned char* &imageData, bool &wasRGBA);
 bool registerOpenGLTexture(unsigned char *imageData, const int texWidth, const int texHeight, GLuint &texHandle);
 vector<string> tokenizeString(const string input, const string delimiters);

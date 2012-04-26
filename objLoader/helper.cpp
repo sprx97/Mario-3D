@@ -20,6 +20,25 @@
 //  The TGA file format, including the data layout with RLE, is based on a spec found at:
 //      http://www.dca.fee.unicamp.br/~martino/disciplinas/ea978/tgaffs.pdf
 //
+void renderGLUTText(float x, float y, const char *str, mPoint color)
+{
+    //save the current state of every glEnable()/glDisable(); we'll mess
+    //with a couple, but we can push before and pop afterwards so that it
+    //goes back to the way it was once we're done here.
+    glPushAttrib(GL_ENABLE_BIT);
+   
+    glDisable(GL_LIGHTING);     //disable these...
+    glDisable(GL_TEXTURE_2D);   //... just in case
+    glColor3f(color.x, color.y, color.z);
+   
+    //the character rendering function uses the 'raster poition' as an insertion point.
+    glRasterPos2f(x,y);
+    for(const char *c = str; *c != '\0'; c++)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);       //you can change out GLUT_BITMAP_8_BY_13; check the man page for more details.
+       
+    glPopAttrib();
+}
+
 bool readTGA(const string filename, int &imageWidth, int &imageHeight, unsigned char* &imageData, bool &wasRGBA)
 {
     FILE *fp = fopen(filename.c_str(), "rb");
