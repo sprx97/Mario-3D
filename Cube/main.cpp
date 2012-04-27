@@ -4,6 +4,7 @@
 // Main driver
 
 #include <string>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
@@ -104,8 +105,8 @@ Cube* bg; // background skycube
 Cube* camcube; // player "model"
 
 #define MUSHROOM 0
-#define FLOWER 1
-#define STARMAN 2 
+#define STARMAN 1
+#define FLOWER 2 
 
 vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
@@ -447,6 +448,7 @@ bool fireballAI(draw_fireball* c) {
 }
 
 void starAI(draw_star* c) {
+	if(c->velocity.y > .04) c->velocity.y = .04;
 	c->velocity.y += 10*gravity.y;	
     for(int i = 0; i < cubes.size(); i++) {
 		if(c->collidesWith(cubes[i])) {
@@ -581,21 +583,36 @@ void setVectors() {
 } // sets player vectors and mouse location
 
 void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
-    if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
-      switch (type) {
+	if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
+		switch (type) {
+			case MUSHROOM:
+				mushroom = new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
+											 glm::vec3(.5, .5, .5), 
+											 glm::vec3(0, -90, 0));
+				mushroom->velocity = glm::vec3(mushmovespeed, 0, 0);
+				mushroom->destroyed = false;
+				Zoidberg->hit = true;
+				break;
 
-      case 1 :
-	mushroom->velocity = glm::vec3(mushmovespeed, 0, 0);
-	mushroom->destroyed = false;
-	Zoidberg->hit = true;
-	break;
+			case FLOWER:
+				flower = new draw_flower(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
+										 glm::vec3(.25, .25, .25), 
+										 glm::vec3(0, 0, 0));
 
-      case 2 :
-	star->destroyed = false;
-	Zoidberg->hit = true;
-	break;
+				// flower doesn't move
+				flower->destroyed = false;
+				Zoidberg->hit = true;
+				break;
 
-      }
+			case STARMAN:
+				star = new draw_star(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z),
+									 glm::vec3(.2, .2, .2), 
+									 glm::vec3(0, -90, 0));
+				star->velocity = glm::vec3(.005, .025, 0);
+				star->destroyed = false;
+				Zoidberg->hit = true;
+				break;
+		}
     }    
 }
 
@@ -629,7 +646,7 @@ void moveCamera() {
 	applyGravity();
 	
 	for(int n = 0; n < cubes.size(); n++) {
-		if(!cubes[n]->hit) spawnsPrize(camcube, cubes[n], 1);
+		if(!cubes[n]->hit && cubes[n]->prizetype != -1) spawnsPrize(camcube, cubes[n], cubes[n]->prizetype);
 	}
 
 	camcube->velocity.x = 0;
@@ -1041,6 +1058,7 @@ void initLighting() {
 }
 
 int main(int argc, char* argv[]) {
+	srand(time(NULL));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
@@ -1077,8 +1095,7 @@ int main(int argc, char* argv[]) {
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        cubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize));
-		cubes[n]->prizetype = rand()%3;
+        cubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, rand()%3));
 	} // floating ? cubes
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
@@ -1089,22 +1106,23 @@ int main(int argc, char* argv[]) {
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
-	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 
+	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
+	flower->destroyed = true;
+
 	star = new draw_star(glm::vec3(4, 5, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
-	star->velocity = glm::vec3(.005, .025, 0);
-	
-	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
+	star->destroyed = true;
+		
 	mushroom = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	mushroom->destroyed = true;
+
+	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
-	
-	srand(time(NULL));
-	
+		
 	if(initShaders()) {
 		initLighting();
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
