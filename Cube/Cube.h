@@ -35,6 +35,7 @@ class Cube {
 
 		Cube(float, float, float, const char*, float, int = -1);
 		bool intersectsWith(float, float, float);
+		bool intersectsWith(Cube*);
 		bool collidesWith(Cube*);
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);

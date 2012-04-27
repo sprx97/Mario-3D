@@ -76,7 +76,9 @@ int pathlengthcheck = 1; // ai checks path width WIP
 bool fullscreen = true;
 bool mouseinit = false;
 bool jump = false;
-bool lighttest = false;
+int onpipe = -1;
+bool warping1 = false;
+bool warping2 = false;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -526,13 +528,15 @@ void applyGravity() {
 			break;
 		}
 	}
+	onpipe = -1;
 	for(int n = 0; n < pipes.size(); n++) {
 		if(pipes[n]->collidesBottomY(camcube)) {
+			onpipe = n;
 			jump = false;
 			camcube->velocity.y = 0;
 			break;
-		}		
-	}		
+		}
+	}
 } // moves by physics instead of input
 
 void motion(int x, int y) {
@@ -596,6 +600,31 @@ void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
 }
 
 void moveCamera() {
+	if(warping1) {
+		for(int n = 0; n < cubes.size(); n++) {
+			if(cubes[n]->collidesWith(camcube)) {
+				float tempx = (pipes[onpipe]->linkedpipe)->position.x;
+				float tempy = (pipes[onpipe]->linkedpipe)->position.y;
+				float tempz = (pipes[onpipe]->linkedpipe)->position.z;
+				bool flag = true;
+				camcube->position = glm::vec3(tempx, tempy, tempz);
+				camcube->velocity.y = .005;
+				warping1 = false;
+				warping2 = true;
+			}
+		} // "warps" until it hits the ground
+		camcube->position += camcube->velocity;
+		return;
+	}
+	else if(warping2) {
+		if(!(pipes[onpipe]->linkedpipe)->intersectsWith(camcube) && !((pipes[onpipe]->linkedpipe)->hitboxes[0])->collidesBottomY(camcube)) {
+			warping2 = false;
+			camcube->velocity.y = .015;
+		}
+		camcube->position += camcube->velocity;
+		return;
+	}
+
 	setVectors();
 	applyGravity();
 	
@@ -663,6 +692,12 @@ void moveCamera() {
 				camcube->velocity += forward*((float)(movespeed+.01));
 				break;
 			}		
+		}
+	}
+	if(keys['c'] && onpipe != -1) {
+		if(pipes[onpipe]->linkedpipe != NULL) {
+			warping1 = true;
+			camcube->velocity.y = -.025;
 		}
 	}
 	if(keys[' '] && !jump) {
@@ -855,7 +890,7 @@ void onDisplay() {
     glLoadIdentity();
 
 	char* s = new char[20];
-	sprintf(s, "%.2f FPS\0", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+	sprintf(s, "%.2f FPS", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
 	renderGLUTText(0.0, 0.0, s, mPoint(0, 0, 0)); // x, y, string, color
 
 	lastframe = glutGet(GLUT_ELAPSED_TIME);
@@ -937,8 +972,6 @@ void key_pressed(unsigned char key, int x, int y) {
 //			reset();
 //		} // reset
 	}
-	
-      
 } // watches keyboard
 
 void key_released(unsigned char key, int x, int y) {
@@ -1050,6 +1083,8 @@ int main(int argc, char* argv[]) {
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
     }
+	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
+	pipes[pathlength/32 -1]->linkedpipe = pipes[0]; // links last pipe to first pipe
 	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know

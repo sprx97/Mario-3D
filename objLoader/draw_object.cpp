@@ -37,6 +37,13 @@ void draw_object::rotate(glm::vec3 newrot) {
 	setHitboxes();
 }
 
+bool draw_object::intersectsWith(Cube* c) {
+	for(int n = 0; n < hitboxes.size(); n++) {
+		if(c->intersectsWith(hitboxes[n])) return true;
+	}
+	return false;
+}
+
 bool draw_object::collidesWith(Cube* c) {
 	for(int n = 0; n < hitboxes.size(); n++) {
 		if(c->collidesWith(hitboxes[n]) || hitboxes[n]->collidesWith(c)) return true;

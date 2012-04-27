@@ -31,6 +31,9 @@ class draw_object {
 		void move(glm::vec3);
 		void rotate(glm::vec3);
 		void draw();
+		
+		bool intersectsWith(Cube*);
+		
 		bool collidesWith(Cube*); // collision
 		bool collidesX(Cube*);
 		bool collidesY(Cube*);

@@ -479,6 +479,12 @@ bool Cube::intersectsWith(float x, float y, float z) {
 		&& z >= position.z-size/2 && z <= position.z+size/2;
 } // whether the point (x, y, z) is in the cube (collides with it)
 
+bool Cube::intersectsWith(Cube* other) {
+	return abs(position.x-other->position.x) <= (size/2 + other->size/2)
+		&& abs(position.y-other->position.y) <= (size/2 + other->size/2)
+		&& abs(position.z-other->position.z) <= (size/2 + other->size/2);
+}
+
 bool Cube::collidesX(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
@@ -487,6 +493,7 @@ bool Cube::collidesX(Cube* other) {
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
+
 bool Cube::collidesY(Cube* other) {
 	glm::vec3 nextpos = position + velocity;
 	glm::vec3 othernextpos = other->position + other->velocity;
