@@ -13,6 +13,8 @@ draw_coin::draw_coin(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 
 	hitboxes.push_back(new Cube(position.x, position.y, position.z, "brickblock", scale.x*15));
 
+	type = "coin";
+
 	load();
 }
 

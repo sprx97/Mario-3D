@@ -25,6 +25,8 @@
   
   hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z+scale.z, "brickblock", 2*scale.x));
 
+  type = "mushroom";
+
   load();
 }
 

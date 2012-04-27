@@ -8,6 +8,7 @@ draw_object::draw_object(glm::vec3 p, glm::vec3 s, glm::vec3 r) {
 	rot = r;
 	velocity = glm::vec3(0.0, 0.0, 0.0);
 	destroyed = false;
+	type = "object";
 }
 
 void draw_object::draw() {

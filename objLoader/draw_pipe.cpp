@@ -16,6 +16,8 @@ draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r, draw_pipe* l)
 
   linkedpipe = l;
 
+  type = "pipe";
+
   load();
 }
 

@@ -22,6 +22,8 @@ class draw_object {
 		glm::vec3 scale;
 		glm::vec3 rot;
 		
+		const char* type;
+		
 		vector<Mesh> meshes;
 		
 		vector<Cube*> hitboxes;

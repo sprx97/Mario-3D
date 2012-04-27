@@ -37,6 +37,8 @@
 
   hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z, "brickblock", 2*scale.x));
 
+  type = "goomba";
+
   load();
 }
 

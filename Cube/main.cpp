@@ -113,9 +113,6 @@ vector<draw_pipe*> pipes;
 vector<draw_fireball*> fireballs;
 draw_goomba* goomba; // will be vector of goomba called enemies
 
-draw_flower* flower;
-draw_mushroom* mushroom;
-draw_star* star;
 draw_flag* flag;
 draw_coin* coin;
 
@@ -128,7 +125,7 @@ GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float movespeed = 0.01;
 float aimovespeed = movespeed * .5;
-float mushmovespeed = 0.001;
+float mushmovespeed = 0.0025;
 float firemovespeed = .1;
 float mousespeed = 0.002;
 float jumpvel = .025;
@@ -174,19 +171,11 @@ void AIphysics(Cube* c) {
 	}
 } // ai physics
 
-void destroy(Cube* c) {
-	c->destroyed = true;
-}
-
 void reset() {
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
 	goomba->destroyed = false;
-
-	mushroom = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-1)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-	mushroom->destroyed = false;
-	mushroom->destroyed = true;
 	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < cubes.size(); n++) cubes[n]->hit = false;
@@ -370,7 +359,7 @@ void simpleAI(draw_object* c) {
 	else c->rotate(glm::vec3(0, 90-angletouser, 0));
 } // Simple test AI
 
-void mushroomAI(draw_mushroom* c) {
+bool mushroomAI(draw_object* c) {
 	c->velocity += (gravity*.5f);
 	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n])) {
@@ -399,14 +388,6 @@ void mushroomAI(draw_mushroom* c) {
 			c->velocity.z *= -1;
 			break;
 		}
-	}
-	if(c->collidesWith(camcube) && c->destroyed==false) {
-//		printf("Mushroom get\n");
-		camcube->position.y -= camcube->size/2;
-		camcube->size = cubesize*2;
-		camcube->position.y += camcube->size/2;
-		mushroom->destroyed = false;
-		c->destroyed = true;
 	}
 	c->position += c->velocity;
 	c->move(c->position);
@@ -447,7 +428,7 @@ bool fireballAI(draw_fireball* c) {
   }
 }
 
-void starAI(draw_star* c) {
+void starAI(draw_object* c) {
 	if(c->velocity.y > .04) c->velocity.y = .04;
 	c->velocity.y += 10*gravity.y;	
     for(int i = 0; i < cubes.size(); i++) {
@@ -582,34 +563,30 @@ void setVectors() {
 #endif
 } // sets player vectors and mouse location
 
-void spawnsPrize(Cube* c, Cube* Zoidberg, int type) {
+void spawnsPrize(Cube* c, Cube* Zoidberg) {
 	if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
-		switch (type) {
+		switch(Zoidberg->prizetype) {
 			case MUSHROOM:
-				mushroom = new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
+				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
 											 glm::vec3(.5, .5, .5), 
-											 glm::vec3(0, -90, 0));
-				mushroom->velocity = glm::vec3(mushmovespeed, 0, 0);
-				mushroom->destroyed = false;
+											 glm::vec3(0, -90, 0)));
+				prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
 				Zoidberg->hit = true;
 				break;
 
 			case FLOWER:
-				flower = new draw_flower(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
+				prizes.push_back(new draw_flower(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
 										 glm::vec3(.25, .25, .25), 
-										 glm::vec3(0, 0, 0));
-
+										 glm::vec3(0, 0, 0)));
 				// flower doesn't move
-				flower->destroyed = false;
 				Zoidberg->hit = true;
 				break;
 
 			case STARMAN:
-				star = new draw_star(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z),
+				prizes.push_back(new draw_star(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z),
 									 glm::vec3(.2, .2, .2), 
-									 glm::vec3(0, -90, 0));
-				star->velocity = glm::vec3(.005, .025, 0);
-				star->destroyed = false;
+									 glm::vec3(0, -90, 0)));
+				prizes[prizes.size()-1]->velocity = glm::vec3(.005, .025, 0);
 				Zoidberg->hit = true;
 				break;
 		}
@@ -646,7 +623,7 @@ void moveCamera() {
 	applyGravity();
 	
 	for(int n = 0; n < cubes.size(); n++) {
-		if(!cubes[n]->hit && cubes[n]->prizetype != -1) spawnsPrize(camcube, cubes[n], cubes[n]->prizetype);
+		if(!cubes[n]->hit && cubes[n]->prizetype != -1) spawnsPrize(camcube, cubes[n]);
 	}
 
 	camcube->velocity.x = 0;
@@ -727,14 +704,6 @@ void moveCamera() {
 	// key input
 
 	if(flag->collidesWith(camcube)) state = MENU_STATE; // win the level!
-	if(flower->collidesWith(camcube)) {
-		hasfire = true;
-		flower->destroyed = true;
-	}
-	if(star->collidesWith(camcube)) {
-		invincible = true;
-		star->destroyed = true;
-	}
 	
 	camcube->position += camcube->velocity;
 	if (camcube->position.y < -50) {
@@ -742,9 +711,38 @@ void moveCamera() {
 		reset();
 	}
     
+	for(int n = 0; n < prizes.size(); n++) {
+		if(strcmp(prizes[n]->type, "mushroom") == 0) {
+			mushroomAI(prizes[n]);
+			if(prizes[n]->collidesWith(camcube)) {
+				camcube->position.y -= camcube->size/2;
+				camcube->size = cubesize*2;
+				camcube->position.y += camcube->size/2;
+				// grows
+				
+				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
+				n--;
+			}
+		}
+		else if(strcmp(prizes[n]->type, "star") == 0) {
+			starAI(prizes[n]);
+			if(prizes[n]->collidesWith(camcube)) {
+				invincible = true;
+				movespeed *= 2;
+				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
+				n--;
+			}
+		}
+		else if(strcmp(prizes[n]->type, "flower") == 0) {
+			if(prizes[n]->collidesWith(camcube)) {
+				hasfire = true;
+				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
+				n--;
+			}
+		}
+	}
+	
 	if(!goomba->destroyed) simpleAI(goomba);	
-    if(!mushroom->destroyed) mushroomAI(mushroom);
-	if(!star->destroyed) starAI(star);
 	for(int n = 0; n < fireballs.size(); n++) {
 		if(fireballAI(fireballs[n])) {
 			fireballs.erase(fireballs.begin()+n, fireballs.begin()+n+1);
@@ -752,7 +750,7 @@ void moveCamera() {
 		}
 	}
 
-    if (numlives<0) {
+    if(numlives<0) {
       numlives = 3;
       state = MENU_STATE;
     }
@@ -806,28 +804,28 @@ void gameDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 
-	if(!flower->destroyed) flower->draw();
 	if(!goomba->destroyed) goomba->draw();	
 	flag->draw();
 	for( int i = 0; i < pipes.size(); i++) pipes[i]->draw();
-	if(!star->destroyed) star->draw();
 	coin->draw();
 	for(int n = 0; n < fireballs.size(); n++) fireballs[n]->draw();
-	if (mushroom->destroyed == false) mushroom->draw();
-	// put this shit into an array!
+	
+	for(int n = 0; n < prizes.size(); n++) prizes[n]->draw();
 	
 	glUseProgram(program);
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 
 #ifdef DRAW_HITBOXES
-	(flower->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	(star->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < fireballs.size(); n++)
 		(fireballs[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	(mushroom->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < prizes.size(); n++) {
+		for(int m = 0; m < (prizes[n]->hitboxes).size(); m++) {
+			(prizes[n]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+		}
+	}
 	for(int l = 0; l < pipes.size(); l++) {
 	  for(int m = 0; m < pipes[l]->hitboxes.size(); m++) {
 	    (pipes[l]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
@@ -1107,16 +1105,7 @@ int main(int argc, char* argv[]) {
     //these are all of the graphics. they can be easily modified so let me know
 
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-
-	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
-	flower->destroyed = true;
-
-	star = new draw_star(glm::vec3(4, 5, -4), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
-	star->destroyed = true;
 		
-	mushroom = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-	mushroom->destroyed = true;
-
 	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
 	
 #ifdef __APPLE__

@@ -20,6 +20,8 @@
 	hitboxes.push_back(new Cube(position.x, position.y+scale.y*n, position.z, "brickblock", scale.x));
   }
 
+  type = "flag";
+
   load();
 }
 

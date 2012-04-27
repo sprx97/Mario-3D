@@ -15,6 +15,8 @@
 
 	distancetraveled = 0;
 
+    type = "fireball";
+
 	load();
 }
 
