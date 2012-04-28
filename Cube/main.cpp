@@ -111,10 +111,10 @@ Cube* camcube; // player "model"
 vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
 vector<draw_fireball*> fireballs;
+vector<draw_coin*> coins;
 draw_goomba* goomba; // will be vector of goomba called enemies
 
 draw_flag* flag;
-draw_coin* coin;
 
 glm::mat4 view, projection;
 
@@ -146,6 +146,7 @@ int destroycountdown = -1;
 int knockbackcountdown = -1;
 
 int numlives = 3;
+int coincount = 0;
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
@@ -703,13 +704,18 @@ void moveCamera() {
 	// key input
 
 	if(flag->collidesWith(camcube, dt)) state = MENU_STATE; // win the level!
-	
-	camcube->position += camcube->velocity * dt;
-	if (camcube->position.y < -50) {
-		numlives--;
-		reset();
+	for(int n = 0; n < coins.size(); n++) {
+		if(coins[n]->collidesWith(camcube, dt)) {
+			coincount++;
+			if(coincount == 100) {
+				numlives++;
+				coincount = 0;
+			}
+			
+			coins.erase(coins.begin()+n, coins.begin()+n+1);
+			n--;
+		}
 	}
-    
 	for(int n = 0; n < prizes.size(); n++) {
 		if(strcmp(prizes[n]->type, "mushroom") == 0) {
 			mushroomAI(prizes[n]);
@@ -748,8 +754,14 @@ void moveCamera() {
 			n--;
 		}
 	}
+	
+	camcube->position += camcube->velocity * dt;
+	if (camcube->position.y < -50) {
+		numlives--;
+		reset();
+	}
 
-    if(numlives<0) {
+    if(numlives < 0) {
       numlives = 3;
       state = MENU_STATE;
     }
@@ -813,7 +825,7 @@ void gameDisplay() {
 	if(!goomba->destroyed) goomba->draw();	
 	flag->draw();
 	for( int i = 0; i < pipes.size(); i++) pipes[i]->draw();
-	coin->draw();
+	for(int n = 0; n < coins.size(); n++) coins[n]->draw();
 	for(int n = 0; n < fireballs.size(); n++) fireballs[n]->draw();
 	
 	for(int n = 0; n < prizes.size(); n++) prizes[n]->draw();
@@ -824,7 +836,8 @@ void gameDisplay() {
 
 #ifdef DRAW_HITBOXES
 	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	(coin->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < coins.size(); n++) 
+		(coins[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < fireballs.size(); n++)
 		(fireballs[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < prizes.size(); n++) {
@@ -1111,8 +1124,10 @@ int main(int argc, char* argv[]) {
     //these are all of the graphics. they can be easily modified so let me know
 
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-		
-	coin = new draw_coin(glm::vec3(10, 3,-7), glm::vec3(.025, .025, .025), glm::vec3(0, 20, 90)); 
+	
+	for(int n = 0; n < pathlength; n++) {
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+	}
 	
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
@@ -1123,7 +1138,6 @@ int main(int argc, char* argv[]) {
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
-//		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
