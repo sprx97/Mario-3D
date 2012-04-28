@@ -36,19 +36,19 @@ class draw_object {
 		
 		bool intersectsWith(Cube*);
 		
-		bool collidesWith(Cube*); // collision
-		bool collidesX(Cube*);
-		bool collidesY(Cube*);
-		bool collidesZ(Cube*);
-		bool collidesBottomY(Cube*);
-		bool collidesTopY(Cube*);
+		bool collidesWith(Cube*, float); // collision
+		bool collidesX(Cube*, float);
+		bool collidesY(Cube*, float);
+		bool collidesZ(Cube*, float);
+		bool collidesBottomY(Cube*, float);
+		bool collidesTopY(Cube*, float);
 
-		bool collidesWith(draw_object*); // collision
-		bool collidesX(draw_object*);
-		bool collidesY(draw_object*);
-		bool collidesZ(draw_object*);
-		bool collidesBottomY(draw_object*);
-		bool collidesTopY(draw_object*);
+		bool collidesWith(draw_object*, float); // collision
+		bool collidesX(draw_object*, float);
+		bool collidesY(draw_object*, float);
+		bool collidesZ(draw_object*, float);
+		bool collidesBottomY(draw_object*, float);
+		bool collidesTopY(draw_object*, float);
 		
 		bool destroyed;
 

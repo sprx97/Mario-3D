@@ -133,6 +133,8 @@ glm::vec3 gravity = glm::vec3(0, -.00002, 0);
 glm::vec3 termvel = glm::vec3(0, -.1, 0);
 bool lowgrav = false;
 
+float dt = 1; // for time based movement
+float lastidle = 0;
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int test = 0;
@@ -149,7 +151,7 @@ float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
 }// distance between 2 points
 
 void ai_chase(Cube* c) {
-	c->position -= forward * aimovespeed;
+	c->position -= forward * aimovespeed * dt;
 }
 
 void changegrav() {
@@ -159,12 +161,12 @@ void changegrav() {
 }
 
 void AIphysics(Cube* c) {
-    c->velocity += gravity;
+    c->velocity += gravity * dt;
 	c->position += c->velocity;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
 	for(int n = 0; n < cubes.size(); n++) {
-		if(cubes[n]->collidesWith(c)) {
-			c->position -= c->velocity;
+		if(cubes[n]->collidesWith(c, dt)) {
+			c->position -= c->velocity * dt;
 			c->velocity = glm::vec3(0, 0, 0);
 			break;
 		}
@@ -240,8 +242,8 @@ void simpleAI(draw_object* c) {
 		c->velocity = glm::vec3(0, c->velocity.y, 0);
 		switch (behavior){
 			case 0:
-				c->velocity.z += pathwidthcheck * (aimovespeed * .1f);
-				c->velocity.x -= pathlengthcheck * (aimovespeed * .25f);
+				c->velocity.z += pathwidthcheck * (aimovespeed * .1f) * dt;
+				c->velocity.x -= pathlengthcheck * (aimovespeed * .25f) * dt;
 				if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
 				if(c->position.x < 12 * cubesize) {
 					pathlengthcheck = -1;
@@ -254,27 +256,27 @@ void simpleAI(draw_object* c) {
 				break;
 			case 1:
 				if (c->position.z >= camcube->position.z) {
-					c->velocity.z -= aimovespeed * .5f;
+					c->velocity.z -= aimovespeed * .5f * dt;
 					for(int n = 0; n < pipes.size(); n++) {
-						if(c->collidesZ(pipes[n])) c->velocity.z += (aimovespeed+.01f)*.5f;
+						if(c->collidesZ(pipes[n], dt)) c->velocity.z += (aimovespeed+.01f)*.5f * dt;
 					}
 				}
 				if (c->position.z <= camcube->position.z) {
-					c->velocity.z += aimovespeed * .5f;
+					c->velocity.z += aimovespeed * .5f * dt;
 					for(int n = 0; n < pipes.size(); n++) {
-						if(c->collidesZ(pipes[n])) c->velocity.z -= (aimovespeed+.01f)*.5f;
+						if(c->collidesZ(pipes[n], dt)) c->velocity.z -= (aimovespeed+.01f)*.5f * dt;
 					}
 				}
 				if (c->position.x >= camcube->position.x) {
-					c->velocity.x -= aimovespeed * .5f;
+					c->velocity.x -= aimovespeed * .5f * dt;
 					for(int n = 0; n < pipes.size(); n++) {
-						if(c->collidesX(pipes[n])) c->velocity.x += (aimovespeed+.01f)*.5f;
+						if(c->collidesX(pipes[n], dt)) c->velocity.x += (aimovespeed+.01f)*.5f * dt;
 					}
 				}
 				if (c->position.x <= camcube->position.x) {
-					c->velocity.x += aimovespeed * .5f;
+					c->velocity.x += aimovespeed * .5f * dt;
 					for(int n = 0; n < pipes.size(); n++) {
-						if(c->collidesX(pipes[n])) c->velocity.x -= (aimovespeed+.01f)*.5f;
+						if(c->collidesX(pipes[n], dt)) c->velocity.x -= (aimovespeed+.01f)*.5f * dt;
 					}
 				}
 				rotateToFaceCamAI(c);
@@ -282,10 +284,10 @@ void simpleAI(draw_object* c) {
 		}
 	}
 	
-    c->velocity += gravity;
+    c->velocity += gravity * dt;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
 	for(int n = 0; n < cubes.size(); n++) {
-		if(c->collidesTopY(cubes[n])) {
+		if(c->collidesTopY(cubes[n], dt)) {
 			c->velocity.y = 0;
 			break;
 		}
@@ -301,8 +303,8 @@ void simpleAI(draw_object* c) {
 	else if(knockbackcountdown >= 0) {
 		knockbackcountdown--;
 	}
-	else if(c->collidesWith(camcube) && !c->destroyed && destroycountdown < 0){
-		if(c->collidesBottomY(camcube) && !c->collidesX(camcube) && !c->collidesZ(camcube)) {
+	else if(c->collidesWith(camcube, dt) && !c->destroyed && destroycountdown < 0){
+		if(c->collidesBottomY(camcube, dt) && !c->collidesX(camcube, dt) && !c->collidesZ(camcube, dt)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
 			c->destroyed = true;
 		}
@@ -350,7 +352,7 @@ void simpleAI(draw_object* c) {
 			}
 		}
 	}
-	c->position += c->velocity;	
+	c->position += c->velocity * dt;	
 	glm::vec3 newpos(c->position.x,c->position.y,c->position.z);
 	c->move(newpos);
 	
@@ -360,36 +362,36 @@ void simpleAI(draw_object* c) {
 } // Simple test AI
 
 bool mushroomAI(draw_object* c) {
-	c->velocity += (gravity*.5f);
+	c->velocity += (gravity*.5f) * dt;
 	for(int n = 0; n < cubes.size(); n++) {
-		if(c->collidesTopY(cubes[n])) {
+		if(c->collidesTopY(cubes[n], dt)) {
 			c->velocity.y = 0;
 			break;
 		}
-		else if(c->collidesX(cubes[n])) {
+		else if(c->collidesX(cubes[n], dt)) {
 			c->velocity.x *= -1;
 			break;
 		}
-		else if(c->collidesZ(cubes[n])) {
+		else if(c->collidesZ(cubes[n], dt)) {
 			c->velocity.z *= -1;
 			break;
 		}
 	}
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesTopY(pipes[n])) {
+		if(c->collidesTopY(pipes[n], dt)) {
 			c->velocity.y = 0;
 			break;
 		}
-		else if(c->collidesX(pipes[n])) {
+		else if(c->collidesX(pipes[n], dt)) {
 			c->velocity.x *= -1;
 			break;
 		}
-		else if(c->collidesZ(pipes[n])) {
+		else if(c->collidesZ(pipes[n], dt)) {
 			c->velocity.z *= -1;
 			break;
 		}
 	}
-	c->position += c->velocity;
+	c->position += c->velocity * dt;
 	c->move(c->position);
 }
 
@@ -397,32 +399,32 @@ bool fireballAI(draw_fireball* c) {
   if(c->distancetraveled > 1000) return true;
   else {
 	c->distancetraveled += 1;
-	c->velocity.y += 10*gravity.y;
+	c->velocity.y += 10*gravity.y * dt;
 
-    if(c->collidesWith(goomba)) {
+    if(c->collidesWith(goomba, dt)) {
 	  goomba->destroyed = true;
 	  return true;
     }
     //if path collision, fireball is destroyed
     for(int i = 0; i < cubes.size(); i++) {
-		if(c->collidesWith(cubes[i])) {
-			if(c->collidesY(cubes[i])) c->velocity.y *= -.75;
-			else if(c->collidesX(cubes[i])) c->velocity.x *= -.75;
-			else if(c->collidesZ(cubes[i])) c->velocity.z *= -.75;
+		if(c->collidesWith(cubes[i], dt)) {
+			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -.75;
+			else if(c->collidesX(cubes[i], dt)) c->velocity.x *= -.75;
+			else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -.75;
 			break;
 		}
     }
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n])) {
-			if(c->collidesWith(pipes[n])) {
-				if(c->collidesY(pipes[n])) c->velocity.y *= -.75;
-				else if(c->collidesX(pipes[n])) c->velocity.x *= -.75;
-				else if(c->collidesZ(pipes[n])) c->velocity.z *= -.75;
+		if(c->collidesWith(pipes[n], dt)) {
+			if(c->collidesWith(pipes[n], dt)) {
+				if(c->collidesY(pipes[n], dt)) c->velocity.y *= -.75;
+				else if(c->collidesX(pipes[n], dt)) c->velocity.x *= -.75;
+				else if(c->collidesZ(pipes[n], dt)) c->velocity.z *= -.75;
 				break;
 			}
 		}
 	}
-	c->position += c->velocity;
+	c->position += c->velocity * dt;
 	c->move(c->position);
 	return false;
   }
@@ -430,26 +432,26 @@ bool fireballAI(draw_fireball* c) {
 
 void starAI(draw_object* c) {
 	if(c->velocity.y > .04) c->velocity.y = .04;
-	c->velocity.y += 10*gravity.y;	
+	c->velocity.y += 10*gravity.y * dt;	
     for(int i = 0; i < cubes.size(); i++) {
-		if(c->collidesWith(cubes[i])) {
-			if(c->collidesY(cubes[i])) c->velocity.y *= -1;
-			else if(c->collidesX(cubes[i])) c->velocity.x *= -1;
-			else if(c->collidesZ(cubes[i])) c->velocity.z *= -1;
+		if(c->collidesWith(cubes[i], dt)) {
+			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -1;
+			else if(c->collidesX(cubes[i], dt)) c->velocity.x *= -1;
+			else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -1;
 			break;
 		}
     }
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n])) {
-			if(c->collidesWith(pipes[n])) {
-				if(c->collidesY(pipes[n])) c->velocity.y *= -1;
-				else if(c->collidesX(pipes[n])) c->velocity.x *= -1;
-				else if(c->collidesZ(pipes[n])) c->velocity.z *= -1;
+		if(c->collidesWith(pipes[n], dt)) {
+			if(c->collidesWith(pipes[n], dt)) {
+				if(c->collidesY(pipes[n], dt)) c->velocity.y *= -1;
+				else if(c->collidesX(pipes[n], dt)) c->velocity.x *= -1;
+				else if(c->collidesZ(pipes[n], dt)) c->velocity.z *= -1;
 				break;
 			}
 		}
 	}
-	c->position += c->velocity;
+	c->position += c->velocity * dt;
 	c->move(c->position);
 	c->rot += glm::vec3(0, .5, 0);
 	c->rotate(c->rot);
@@ -500,20 +502,20 @@ int initShaders() {
 }
 
 void applyGravity() {
-	camcube->velocity += gravity;
+	camcube->velocity += gravity * dt;
 	if(camcube->velocity.y < termvel.y) {
 		camcube->velocity.y = termvel.y;
 	}
 	for(int n = 0; n < cubes.size(); n++) {
-		if(cubes[n]->collidesY(camcube)) {
-			if(cubes[n]->collidesBottomY(camcube)) jump = false;
+		if(cubes[n]->collidesY(camcube, dt)) {
+			if(cubes[n]->collidesBottomY(camcube, dt)) jump = false;
 			camcube->velocity.y = 0;
 			break;
 		}
 	}
 	onpipe = -1;
 	for(int n = 0; n < pipes.size(); n++) {
-		if(pipes[n]->collidesBottomY(camcube)) {
+		if(pipes[n]->collidesBottomY(camcube, dt)) {
 			onpipe = n;
 			jump = false;
 			camcube->velocity.y = 0;
@@ -523,8 +525,8 @@ void applyGravity() {
 } // moves by physics instead of input
 
 void motion(int x, int y) {
-	angle.x -= (x - lastx) * mousespeed; // phi
-	angle.y -= (y - lasty) * mousespeed; // theta
+	angle.x -= (x - lastx) * mousespeed * dt; // phi
+	angle.y -= (y - lasty) * mousespeed * dt; // theta
 	// moves camera
 	
 	if(angle.x < -M_PI) angle.x += M_PI * 2;
@@ -564,7 +566,7 @@ void setVectors() {
 } // sets player vectors and mouse location
 
 void spawnsPrize(Cube* c, Cube* Zoidberg) {
-	if (c->collidesBottomY(Zoidberg) && c->velocity.y == 0 && !Zoidberg->hit) {
+	if (c->collidesBottomY(Zoidberg, dt) && c->velocity.y == 0 && !Zoidberg->hit) {
 		switch(Zoidberg->prizetype) {
 			case MUSHROOM:
 				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
@@ -596,7 +598,7 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 void moveCamera() {
 	if(warping1) {
 		for(int n = 0; n < cubes.size(); n++) {
-			if(cubes[n]->collidesWith(camcube)) {
+			if(cubes[n]->collidesWith(camcube, dt)) {
 				float tempx = (pipes[onpipe]->linkedpipe)->position.x;
 				float tempy = (pipes[onpipe]->linkedpipe)->position.y;
 				float tempz = (pipes[onpipe]->linkedpipe)->position.z;
@@ -607,15 +609,15 @@ void moveCamera() {
 				warping2 = true;
 			}
 		} // "warps" until it hits the ground
-		camcube->position += camcube->velocity;
+		camcube->position += camcube->velocity * dt;
 		return;
 	}
 	else if(warping2) {
-		if(!(pipes[onpipe]->linkedpipe)->intersectsWith(camcube) && !((pipes[onpipe]->linkedpipe)->hitboxes[0])->collidesBottomY(camcube)) {
+		if(!(pipes[onpipe]->linkedpipe)->intersectsWith(camcube) && !((pipes[onpipe]->linkedpipe)->hitboxes[0])->collidesBottomY(camcube, dt)) {
 			warping2 = false;
 			camcube->velocity.y = .015;
 		}
-		camcube->position += camcube->velocity;
+		camcube->position += camcube->velocity * dt;
 		return;
 	}
 
@@ -629,61 +631,61 @@ void moveCamera() {
 	camcube->velocity.x = 0;
 	camcube->velocity.z = 0;
     if(keys['a']) {
-		camcube->velocity -= rightvec * movespeed;
+		camcube->velocity -= rightvec * movespeed * dt;
 		for(int n = 0; n < cubes.size(); n++) {
-			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity += rightvec * movespeed;
+			if(cubes[n]->collidesX(camcube, dt) || cubes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity += rightvec * movespeed * dt;
 				break;
 			}
 		}
 		for(int n = 0; n < pipes.size(); n++) {
-			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity += rightvec*((float)(movespeed+.01));
+			if(pipes[n]->collidesX(camcube, dt) || pipes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity += rightvec*((float)(movespeed+.01)) * dt;
 				break;
 			}		
 		}
 	}
 	if(keys['d']) {
-		camcube->velocity += rightvec * movespeed;
+		camcube->velocity += rightvec * movespeed * dt;
 		for(int n = 0; n < cubes.size(); n++) {
-			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= rightvec * movespeed;
+			if(cubes[n]->collidesX(camcube, dt) || cubes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity -= rightvec * movespeed * dt;
 				break;
 			}
 		}		
 		for(int n = 0; n < pipes.size(); n++) {
-			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity -= rightvec*((float)(movespeed+.01));
+			if(pipes[n]->collidesX(camcube, dt) || pipes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity -= rightvec*((float)(movespeed+.01)) * dt;
 				break;
 			}		
 		}
 	}
 	if(keys['w']) {
-		camcube->velocity += forward * movespeed;
+		camcube->velocity += forward * movespeed * dt;
 		for(int n = 0; n < cubes.size(); n++) {
-			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity -= forward * movespeed;
+			if(cubes[n]->collidesX(camcube, dt) || cubes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity -= forward * movespeed * dt;
 				break;
 			}
 		}
 		for(int n = 0; n < pipes.size(); n++) {
-			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity -= forward*((float)(movespeed+.01));
+			if(pipes[n]->collidesX(camcube, dt) || pipes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity -= forward*((float)(movespeed+.01)) * dt;
 				break;
 			}		
 		}
 	}
 	if(keys['s']) {
-		camcube->velocity -= forward * movespeed;
+		camcube->velocity -= forward * movespeed * dt;
 		for(int n = 0; n < cubes.size(); n++) {
-			if(cubes[n]->collidesX(camcube) || cubes[n]->collidesZ(camcube)) {
-				camcube->velocity += forward * movespeed;
+			if(cubes[n]->collidesX(camcube, dt) || cubes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity += forward * movespeed * dt;
 				break;
 			}
 		}		
 		for(int n = 0; n < pipes.size(); n++) {
-			if(pipes[n]->collidesX(camcube) || pipes[n]->collidesZ(camcube)) {
-				camcube->velocity += forward*((float)(movespeed+.01));
+			if(pipes[n]->collidesX(camcube, dt) || pipes[n]->collidesZ(camcube, dt)) {
+				camcube->velocity += forward*((float)(movespeed+.01)) * dt;
 				break;
 			}		
 		}
@@ -703,9 +705,9 @@ void moveCamera() {
 	}
 	// key input
 
-	if(flag->collidesWith(camcube)) state = MENU_STATE; // win the level!
+	if(flag->collidesWith(camcube, dt)) state = MENU_STATE; // win the level!
 	
-	camcube->position += camcube->velocity;
+	camcube->position += camcube->velocity * dt;
 	if (camcube->position.y < -50) {
 		numlives--;
 		reset();
@@ -714,7 +716,7 @@ void moveCamera() {
 	for(int n = 0; n < prizes.size(); n++) {
 		if(strcmp(prizes[n]->type, "mushroom") == 0) {
 			mushroomAI(prizes[n]);
-			if(prizes[n]->collidesWith(camcube)) {
+			if(prizes[n]->collidesWith(camcube, dt)) {
 				camcube->position.y -= camcube->size/2;
 				camcube->size = cubesize*2;
 				camcube->position.y += camcube->size/2;
@@ -726,7 +728,7 @@ void moveCamera() {
 		}
 		else if(strcmp(prizes[n]->type, "star") == 0) {
 			starAI(prizes[n]);
-			if(prizes[n]->collidesWith(camcube)) {
+			if(prizes[n]->collidesWith(camcube, dt)) {
 				invincible = true;
 				movespeed *= 2;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
@@ -734,7 +736,7 @@ void moveCamera() {
 			}
 		}
 		else if(strcmp(prizes[n]->type, "flower") == 0) {
-			if(prizes[n]->collidesWith(camcube)) {
+			if(prizes[n]->collidesWith(camcube, dt)) {
 				hasfire = true;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
@@ -779,7 +781,12 @@ void titleIdle() {
 	
 } // idle function for title state
 
+float sum = 0;
+
 void idle() {
+//	dt = 3*(glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
+//	cout << dt << endl;
+	lastidle = glutGet(GLUT_ELAPSED_TIME);
 	if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
 	else if(state == GAME_STATE) gameIdle();
@@ -1015,7 +1022,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			}
 		}
 		else if(state == GAME_STATE) {
-		  if(hasfire) {
+		  if(hasfire && fireballs.size() < 5) {
 			draw_fireball* newfire = new draw_fireball(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
 													   glm::vec3(.5, .5, .5), 
 													   glm::vec3(0, 0, 0));
