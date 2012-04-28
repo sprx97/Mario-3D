@@ -112,7 +112,7 @@ vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
 vector<draw_fireball*> fireballs;
 vector<draw_coin*> coins;
-draw_goomba* goomba; // will be vector of goomba called enemies
+vector<draw_object*> enemies; // goombas
 
 draw_flag* flag;
 
@@ -142,8 +142,6 @@ int test = 0;
 
 bool hasfire = false;
 bool invincible = false;
-int destroycountdown = -1;
-int knockbackcountdown = -1;
 
 int numlives = 3;
 int coincount = 0;
@@ -178,9 +176,6 @@ void AIphysics(Cube* c) {
 void reset() {
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
-	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-	goomba->destroyed = false;
-	
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < cubes.size(); n++) cubes[n]->hit = false;
 }
@@ -234,13 +229,13 @@ void rotateToFaceCamAI(draw_object *c) {
 	}
 }
 
-void simpleAI(draw_object* c) {    
+bool simpleAI(draw_object* c) {    
 	int behavior;   // state ai is in, 0 is normal patrol, 1 is chase 
     float dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
     else behavior = 0;
 
-    if(destroycountdown < 0 && knockbackcountdown < 0) {
+    if(c->destroycountdown < 0 && c->knockbackcountdown < 0) {
 		c->velocity = glm::vec3(0, c->velocity.y, 0);
 		switch (behavior){
 			case 0:
@@ -295,24 +290,23 @@ void simpleAI(draw_object* c) {
 		}
 	} // ai physics
 
-	if(destroycountdown > 0) {
-		destroycountdown--;
-		if(destroycountdown == 0) {
-			c->destroyed = true;
-			destroycountdown--;
+	if(c->destroycountdown > 0) {
+		c->destroycountdown--;
+		if(c->destroycountdown == 0) {
+			return true;
 		}
 	}
-	else if(knockbackcountdown >= 0) {
-		knockbackcountdown--;
+	else if(c->knockbackcountdown >= 0) {
+		c->knockbackcountdown--;
 	}
-	else if(c->collidesWith(camcube, dt) && !c->destroyed && destroycountdown < 0){
+	else if(c->collidesWith(camcube, dt) && !c->destroyed && c->destroycountdown < 0){
 		if(c->collidesBottomY(camcube, dt) && !c->collidesX(camcube, dt) && !c->collidesZ(camcube, dt)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
-			c->destroyed = true;
+			return true;
 		}
 		else {
 			if(invincible) {
-				destroycountdown = 1000;
+				c->destroycountdown = 1000;
 				// angle between user and gooma
 				float dx = abs(c->position.x - camcube->position.x);
 				float dz = abs(c->position.z - camcube->position.z);
@@ -332,7 +326,7 @@ void simpleAI(draw_object* c) {
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
 				
-				knockbackcountdown = 1000;
+				c->knockbackcountdown = 1000;
 				
 				// angle between user and gooma
 				float dx = abs(c->position.x - camcube->position.x);
@@ -354,6 +348,13 @@ void simpleAI(draw_object* c) {
 			}
 		}
 	}
+	for(int n = 0; n < enemies.size(); n++) {
+		if(enemies[n] == c) continue;
+		if(c->collidesX(enemies[n], dt)) c->velocity.x = 0;
+		else if(c->collidesZ(enemies[n], dt)) c->velocity.z = 0;
+		else if(c->collidesY(enemies[n], dt)) c->velocity.y = 0;
+	}
+	
 	c->position += c->velocity * dt;	
 	glm::vec3 newpos(c->position.x,c->position.y,c->position.z);
 	c->move(newpos);
@@ -361,6 +362,7 @@ void simpleAI(draw_object* c) {
 	float angletouser = 180/M_PI*atan((newpos.z-camcube->position.z)/(newpos.x-camcube->position.x));
 	if(newpos.x-camcube->position.x > 0) c->rotate(glm::vec3(0, -90-angletouser, 0));
 	else c->rotate(glm::vec3(0, 90-angletouser, 0));
+	return false;
 } // Simple test AI
 
 bool mushroomAI(draw_object* c) {
@@ -403,10 +405,13 @@ bool fireballAI(draw_fireball* c) {
 	c->distancetraveled += 1;
 	c->velocity.y += 2*gravity.y * dt;
 	if(c->velocity.y > .2) c->velocity.y = .2;
-	if(c->collidesWith(goomba, dt)) {
-	  goomba->destroyed = true;
-	  return true;
-    }
+	for(int n = 0; n < enemies.size(); n++) {
+		if(c->collidesWith(enemies[n], dt)) {
+			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
+			n--;
+			return true;
+		}
+	}
 
     for(int i = 0; i < cubes.size(); i++) {
 		if(c->collidesWith(cubes[i], dt)) {
@@ -705,6 +710,7 @@ void moveCamera() {
 
 	if(flag->collidesWith(camcube, dt)) state = MENU_STATE; // win the level!
 	for(int n = 0; n < coins.size(); n++) {
+		coins[n]->rotate(glm::vec3(coins[n]->rot.x, coins[n]->rot.y, coins[n]->rot.z+1));
 		if(coins[n]->collidesWith(camcube, dt)) {
 			coincount++;
 			if(coincount == 100) {
@@ -747,7 +753,12 @@ void moveCamera() {
 		}
 	}
 	
-	if(!goomba->destroyed) simpleAI(goomba);	
+	for(int n = 0; n < enemies.size(); n++) {
+		if(simpleAI(enemies[n])) {
+			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
+			n--;
+		}
+	}
 	for(int n = 0; n < fireballs.size(); n++) {
 		if(fireballAI(fireballs[n])) {
 			fireballs.erase(fireballs.begin()+n, fireballs.begin()+n+1);
@@ -822,9 +833,9 @@ void gameDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
 
-	if(!goomba->destroyed) goomba->draw();	
 	flag->draw();
-	for( int i = 0; i < pipes.size(); i++) pipes[i]->draw();
+	for(int n = 0; n < enemies.size(); n++) enemies[n]->draw();
+	for(int n = 0; n < pipes.size(); n++) pipes[n]->draw();
 	for(int n = 0; n < coins.size(); n++) coins[n]->draw();
 	for(int n = 0; n < fireballs.size(); n++) fireballs[n]->draw();
 	
@@ -835,16 +846,14 @@ void gameDisplay() {
 	glEnableVertexAttribArray(attribute_coord3d);
 
 #ifdef DRAW_HITBOXES
-	(goomba->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	for(int n = 0; n < enemies.size(); n++)
+		(enemies[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < coins.size(); n++) 
 		(coins[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int n = 0; n < fireballs.size(); n++)
 		(fireballs[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-	for(int n = 0; n < prizes.size(); n++) {
-		for(int m = 0; m < (prizes[n]->hitboxes).size(); m++) {
-			(prizes[n]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
-		}
-	}
+	for(int n = 0; n < prizes.size(); n++)
+		(prizes[n]->hitboxes[0])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	for(int l = 0; l < pipes.size(); l++) {
 	  for(int m = 0; m < pipes[l]->hitboxes.size(); m++) {
 	    (pipes[l]->hitboxes[m])->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
@@ -1123,7 +1132,9 @@ int main(int argc, char* argv[]) {
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
-	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
+	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {
 		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));

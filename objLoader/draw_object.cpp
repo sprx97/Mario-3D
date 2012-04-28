@@ -9,6 +9,8 @@ draw_object::draw_object(glm::vec3 p, glm::vec3 s, glm::vec3 r) {
 	velocity = glm::vec3(0.0, 0.0, 0.0);
 	destroyed = false;
 	type = "object";
+	destroycountdown = -1;
+	knockbackcountdown = -1;
 }
 
 void draw_object::draw() {
