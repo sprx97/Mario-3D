@@ -125,15 +125,16 @@ GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float movespeed = 0.01;
 float aimovespeed = movespeed * .5;
-float mushmovespeed = 0.0025;
+float mushmovespeed = 0.01;
 float firemovespeed = .1;
 float mousespeed = 0.002;
-float jumpvel = .025;
-glm::vec3 gravity = glm::vec3(0, -.00002, 0);
+float jumpvel = .1;
+glm::vec3 gravity = glm::vec3(0, -.00025, 0);
 glm::vec3 termvel = glm::vec3(0, -.1, 0);
 bool lowgrav = false;
 
-float dt = 1; // for time based movement
+float dt = 5; // for time based movement
+int idlecount = 0;
 float lastidle = 0;
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
@@ -162,7 +163,7 @@ void changegrav() {
 
 void AIphysics(Cube* c) {
     c->velocity += gravity * dt;
-	c->position += c->velocity;
+	c->position += c->velocity * dt;
 	if(c->velocity.y < termvel.y) c->velocity = termvel;
 	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesWith(c, dt)) {
@@ -320,9 +321,9 @@ void simpleAI(draw_object* c) {
 				int modx = 1;
 				if(c->position.z-camcube->position.z < 0) modz = -1;
 				if(c->position.x-camcube->position.x < 0) modx = -1;
-				c->velocity.y = .01;
-				c->velocity.x = 4*modx*aimovespeed*cos(anglebetween);
-				c->velocity.z = 4*modz*aimovespeed*sin(anglebetween);
+				c->velocity.y = .05;
+				c->velocity.x = 16*modx*aimovespeed*cos(anglebetween);
+				c->velocity.z = 16*modz*aimovespeed*sin(anglebetween);
 			}
 			else if(camcube->size != cubesize) {
 //				printf("Mushroom lost\n");
@@ -341,9 +342,9 @@ void simpleAI(draw_object* c) {
 				int modx = 1;
 				if(c->position.z-camcube->position.z < 0) modz = -1;
 				if(c->position.x-camcube->position.x < 0) modx = -1;
-				c->velocity.y = .01;
-				c->velocity.x = 2*modx*aimovespeed*cos(anglebetween);
-				c->velocity.z = 2*modz*aimovespeed*sin(anglebetween);
+				c->velocity.y = .05;
+				c->velocity.x = 8*modx*aimovespeed*cos(anglebetween);
+				c->velocity.z = 8*modz*aimovespeed*sin(anglebetween);
 			}
 			else {
 //				printf("You died\n");
@@ -362,7 +363,7 @@ void simpleAI(draw_object* c) {
 } // Simple test AI
 
 bool mushroomAI(draw_object* c) {
-	c->velocity += (gravity*.5f) * dt;
+	c->velocity += (gravity) * dt;
 	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n], dt)) {
 			c->velocity.y = 0;
@@ -396,16 +397,16 @@ bool mushroomAI(draw_object* c) {
 }
 
 bool fireballAI(draw_fireball* c) {
-  if(c->distancetraveled > 1000) return true;
+  if(c->distancetraveled > 100) return true;
   else {
 	c->distancetraveled += 1;
-	c->velocity.y += 10*gravity.y * dt;
-
-    if(c->collidesWith(goomba, dt)) {
+	c->velocity.y += 2*gravity.y * dt;
+	if(c->velocity.y > .2) c->velocity.y = .2;
+	if(c->collidesWith(goomba, dt)) {
 	  goomba->destroyed = true;
 	  return true;
     }
-    //if path collision, fireball is destroyed
+
     for(int i = 0; i < cubes.size(); i++) {
 		if(c->collidesWith(cubes[i], dt)) {
 			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -.75;
@@ -431,8 +432,8 @@ bool fireballAI(draw_fireball* c) {
 }
 
 void starAI(draw_object* c) {
-	if(c->velocity.y > .04) c->velocity.y = .04;
-	c->velocity.y += 10*gravity.y * dt;	
+	c->velocity.y += 3*gravity.y * dt;	
+	if(c->velocity.y > .075) c->velocity.y = .075;
     for(int i = 0; i < cubes.size(); i++) {
 		if(c->collidesWith(cubes[i], dt)) {
 			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -1;
@@ -453,7 +454,7 @@ void starAI(draw_object* c) {
 	}
 	c->position += c->velocity * dt;
 	c->move(c->position);
-	c->rot += glm::vec3(0, .5, 0);
+	c->rot += glm::vec3(0, 2.5, 0);
 	c->rotate(c->rot);
 }
 
@@ -525,8 +526,8 @@ void applyGravity() {
 } // moves by physics instead of input
 
 void motion(int x, int y) {
-	angle.x -= (x - lastx) * mousespeed * dt; // phi
-	angle.y -= (y - lasty) * mousespeed * dt; // theta
+	angle.x -= (x - lastx) * mousespeed; // phi
+	angle.y -= (y - lasty) * mousespeed; // theta
 	// moves camera
 	
 	if(angle.x < -M_PI) angle.x += M_PI * 2;
@@ -569,8 +570,8 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 	if (c->collidesBottomY(Zoidberg, dt) && c->velocity.y == 0 && !Zoidberg->hit) {
 		switch(Zoidberg->prizetype) {
 			case MUSHROOM:
-				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
-											 glm::vec3(.5, .5, .5), 
+				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+1.5*Zoidberg->size, Zoidberg->position.z-.75), 
+											 glm::vec3(.75, .75, .75), 
 											 glm::vec3(0, -90, 0)));
 				prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
 				Zoidberg->hit = true;
@@ -588,7 +589,7 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 				prizes.push_back(new draw_star(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z),
 									 glm::vec3(.2, .2, .2), 
 									 glm::vec3(0, -90, 0)));
-				prizes[prizes.size()-1]->velocity = glm::vec3(.005, .025, 0);
+				prizes[prizes.size()-1]->velocity = glm::vec3(.025, .1, 0);
 				Zoidberg->hit = true;
 				break;
 		}
@@ -599,12 +600,8 @@ void moveCamera() {
 	if(warping1) {
 		for(int n = 0; n < cubes.size(); n++) {
 			if(cubes[n]->collidesWith(camcube, dt)) {
-				float tempx = (pipes[onpipe]->linkedpipe)->position.x;
-				float tempy = (pipes[onpipe]->linkedpipe)->position.y;
-				float tempz = (pipes[onpipe]->linkedpipe)->position.z;
-				bool flag = true;
-				camcube->position = glm::vec3(tempx, tempy, tempz);
-				camcube->velocity.y = .005;
+				camcube->position = glm::vec3((pipes[onpipe]->linkedpipe)->position.x, (pipes[onpipe]->linkedpipe)->position.y, (pipes[onpipe]->linkedpipe)->position.z);
+				camcube->velocity.y = jumpvel/2;
 				warping1 = false;
 				warping2 = true;
 			}
@@ -615,7 +612,7 @@ void moveCamera() {
 	else if(warping2) {
 		if(!(pipes[onpipe]->linkedpipe)->intersectsWith(camcube) && !((pipes[onpipe]->linkedpipe)->hitboxes[0])->collidesBottomY(camcube, dt)) {
 			warping2 = false;
-			camcube->velocity.y = .015;
+			camcube->velocity.y = jumpvel/2;
 		}
 		camcube->position += camcube->velocity * dt;
 		return;
@@ -693,15 +690,15 @@ void moveCamera() {
 	if(keys['c'] && onpipe != -1) {
 		if(pipes[onpipe]->linkedpipe != NULL) {
 			warping1 = true;
-			camcube->velocity.y = -.025;
+			camcube->velocity.y = -jumpvel;
 		}
 	}
 	if(keys[' '] && !jump) {
 		camcube->velocity.y = jumpvel;
 		jump = true;
 	}
-	if(jump && !keys[' '] && camcube->velocity.y > .005) {
-		camcube->velocity.y = .005;
+	if(jump && !keys[' '] && camcube->velocity.y > jumpvel/5) {
+		camcube->velocity.y = jumpvel/5;
 	}
 	// key input
 
@@ -729,8 +726,8 @@ void moveCamera() {
 		else if(strcmp(prizes[n]->type, "star") == 0) {
 			starAI(prizes[n]);
 			if(prizes[n]->collidesWith(camcube, dt)) {
+				if(!invincible) movespeed *= 1.5; // only first starman
 				invincible = true;
-				movespeed *= 2;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
 			}
@@ -782,17 +779,21 @@ void titleIdle() {
 } // idle function for title state
 
 void idle() {
-//	dt = 3*(glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
-//	cout << dt << endl;
-	lastidle = glutGet(GLUT_ELAPSED_TIME);
+//	idlecount++;
+//	dt = (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
+//	cout << (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS) << endl;
+//	lastidle = glutGet(GLUT_ELAPSED_TIME);
 	if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
 	else if(state == GAME_STATE) gameIdle();
 } // constantly calculates redraws
 
 void timer(int value) {
-	glutPostRedisplay();
+//	cout << idlecount << endl;
+//	idlecount = 0;
 	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
+	idle();
+	glutPostRedisplay();
 }
 
 void gameDisplay() {
@@ -1020,7 +1021,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			}
 		}
 		else if(state == GAME_STATE) {
-		  if(hasfire && fireballs.size() < 5) {
+		  if(hasfire) {
 			draw_fireball* newfire = new draw_fireball(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
 													   glm::vec3(.5, .5, .5), 
 													   glm::vec3(0, 0, 0));
@@ -1122,7 +1123,7 @@ int main(int argc, char* argv[]) {
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
 		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
-		glutIdleFunc(idle);
+//		glutIdleFunc(idle);
 		glutReshapeFunc(reshape);
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
