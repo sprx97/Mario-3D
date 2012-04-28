@@ -781,8 +781,6 @@ void titleIdle() {
 	
 } // idle function for title state
 
-float sum = 0;
-
 void idle() {
 //	dt = 3*(glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
 //	cout << dt << endl;
