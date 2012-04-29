@@ -918,7 +918,6 @@ void onDisplay() {
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
 
-#ifdef PRINT_FPS
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
 
@@ -932,18 +931,29 @@ void onDisplay() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-	char* s = new char[20];
-	sprintf(s, "%.2f FPS", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
-	renderGLUTText(0.0, 0.0, s, mPoint(0, 0, 0)); // x, y, string, color
+	if(state == GAME_STATE) {
+		char* printlives = new char[10];
+		sprintf(printlives, "Lives: %d", numlives);
+		renderGLUTText(0.0, 0.975, printlives, mPoint(0, 0, 0));
+		
+		char* printcoins = new char[10];
+		sprintf(printcoins, "Coins: %d", coincount);
+		renderGLUTText(0.0, 0.95, printcoins, mPoint(0, 0, 0));
+	
+#ifdef PRINT_FPS
+		char* fps = new char[20];
+		sprintf(fps, "%.2f FPS", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
+		renderGLUTText(0.0, 0.0, fps, mPoint(0, 0, 0)); // x, y, string, color
+#endif // prints FPS to bottom left
 
-	lastframe = glutGet(GLUT_ELAPSED_TIME);
+		lastframe = glutGet(GLUT_ELAPSED_TIME);
+   }
    
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
-#endif // posts FPS to screen
 	
 	glutSwapBuffers();
 } // displays to screen
