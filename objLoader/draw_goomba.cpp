@@ -5,6 +5,9 @@
  draw_goomba::draw_goomba(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 				 : draw_object(p, s, r) {
 
+  destroycountdown = -1;
+  knockbackcountdown = -1;
+
   //set the parameters of white
   meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
 						mPoint(scale.x, scale.y, scale.z),
@@ -36,6 +39,8 @@
 						Material(mPoint(.09,.05, .05), mPoint(.1,.1,.1), mPoint(0,0,0))));
 
   hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z, "brickblock", 2*scale.x));
+
+  type = "goomba";
 
   load();
 }

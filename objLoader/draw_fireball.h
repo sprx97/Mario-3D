@@ -7,6 +7,7 @@ class draw_fireball : public draw_object {
   draw_fireball(glm::vec3,
 			    glm::vec3,
 				glm::vec3);
+  int distancetraveled;
   void load();
   void setHitboxes();
 };

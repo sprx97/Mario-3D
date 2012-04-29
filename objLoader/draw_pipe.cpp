@@ -2,7 +2,7 @@
 #include "draw_pipe.h"
 #include <string>
 
-draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r)
+draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r, draw_pipe* l)
 				: draw_object(p, s, r) {
 				
   //set the parameters of body
@@ -13,6 +13,10 @@ draw_pipe::draw_pipe(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 
   hitboxes.push_back(new Cube(position.x, position.y+1.0*20*scale.y, position.z, "brickblock", 20*scale.x));
   hitboxes.push_back(new Cube(position.x, position.y+0.5*20*scale.y, position.z, "brickblock", 20*scale.x));
+
+  linkedpipe = l;
+
+  type = "pipe";
 
   load();
 }

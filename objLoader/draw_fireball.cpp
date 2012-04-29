@@ -13,6 +13,10 @@
 
 	hitboxes.push_back(new Cube(position.x, position.y, position.z, "brickblock", scale.x));
 
+	distancetraveled = 0;
+
+    type = "fireball";
+
 	load();
 }
 

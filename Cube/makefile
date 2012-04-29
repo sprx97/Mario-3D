@@ -4,7 +4,7 @@ OS = $(shell uname -s)
 ifeq ($(OS), Darwin)
 	COMPILER = g++
 	INCLUDES = -I/opt/local/include
-	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm
+	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm -lsndfile -framework SDL -framework SDL_mixer
 	FLAGS =
 endif
 # Linux

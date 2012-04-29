@@ -6,9 +6,13 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+class draw_object;
+
 class Cube {
 	public:
-		glm::vec3 position, velocity;	
+		glm::vec3 position, velocity;
+		
+		int prizetype;
 	
 //		GLfloat specrefon[];
 //		GLfloat specrefoff[];
@@ -29,14 +33,15 @@ class Cube {
     
 		const char* texturename;
 
-		Cube(float, float, float, const char*, float);
+		Cube(float, float, float, const char*, float, int = -1);
 		bool intersectsWith(float, float, float);
-		bool collidesWith(Cube*);
-		bool collidesX(Cube*);
-		bool collidesY(Cube*);
-		bool collidesBottomY(Cube*);
-		bool collidesTopY(Cube*);
-		bool collidesZ(Cube*);
+		bool intersectsWith(Cube*);
+		bool collidesWith(Cube*, float);
+		bool collidesX(Cube*, float);
+		bool collidesY(Cube*, float);
+		bool collidesBottomY(Cube*, float);
+		bool collidesTopY(Cube*, float);
+		bool collidesZ(Cube*, float);
 		void move(float, float, float);
 		void draw(glm::mat4, glm::mat4, GLint, GLint, GLint);
 		

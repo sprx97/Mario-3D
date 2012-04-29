@@ -37,11 +37,12 @@
 
 using namespace std;
 
-Cube::Cube(float x, float y, float z, const char* texture, float s) {
+Cube::Cube(float x, float y, float z, const char* texture, float s, int p) {
 	position = glm::vec3(x, y, z);
 	velocity = glm::vec3(0.0, 0.0, 0.0);
 	bool destroyed = false;
 	bool hit = false;
+	prizetype = p;
 	
 //	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 //	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -478,55 +479,57 @@ bool Cube::intersectsWith(float x, float y, float z) {
 		&& z >= position.z-size/2 && z <= position.z+size/2;
 } // whether the point (x, y, z) is in the cube (collides with it)
 
-bool Cube::collidesX(Cube* other) {
-	glm::vec3 nextpos = position + velocity;
-	glm::vec3 othernextpos = other->position + other->velocity;
-	return position.x > other->position.x+size && position.x <= other->position.x+(other->size+size)
-		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
-		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2) 
-		|| position.x <= other->position.x && position.x >= other->position.x-(size+other->size) 
-		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
-		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2) ;
+bool Cube::intersectsWith(Cube* other) {
+	return abs(position.x-other->position.x) <= (size/2 + other->size/2)
+		&& abs(position.y-other->position.y) <= (size/2 + other->size/2)
+		&& abs(position.z-other->position.z) <= (size/2 + other->size/2);
 }
 
-bool Cube::collidesY(Cube* other) {
-	glm::vec3 nextpos = position + velocity;
-	glm::vec3 othernextpos = other->position + other->velocity;
+bool Cube::collidesX(Cube* other, float dt) {
+	glm::vec3 nextpos = position + velocity * dt;
+	glm::vec3 othernextpos = other->position + other->velocity * dt;
+	return abs(position.x-other->position.x) > (size/2 + other->size/2)
+		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
+		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
+		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
+}
+
+bool Cube::collidesY(Cube* other, float dt) {
+	glm::vec3 nextpos = position + velocity * dt;
+	glm::vec3 othernextpos = other->position + other->velocity * dt;
 	return abs(position.y-other->position.y) > (size/2 + other->size/2)
 		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
 
-bool Cube::collidesTopY(Cube* other) {
-	glm::vec3 nextpos = position + velocity;
-	glm::vec3 othernextpos = other->position + other->velocity;
+bool Cube::collidesTopY(Cube* other, float dt) {
+	glm::vec3 nextpos = position + velocity * dt;
+	glm::vec3 othernextpos = other->position + other->velocity * dt;
     return position.y > other->position.y+size && position.y <= other->position.y+(other->size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
 
-bool Cube::collidesBottomY(Cube* other) {
-	glm::vec3 nextpos = position + velocity;
-	glm::vec3 othernextpos = other->position + other->velocity;
+bool Cube::collidesBottomY(Cube* other, float dt) {
+	glm::vec3 nextpos = position + velocity * dt;
+	glm::vec3 othernextpos = other->position + other->velocity * dt;
     return position.y <= other->position.y && position.y >= other->position.y-(size+other->size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
 		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
 
-bool Cube::collidesZ(Cube* other) {
-	glm::vec3 nextpos = position + velocity;
-	glm::vec3 othernextpos = other->position + other->velocity;
-	return position.z > other->position.z+size && position.z <= other->position.z+(other->size+size)
-		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
+bool Cube::collidesZ(Cube* other, float dt) {
+	glm::vec3 nextpos = position + velocity * dt;
+	glm::vec3 othernextpos = other->position + other->velocity * dt;
+	return abs(position.z-other->position.z) > (size/2 + other->size/2)
 		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2)
-		|| position.z <= other->position.z && position.z >= other->position.z-(size+other->size)
 		&& abs(nextpos.x-othernextpos.x) <= (size/2+other->size/2)
-		&& abs(nextpos.y-othernextpos.y) <= (size/2+other->size/2);
+		&& abs(nextpos.z-othernextpos.z) <= (size/2+other->size/2);
 }
 
-bool Cube::collidesWith(Cube* other) {
-	return collidesX(other) || collidesY(other) || collidesZ(other);
+bool Cube::collidesWith(Cube* other, float dt) {
+	return collidesX(other, dt) || collidesY(other, dt) || collidesZ(other, dt);
 } // whether the point (x, y, z) is in the cube (collides with it)
 
 void Cube::move(float x, float y, float z) {
