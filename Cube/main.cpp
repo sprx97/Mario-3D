@@ -3,6 +3,11 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
+#define PLAY_SOUNDS
+#define SKIP_MENUS
+//#define DRAW_HITBOXES
+#define PRINT_FPS
+
 #include <string>
 #include <time.h>
 #include <stdio.h>
@@ -23,8 +28,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 // libraries
-
-#define PLAY_SOUNDS
 
 #ifdef PLAY_SOUNDS
 #include "../FMODapi/inc/fmod.h"
@@ -51,10 +54,6 @@
 #ifndef GLUT_KEY_ESC
 #define GLUT_KEY_ESC 27
 #endif
-
-#define SKIP_MENUS
-//#define DRAW_HITBOXES
-#define PRINT_FPS
 
 using namespace std;
 
@@ -1273,7 +1272,7 @@ int main(int argc, char* argv[]) {
     //these are all of the graphics. they can be easily modified so let me know
 
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(18 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(2, 2, 2), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {
