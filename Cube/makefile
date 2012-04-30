@@ -4,14 +4,14 @@ OS = $(shell uname -s)
 ifeq ($(OS), Darwin)
 	COMPILER = g++
 	INCLUDES = -I/opt/local/include
-	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm
+	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm -lfmodex
 	FLAGS =
 endif
 # Linux
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES =
-	LIBS = -lm -lGL -lglut -lGLEW -lGLU 
+	LIBS = -lm -lGL -lglut -lGLEW -lGLU
 	FLAGS =
 endif
 

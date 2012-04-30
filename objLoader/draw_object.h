@@ -52,6 +52,9 @@ class draw_object {
 		
 		bool destroyed;
 
+		int destroycountdown;
+		int knockbackcountdown;
+
 		glm::vec3 position;
 };
 #endif

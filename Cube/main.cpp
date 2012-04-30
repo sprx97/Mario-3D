@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glew.h>
+#include <stdint.h>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #include <QuartzCore/QuartzCore.h> // Apple pointer warp
@@ -22,6 +23,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 // libraries
+
+#define PLAY_SOUNDS
+
+#ifdef PLAY_SOUNDS
+#include "../FMODapi/inc/fmod.h"
+#include "../FMODapi/inc/fmod.hpp"
+#include "../FMODapi/inc/fmod_errors.h"
+#endif
 
 #include "Files.h"
 #include "Cube.h"
@@ -57,6 +66,8 @@ GLint uniform_mvp;
 #define MENU_STATE 1
 #define GAME_STATE 2
 
+#define BLOCK_SIZE 512 
+
 #ifdef SKIP_MENUS
 int state = GAME_STATE;
 #else
@@ -67,6 +78,21 @@ GLuint title_id;
 GLuint vbo_title_vertices;
 GLuint vbo_title_texcoords;
 GLuint ibo_title_elements;
+
+#ifdef PLAY_SOUNDS
+	//AUDIO STUFF//
+FMOD::System* fmodSystem;	// the global variable for talking to FMOD
+FMOD::Sound *music;
+FMOD::Sound *coinsound;
+FMOD::Sound *jumpsound;
+FMOD::Sound *prizesound;
+FMOD::Sound *mushgetsound;
+FMOD::Sound *stompsound;
+FMOD::Sound *fireballsound;
+FMOD::Sound *shellsound;
+FMOD::Channel* musicChannel;
+	//END AUDIO STUFF//
+#endif
 
 int windowid;
 int screen_width = 800, screen_height = 600; // screen size
@@ -174,6 +200,64 @@ void AIphysics(Cube* c) {
 		}
 	}
 } // ai physics
+
+#ifdef PLAY_SOUNDS
+void AudioError(FMOD_RESULT result)	// this checks for FMOD errors
+{						
+	if (result != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+		exit(-1);
+	}
+}
+
+void initAudio() {
+	FMOD_RESULT result;
+	result = FMOD::System_Create(&fmodSystem);
+	AudioError(result);
+	
+	result = fmodSystem->init(32, FMOD_INIT_NORMAL, 0);
+	AudioError(result);
+	
+	result = fmodSystem->createStream("./mario.wav", 
+									  FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &music);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./mariocoin.wav", FMOD_SOFTWARE, 0, 
+									 &coinsound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./mariojump.wav", FMOD_SOFTWARE, 0, 
+									 &jumpsound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./marioprize.wav", FMOD_SOFTWARE, 0, 
+									 &prizesound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./mariogetshroom.wav", FMOD_SOFTWARE, 0, 
+									 &mushgetsound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./mariostomp.wav", FMOD_SOFTWARE, 0, 
+									 &stompsound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./marioshootfire.wav", FMOD_SOFTWARE, 0, 
+									 &fireballsound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("./marioshell.wav", FMOD_SOFTWARE, 0, 
+									 &shellsound);
+	AudioError(result);
+}
+
+void playmusic() {
+	FMOD_RESULT result;
+	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, false, &musicChannel);
+	AudioError(result);
+}
+#endif
 
 void reset() {
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
@@ -304,6 +388,11 @@ bool simpleAI(draw_enemy* c) {
 	else if(c->collidesWith(camcube, dt) && !c->destroyed && c->destroycountdown < 0){
 		if(c->collidesBottomY(camcube, dt) && !c->collidesX(camcube, dt) && !c->collidesZ(camcube, dt)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, stompsound, false,NULL );
+			AudioError(result);
+#endif
 			return true;
 		}
 		else {
@@ -411,6 +500,11 @@ bool fireballAI(draw_fireball* c) {
 		if(c->collidesWith(enemies[n], dt)) {
 			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
 			n--;
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, shellsound, false,NULL );
+			AudioError(result);
+#endif
 			return true;
 		}
 	}
@@ -576,6 +670,9 @@ void setVectors() {
 
 void spawnsPrize(Cube* c, Cube* Zoidberg) {
 	if (c->collidesBottomY(Zoidberg, dt) && c->velocity.y == 0 && !Zoidberg->hit) {
+#ifdef PLAY_SOUNDS
+		FMOD_RESULT result;
+#endif
 		switch(Zoidberg->prizetype) {
 			case MUSHROOM:
 				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+1.5*Zoidberg->size, Zoidberg->position.z-.75), 
@@ -583,6 +680,10 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 											 glm::vec3(0, -90, 0)));
 				prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
 				Zoidberg->hit = true;
+#ifdef PLAY_SOUNDS
+				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
+				AudioError(result);
+#endif
 				break;
 
 			case FLOWER:
@@ -591,6 +692,10 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 										 glm::vec3(0, 0, 0)));
 				// flower doesn't move
 				Zoidberg->hit = true;
+#ifdef PLAY_SOUNDS
+				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
+				AudioError(result);
+#endif
 				break;
 
 			case STARMAN:
@@ -704,6 +809,11 @@ void moveCamera() {
 	if(keys[' '] && !jump) {
 		camcube->velocity.y = jumpvel;
 		jump = true;
+#ifdef PLAY_SOUNDS
+		FMOD_RESULT result;
+		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, jumpsound, false,NULL );
+		AudioError(result);
+#endif
 	}
 	if(jump && !keys[' '] && camcube->velocity.y > jumpvel/5) {
 		camcube->velocity.y = jumpvel/5;
@@ -722,6 +832,11 @@ void moveCamera() {
 			
 			coins.erase(coins.begin()+n, coins.begin()+n+1);
 			n--;
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, coinsound, false,NULL );
+			AudioError(result);
+#endif
 		}
 	}
 	for(int n = 0; n < prizes.size(); n++) {
@@ -735,6 +850,11 @@ void moveCamera() {
 				
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
+#ifdef PLAY_SOUNDS
+				FMOD_RESULT result;
+				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, mushgetsound, false,NULL );
+				AudioError(result);
+#endif
 			}
 		}
 		else if(strcmp(prizes[n]->type, "star") == 0) {
@@ -823,8 +943,8 @@ void timer(int value) {
 
 void gameDisplay() {
   //clear model view at begginning of display
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
 	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
 	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
@@ -871,7 +991,7 @@ void gameDisplay() {
 
 	for(int n = 0; n < cubes.size(); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	
-	glDisableVertexAttribArray(attribute_coord3d);
+glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
 } // display function for game state
@@ -956,7 +1076,7 @@ void onDisplay() {
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
-	
+
 	glutSwapBuffers();
 } // displays to screen
 
@@ -1063,6 +1183,11 @@ void mouse_click(int button, int mstate, int x, int y) {
 			newfire->velocity.y = (lookat.y)*firemovespeed;
 			newfire->velocity.z = (lookat.z)*firemovespeed;
 			fireballs.push_back(newfire);
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, fireballsound, false,NULL );
+			AudioError(result);
+#endif
 //			cout << "mouse click" <<endl;
 		  }
 		}
@@ -1097,6 +1222,9 @@ void initLighting() {
 
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
+
+	initAudio();
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(screen_width, screen_height);
@@ -1169,7 +1297,7 @@ int main(int argc, char* argv[]) {
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
-		
+		playmusic();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_TEXTURE_3D);

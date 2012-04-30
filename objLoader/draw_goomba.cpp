@@ -8,6 +8,9 @@
   destroycountdown = -1;
   knockbackcountdown = -1;
 
+  destroycountdown = -1;
+  knockbackcountdown = -1;
+
   //set the parameters of white
   meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
 						mPoint(scale.x, scale.y, scale.z),
