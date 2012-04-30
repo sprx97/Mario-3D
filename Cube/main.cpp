@@ -79,7 +79,7 @@ GLuint vbo_title_texcoords;
 GLuint ibo_title_elements;
 
 #ifdef PLAY_SOUNDS
-	//AUDIO STUFF//
+bool musicplaying = false;
 FMOD::System* fmodSystem;	// the global variable for talking to FMOD
 FMOD::Sound *music;
 FMOD::Sound *coinsound;
@@ -90,7 +90,6 @@ FMOD::Sound *stompsound;
 FMOD::Sound *fireballsound;
 FMOD::Sound *shellsound;
 FMOD::Channel* musicChannel;
-	//END AUDIO STUFF//
 #endif
 
 int windowid;
@@ -255,6 +254,7 @@ void playmusic() {
 	FMOD_RESULT result;
 	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, false, &musicChannel);
 	AudioError(result);
+	musicplaying = true;
 }
 #endif
 
@@ -910,6 +910,7 @@ void gameIdle() {
 #endif
 		mouseinit = true;
 	}
+	if(!musicplaying) playmusic();
     
 	moveCamera();
 } // idle function for when in game state
@@ -990,7 +991,7 @@ void gameDisplay() {
 
 	for(int n = 0; n < cubes.size(); n++) cubes[n]->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	
-glDisableVertexAttribArray(attribute_coord3d);
+	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
 	glUseProgram(0);
 } // display function for game state
@@ -1296,7 +1297,6 @@ int main(int argc, char* argv[]) {
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
 		// glut functions
-		playmusic();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_TEXTURE_3D);
