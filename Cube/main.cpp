@@ -29,6 +29,7 @@
 #include "../objLoader/draw_flower.h"
 #include "../objLoader/draw_mushroom.h"
 #include "../objLoader/draw_goomba.h"
+#include "../objLoader/draw_enemy.h"
 #include "../objLoader/draw_pipe.h"
 #include "../objLoader/draw_flag.h"
 #include "../objLoader/draw_star.h"
@@ -112,7 +113,7 @@ vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
 vector<draw_fireball*> fireballs;
 vector<draw_coin*> coins;
-vector<draw_object*> enemies; // goombas
+vector<draw_enemy*> enemies; // goombas
 
 draw_flag* flag;
 
@@ -129,7 +130,7 @@ float mushmovespeed = 0.01;
 float firemovespeed = .1;
 float mousespeed = 0.002;
 float jumpvel = .1;
-glm::vec3 gravity = glm::vec3(0, -.00025, 0);
+glm::vec3 gravity = glm::vec3(0, -.00045, 0);
 glm::vec3 termvel = glm::vec3(0, -.1, 0);
 bool lowgrav = false;
 
@@ -229,7 +230,7 @@ void rotateToFaceCamAI(draw_object *c) {
 	}
 }
 
-bool simpleAI(draw_object* c) {    
+bool simpleAI(draw_enemy* c) {    
 	int behavior;   // state ai is in, 0 is normal patrol, 1 is chase 
     float dist = distance(camcube->position.x, camcube->position.y, camcube->position.z, c->position.x, c->position.y, c->position.z);
     if (dist < (10 * cubesize) && camcube->position.y <= (c->position.y + 2*cubesize)) behavior = 1;
@@ -1131,7 +1132,7 @@ int main(int argc, char* argv[]) {
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        cubes.push_back(new Cube(cubesize*n*16, 6 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, rand()%3));
+        cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, rand()%3));
 	} // floating ? cubes
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
@@ -1147,7 +1148,8 @@ int main(int argc, char* argv[]) {
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
 	}
 	
 #ifdef __APPLE__

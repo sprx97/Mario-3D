@@ -3,7 +3,7 @@
 #include <string>
 
  draw_goomba::draw_goomba(glm::vec3 p, glm::vec3 s, glm::vec3 r)
-				 : draw_object(p, s, r) {
+				 : draw_enemy(p, s, r) {
 
   destroycountdown = -1;
   knockbackcountdown = -1;
