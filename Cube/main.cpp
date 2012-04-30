@@ -1,6 +1,6 @@
-// Jeremy Vercillo and Ryan Liebscher (I want some damn credit :P )
-// 2/9/12
-// Final Project - Mario 3D
+// Jeremy Vercillo, Ryan Liebscher, Natalia Woodbine
+// 2/9/12 - 5/4/12
+// CSE20212 Final Project - Mario 3D
 // Main driver
 
 #include <string>
@@ -27,15 +27,16 @@
 #include "Cube.h"
 #include "../common/shader_utils.h"
 #include "../objLoader/draw_flower.h"
+#include "../objLoader/draw_shell.h"
 #include "../objLoader/draw_mushroom.h"
 #include "../objLoader/draw_goomba.h"
+#include "../objLoader/draw_koopa.h"
 #include "../objLoader/draw_enemy.h"
 #include "../objLoader/draw_pipe.h"
 #include "../objLoader/draw_flag.h"
 #include "../objLoader/draw_star.h"
 #include "../objLoader/draw_coin.h"
 #include "../objLoader/draw_fireball.h"
-
 // local includes
 
 #ifndef GLUT_KEY_ESC
