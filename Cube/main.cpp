@@ -34,6 +34,7 @@
 #include "../objLoader/draw_coin.h"
 #include "../objLoader/draw_fireball.h"
 #include "../objLoader/draw_koopa.h"
+#include "../objLoader/draw_shell.h"
 
 // local includes
 
