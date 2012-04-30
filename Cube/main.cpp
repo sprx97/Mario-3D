@@ -33,6 +33,7 @@
 #include "../objLoader/draw_star.h"
 #include "../objLoader/draw_coin.h"
 #include "../objLoader/draw_fireball.h"
+#include "../objLoader/draw_koopa.h"
 
 // local includes
 
@@ -112,6 +113,7 @@ draw_star* astar;
 draw_flag* flag;
 draw_coin* coin;
 draw_fireball* myfire;
+draw_koopa* koopa;
 
 glm::mat4 view, projection;
 
@@ -747,7 +749,7 @@ void gameDisplay() {
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
-
+	koopa->draw();
 	flower->draw();
 	if (goomba->destroyed == false) goomba->draw();	
 	flag->draw();
@@ -1046,12 +1048,13 @@ int main(int argc, char* argv[]) {
 
 	flower = new draw_flower(glm::vec3(12, 4, -5), glm::vec3(.25, .25, .25), glm::vec3(0, 0, 0));
 	goomba = new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
-
+	koopa = new draw_koopa(glm::vec3(12, 4, -4 * cubesize), glm::vec3(10, 10, 10), glm::vec3(0, -90, 0));
 	astar = new draw_star(glm::vec3(cubesize*16, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.1, .1, .1), glm::vec3(0, -90, 0)); 
 	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 	coin = new draw_coin(glm::vec3(cubesize*3*16, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(0, coinangle, 90)); 
 	myfire = new draw_fireball(glm::vec3(15, 8, -5), glm::vec3(.5, .5, .5), glm::vec3(0, 0, 0));
 	mushgraph = new draw_mushroom(glm::vec3(cubesize, 7*cubesize, -(pathwidth-.6)/2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0));
+	
 	mushgraph->destroyed = true;
 	astar->destroyed = true;
 	coin->destroyed = true;
