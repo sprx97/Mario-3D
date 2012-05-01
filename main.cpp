@@ -82,6 +82,7 @@ GLuint ibo_title_elements;
 bool musicplaying = false;
 FMOD::System* fmodSystem;	// the global variable for talking to FMOD
 FMOD::Sound *music;
+FMOD::Sound *starsound;
 FMOD::Sound *coinsound;
 FMOD::Sound *jumpsound;
 FMOD::Sound *prizesound;
@@ -90,6 +91,7 @@ FMOD::Sound *stompsound;
 FMOD::Sound *fireballsound;
 FMOD::Sound *shellsound;
 FMOD::Sound *gameoversound;
+FMOD::Channel* starChannel;
 FMOD::Channel* musicChannel;
 #endif
 
@@ -118,8 +120,8 @@ static glm::vec3 lookat;
 int keys[256] = {0}; // array of whether keys are pressed
 
 int cubesize = 2;
-int pathlength = 100;
-double pathwidth = 8;
+double pathwidth = 4;
+int pathlength = 100; // these 2 change for each level
 vector<Cube*> cubes; // array of cubes
 Cube* title; // title graphic
 Cube* border; // menu graphic
@@ -254,6 +256,11 @@ void initAudio() {
 									 &gameoversound);
 									 
 	AudioError(result);
+	
+	result = fmodSystem->createStream("Sounds/mariostar.wav",
+										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
+
+	AudioError(result);
 }
 
 void playmusic() {
@@ -261,6 +268,16 @@ void playmusic() {
 	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, false, &musicChannel);
 	AudioError(result);
 	musicplaying = true;
+	
+	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, false, &starChannel);
+	AudioError(result);
+	starChannel->setVolume(0);
+}
+
+void playSound(FMOD::Sound* snd) {
+	FMOD_RESULT result;
+	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, snd, false, NULL);
+	AudioError(result);
 }
 #endif
 
@@ -268,9 +285,7 @@ void reset() {
 	if(numlives < 0) {
 		state = MENU_STATE;
 #ifdef PLAY_SOUNDS
-		FMOD_RESULT result;
-		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, gameoversound, false, NULL);
-		AudioError(result);
+		playSound(gameoversound);
 #endif
 	}
 	
@@ -279,9 +294,9 @@ void reset() {
 	enemies.clear();
 	prizes.clear();
 
-	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 }
@@ -414,9 +429,7 @@ bool simpleAI(draw_enemy* c) {
 				prizes.push_back(((draw_koopa*)c)->shell);
 			}
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, stompsound, false,NULL );
-			AudioError(result);
+			playSound(stompsound);
 #endif
 			return true;
 		}
@@ -523,9 +536,7 @@ bool shellAI(draw_shell* c) {
 			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, shellsound, false, NULL);
-			AudioError(result);
+			playSound(shellsound);
 #endif
 		}
 	}
@@ -549,9 +560,7 @@ bool shellAI(draw_shell* c) {
 		c->velocity.z = 20*modz*aimovespeed*sin(anglebetween);
 		
 #ifdef PLAY_SOUNDS
-		FMOD_RESULT result;
-		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, stompsound, false, NULL);
-		AudioError(result);
+		playSound(stompsound);
 #endif
 	}
 	else if(c->collidesWith(camcube, dt) && !invincible) {
@@ -604,9 +613,7 @@ bool fireballAI(draw_fireball* c) {
 			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, shellsound, false,NULL );
-			AudioError(result);
+			playSound(shellsound);
 #endif
 			return true;
 		}
@@ -694,9 +701,7 @@ void starAI(draw_object* c) {
 void spawnsPrize(Cube* c, Cube* Zoidberg) {
 	if (c->collidesBottomY(Zoidberg, dt) && !Zoidberg->hit) {
 #ifdef PLAY_SOUNDS
-		FMOD_RESULT result;
-		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
-		AudioError(result);
+		playSound(prizesound);
 #endif
 		prizes.push_back(Zoidberg->prize);
 		// darkened texture
@@ -857,9 +862,7 @@ void moveCamera() {
 		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !cubes[n]->hit) {
 			if(camcube->velocity.y > 0) coincount++; // get coin
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, coinsound, false,NULL );
-			AudioError(result);
+			playSound(coinsound);
 #endif
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
@@ -939,9 +942,7 @@ void moveCamera() {
 		camcube->velocity.y = jumpvel;
 		jump = true;
 #ifdef PLAY_SOUNDS
-		FMOD_RESULT result;
-		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, jumpsound, false,NULL );
-		AudioError(result);
+		playSound(jumpsound);
 #endif
 	}
 	if(jump && !keys[' '] && camcube->velocity.y > jumpvel/5) {
@@ -962,9 +963,7 @@ void moveCamera() {
 			coins.erase(coins.begin()+n, coins.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, coinsound, false,NULL );
-			AudioError(result);
+			playSound(coinsound);
 #endif
 		}
 	}
@@ -980,16 +979,18 @@ void moveCamera() {
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
 #ifdef PLAY_SOUNDS
-				FMOD_RESULT result;
-				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, mushgetsound, false,NULL );
-				AudioError(result);
+				playSound(mushgetsound);
 #endif
 			}
 		}
 		else if(strcmp(prizes[n]->type, "star") == 0) {
 			starAI(prizes[n]);
 			if(prizes[n]->collidesWith(camcube, dt)) {
-				if(!invincible) movespeed *= 1.5; // only first starman
+				if(!invincible) {
+					movespeed *= 1.5; // only first starman
+					musicChannel->setVolume(0);
+					starChannel->setVolume(1);
+				}
 				invincible = true;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
@@ -1326,9 +1327,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			newfire->velocity.z = (lookat.z)*firemovespeed;
 			fireballs.push_back(newfire);
 #ifdef PLAY_SOUNDS
-			FMOD_RESULT result;
-			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, fireballsound, false,NULL );
-			AudioError(result);
+			playSound(fireballsound);
 #endif
 //			cout << "mouse click" <<endl;
 		  }
@@ -1364,10 +1363,12 @@ void initLighting() {
 
 void loadDebugLevel() {
 	levelnum = 0;
+	pathlength = 100;
+	pathwidth = 8;
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
-        for (int n = 0; n < 100; n++) {
+        for (int n = 0; n < pathlength; n++) {
             cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
 		}
 	}    
@@ -1406,11 +1407,11 @@ void loadDebugLevel() {
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
-	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
-	for(int n = 0; n < pathlength; n++) {
+	for(int n = 0; n < 100; n++) {
 		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
 		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
 	}
@@ -1419,9 +1420,24 @@ void loadDebugLevel() {
 void loadWorld1_1() {
 	levelnum = 1;
 	
+	pathlength = 213;
+	pathwidth = 4;
+	
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 
+	// 0-70, skip 71 and 72, 73-87, skip 88-90, 91-154, skip 155 and 156, 157-213
+    for (int m = 0; m < pathwidth; m++) {
+        for (int n = 0; n < pathlength; n++) {
+			if(n == 71 || n == 72 || n == 88 || n == 89 || n == 90 || n == 155 || n == 156) continue;
+			cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
+		}
+	}
 	
+	// bricks (and hills)
+	// ? blocks and objs
+	// pipes
+	// enemies
+	// coins
 }
 
 int main(int argc, char* argv[]) {
