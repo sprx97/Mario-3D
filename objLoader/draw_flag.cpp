@@ -36,6 +36,6 @@ void draw_flag::setHitboxes() {
 
 //load all three
 void draw_flag::load() {
-  meshes[0].loadOBJ("../objLoader/flag.obj");
-  meshes[1].loadOBJ("../objLoader/flagpole.obj");
+  meshes[0].loadOBJ("objLoader/flag.obj");
+  meshes[1].loadOBJ("objLoader/flagpole.obj");
 }

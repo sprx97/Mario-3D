@@ -45,9 +45,9 @@ void draw_koopa::setHitboxes() {
 
 //load all three
 void draw_koopa::load() {
-  meshes[0].loadOBJ("../objLoader/turtleW.obj");
-  meshes[1].loadOBJ("../objLoader/turtleB.obj");
-  meshes[2].loadOBJ("../objLoader/turtlebod.obj");
-  meshes[3].loadOBJ("../objLoader/turtleG.obj");
+  meshes[0].loadOBJ("objLoader/turtleW.obj");
+  meshes[1].loadOBJ("objLoader/turtleB.obj");
+  meshes[2].loadOBJ("objLoader/turtlebod.obj");
+  meshes[3].loadOBJ("objLoader/turtleG.obj");
     
 }

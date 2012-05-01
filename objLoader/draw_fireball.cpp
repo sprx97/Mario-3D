@@ -29,5 +29,5 @@ void draw_fireball::setHitboxes() {
 
 //load all three
 void draw_fireball::load() {
-  meshes[0].loadOBJ("../objLoader/fireball.obj");
+  meshes[0].loadOBJ("objLoader/fireball.obj");
 }

@@ -38,8 +38,8 @@ void draw_flower::setHitboxes() {
 
 //load all three
 void draw_flower::load() {
-  meshes[0].loadOBJ("../objLoader/stem_leaves.obj");
-  meshes[1].loadOBJ("../objLoader/flower_center.obj");
-  meshes[2].loadOBJ("../objLoader/flower_inner.obj");
-  meshes[3].loadOBJ("../objLoader/flower_outer.obj");
+  meshes[0].loadOBJ("objLoader/stem_leaves.obj");
+  meshes[1].loadOBJ("objLoader/flower_center.obj");
+  meshes[2].loadOBJ("objLoader/flower_inner.obj");
+  meshes[3].loadOBJ("objLoader/flower_outer.obj");
 }

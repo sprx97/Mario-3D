@@ -30,25 +30,24 @@
 // libraries
 
 #ifdef PLAY_SOUNDS
-#include "../FMODapi/inc/fmod.h"
-#include "../FMODapi/inc/fmod.hpp"
-#include "../FMODapi/inc/fmod_errors.h"
+#include "FMODapi/inc/fmod.h"
+#include "FMODapi/inc/fmod.hpp"
+#include "FMODapi/inc/fmod_errors.h"
 #endif
 
-#include "Files.h"
-#include "Cube.h"
-#include "../common/shader_utils.h"
-#include "../objLoader/draw_flower.h"
-#include "../objLoader/draw_shell.h"
-#include "../objLoader/draw_mushroom.h"
-#include "../objLoader/draw_goomba.h"
-#include "../objLoader/draw_koopa.h"
-#include "../objLoader/draw_enemy.h"
-#include "../objLoader/draw_pipe.h"
-#include "../objLoader/draw_flag.h"
-#include "../objLoader/draw_star.h"
-#include "../objLoader/draw_coin.h"
-#include "../objLoader/draw_fireball.h"
+#include "Cube/Cube.h"
+#include "Shaders/shader_utils.h"
+#include "objLoader/draw_flower.h"
+#include "objLoader/draw_shell.h"
+#include "objLoader/draw_mushroom.h"
+#include "objLoader/draw_goomba.h"
+#include "objLoader/draw_koopa.h"
+#include "objLoader/draw_enemy.h"
+#include "objLoader/draw_pipe.h"
+#include "objLoader/draw_flag.h"
+#include "objLoader/draw_star.h"
+#include "objLoader/draw_coin.h"
+#include "objLoader/draw_fireball.h"
 // local includes
 
 #ifndef GLUT_KEY_ESC
@@ -217,35 +216,35 @@ void initAudio() {
 	result = fmodSystem->init(32, FMOD_INIT_NORMAL, 0);
 	AudioError(result);
 	
-	result = fmodSystem->createStream("./mario.wav", 
+	result = fmodSystem->createStream("Sounds/mario.wav", 
 									  FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &music);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./mariocoin.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/mariocoin.wav", FMOD_SOFTWARE, 0, 
 									 &coinsound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./mariojump.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/mariojump.wav", FMOD_SOFTWARE, 0, 
 									 &jumpsound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./marioprize.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/marioprize.wav", FMOD_SOFTWARE, 0, 
 									 &prizesound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./mariogetshroom.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/mariogetshroom.wav", FMOD_SOFTWARE, 0, 
 									 &mushgetsound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./mariostomp.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/mariostomp.wav", FMOD_SOFTWARE, 0, 
 									 &stompsound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./marioshootfire.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/marioshootfire.wav", FMOD_SOFTWARE, 0, 
 									 &fireballsound);
 	AudioError(result);
 	
-	result = fmodSystem->createSound("./marioshell.wav", FMOD_SOFTWARE, 0, 
+	result = fmodSystem->createSound("Sounds/marioshell.wav", FMOD_SOFTWARE, 0, 
 									 &shellsound);
 	AudioError(result);
 }
@@ -561,8 +560,8 @@ void starAI(draw_object* c) {
 
 int initShaders() {
 	GLuint vs, fs;
-	if((vs = create_shader("cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
-	if((fs = create_shader("cubeshader.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
+	if((vs = create_shader("Cube/cubeshader.v.glsl", GL_VERTEX_SHADER)) == 0) return 0;
+	if((fs = create_shader("Cube/cubeshader.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
     //if((fs = create_shader("cartoonfrag.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
 	// creates shaders from my files
 	

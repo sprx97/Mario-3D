@@ -20,19 +20,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "questionblock_texture.c"
-#include "brickblock_texture.c"
-#include "groundblock_texture.c"
-#include "skybox_texture.c"
-#include "title_texture.c"
+#include "../Textures/questionblock_texture.c"
+#include "../Textures/brickblock_texture.c"
+#include "../Textures/groundblock_texture.c"
+#include "../Textures/skybox_texture.c"
+#include "../Textures/title_texture.c"
 
-#include "start.c"
-#include "startl.c"
-#include "startq.c"
-#include "startn.c"
-#include "border.c"
+#include "../Textures/start.c"
+#include "../Textures/startl.c"
+#include "../Textures/startq.c"
+#include "../Textures/startn.c"
+#include "../Textures/border.c"
 
-#include "../common/shader_utils.h"
+#include "../Shaders/shader_utils.h"
 #include "Cube.h"
 
 using namespace std;

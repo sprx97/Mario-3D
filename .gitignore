@@ -2,13 +2,14 @@
 */.DS_Store
 todo.txt
 Cube/*.o
-common/*.o
+Shaders/*.o
 objLoader/*.o
-Cube/main
+*.o
+main
+Images/*
 PerspectiveExample/*
 objLoader/gallery
 objLoader/*~
 Cube/#*
 objLoader/#*
 objLoader/star.obj
-

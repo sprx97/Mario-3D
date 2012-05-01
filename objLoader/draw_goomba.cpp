@@ -57,9 +57,9 @@ void draw_goomba::setHitboxes() {
 
 //load all three
 void draw_goomba::load() {
-  meshes[0].loadOBJ("../objLoader/goombawhite.obj");
-  meshes[1].loadOBJ("../objLoader/goombablack.obj");
-  meshes[2].loadOBJ("../objLoader/goombahead.obj");
-  meshes[3].loadOBJ("../objLoader/goombabody.obj");
-  meshes[4].loadOBJ("../objLoader/goombafeet.obj");
+  meshes[0].loadOBJ("objLoader/goombawhite.obj");
+  meshes[1].loadOBJ("objLoader/goombablack.obj");
+  meshes[2].loadOBJ("objLoader/goombahead.obj");
+  meshes[3].loadOBJ("objLoader/goombabody.obj");
+  meshes[4].loadOBJ("objLoader/goombafeet.obj");
 }
