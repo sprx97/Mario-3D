@@ -89,6 +89,7 @@ FMOD::Sound *mushgetsound;
 FMOD::Sound *stompsound;
 FMOD::Sound *fireballsound;
 FMOD::Sound *shellsound;
+FMOD::Sound *gameoversound;
 FMOD::Channel* musicChannel;
 #endif
 
@@ -249,6 +250,11 @@ void initAudio() {
 	result = fmodSystem->createSound("Sounds/marioshell.wav", FMOD_SOFTWARE, 0, 
 									 &shellsound);
 	AudioError(result);
+
+	result = fmodSystem->createSound("Sounds/mariodie.wav", FMOD_SOFTWARE, 0,
+									 &gameoversound);
+									 
+	AudioError(result);
 }
 
 void playmusic() {
@@ -260,7 +266,23 @@ void playmusic() {
 #endif
 
 void reset() {
+	if(numlives < 0) {
+		state = MENU_STATE;
+#ifdef PLAY_SOUNDS
+		FMOD_RESULT result;
+		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, gameoversound, false, NULL);
+		AudioError(result);
+#endif
+	}
+	
 	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+
+	enemies.clear();
+	prizes.clear();
+
+	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(8 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 	for (int n = 0; n < cubes.size(); n++) cubes[n]->hit = false;
@@ -982,11 +1004,6 @@ void moveCamera() {
 		numlives--;
 		reset();
 	}
-
-    if(numlives < 0) {
-      numlives = 3;
-      state = MENU_STATE;
-    }
 }
 
 void gameIdle() {
@@ -1233,9 +1250,6 @@ void key_pressed(unsigned char key, int x, int y) {
 			free_resources();
 			exit(0);
 		}
-//		if(key == 'r') {
-//			reset();
-//		} // reset
 	}
 } // watches keyboard
 
