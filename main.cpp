@@ -860,14 +860,20 @@ void moveCamera() {
 		}
 		if(cubes[n]->prize != NULL) spawnsPrize(camcube, cubes[n]);
 		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !cubes[n]->hit) {
-			if(camcube->velocity.y > 0) coincount++; // get coin
+			if(camcube->velocity.y > 0) {
+				coincount++; // get coin
 #ifdef PLAY_SOUNDS
-			playSound(coinsound);
+				playSound(coinsound);
 #endif
+			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
-		
-		if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.01;
+		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt)) {
+			// play brick block break sound
+			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
+			camcube->velocity.y = -.1;
+		}
+		else if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.01;
 	}
 
 	camcube->velocity.x = 0;
@@ -1421,20 +1427,121 @@ void loadWorld1_1() {
 	levelnum = 1;
 	
 	pathlength = 213;
-	pathwidth = 4;
+	pathwidth = 3;
 	
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 
-	// 0-70, skip 71 and 72, 73-87, skip 88-90, 91-154, skip 155 and 156, 157-213
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	flag = new draw_flag(glm::vec3(200*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
 			if(n == 71 || n == 72 || n == 88 || n == 89 || n == 90 || n == 155 || n == 156) continue;
 			cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
+			if(n == 136 || n == 137 || n == 138 || n == 139 || n == 142 || n == 143 || n == 144 || n == 145
+			|| n == 150 || n == 151 || n == 152 || n == 153 || n == 154 || n == 157 || n == 158 || n == 159
+			|| n == 160 || (n >= 183 && n <= 191) || (n == 200 && m == 1)) {
+				cubes.push_back(new Cube(cubesize*n, 1*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 1
+			if(n == 137 || n == 138 || n == 139 || n == 142 || n == 143 || n == 144 || n == 151 || n == 152
+			|| n == 153 || n == 154 || n == 157 || n == 158 || n == 159 || (n >= 184 && n <= 191)) {
+				cubes.push_back(new Cube(cubesize*n, 2*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 2
+			if(n == 138 || n == 139 || n == 142 || n == 143 || n == 152 || n == 153 || n == 154 || n == 157 
+			|| n == 158 || (n >= 185 && n <= 191)) {
+				cubes.push_back(new Cube(cubesize*n, 3*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 3
+			if(n == 139 || n == 142 || n == 153 || n == 154 || n == 157 || (n >= 186 && n <= 191)) {
+				cubes.push_back(new Cube(cubesize*n, 4*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 4
+			if(n >= 187 && n <= 191) {
+				cubes.push_back(new Cube(cubesize*n, 5*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // 5
+			if(n >= 188 && n <= 191) {
+				cubes.push_back(new Cube(cubesize*n, 6*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // 6
+			if(n >= 189 && n <= 191) {
+				cubes.push_back(new Cube(cubesize*n, 7*cubesize, -m*cubesize, "groundblock", cubesize));			
+			} // 7
+			if(n >= 190 && n <= 191) {
+				cubes.push_back(new Cube(cubesize*n, 8*cubesize, -m*cubesize, "groundblock", cubesize));			
+			} // 8
+			if(n == 191) {
+				cubes.push_back(new Cube(cubesize*n, 9*cubesize, -m*cubesize, "groundblock", cubesize));			
+			} // 9
 		}
-	}
+	} // ground blocks (and stair blocks)
 	
-	// bricks (and hills)
-	// ? blocks and objs
+	for(int n = 0; n < pathlength; n++) {
+		if(n == 20 || n == 22 || n == 24 || n == 79 || n == 81 || n == 96 || n == 102 || n == 120 || n == 131 
+		|| n == 132 || n == 173 || n == 171 || n == 170) {
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+		} // bricks	
+		if((n >= 82 && n <= 89) || n == 93 || n == 94 || n == 95 || n == 123 || n == 124 || n == 125 || n == 130 || n == 133) {
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+		}
+	} // floating brick blocks
+	
+	draw_object* newobj = NULL;
+	for(int n = 0; n < pathlength; n++) {
+		if(n == 16) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 21) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+									   glm::vec3(.75, .75, .75), 
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 22) {
+			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+									 glm::vec3(.25, .25, .25), 
+									 glm::vec3(0, 180, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 23) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 80) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+									   glm::vec3(.75, .75, .75), 
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));			
+		}
+		if(n == 96) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 103) {
+			newobj = new draw_star(glm::vec3(cubesize*n, 4 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
+								   glm::vec3(.2, .2, .2), 
+								   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 108 || n == 111 || n == 114) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 111) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+									   glm::vec3(.75, .75, .75), 
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 131 || n == 132) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 172) {
+			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+									 glm::vec3(.25, .25, .25), 
+									 glm::vec3(0, 180, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+	} // ? blocks and objs
+	
 	// pipes
 	// enemies
 	// coins
@@ -1473,8 +1580,8 @@ int main(int argc, char* argv[]) {
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
 	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
-	loadDebugLevel();
-//	loadWorld1_1();
+//	loadDebugLevel();
+	loadWorld1_1();
 	
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
