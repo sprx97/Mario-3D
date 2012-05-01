@@ -1272,7 +1272,7 @@ int main(int argc, char* argv[]) {
     //these are all of the graphics. they can be easily modified so let me know
 
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(18 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(2, 2, 2), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(18 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {
