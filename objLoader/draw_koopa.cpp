@@ -5,6 +5,8 @@
 draw_koopa::draw_koopa(glm::vec3 p, glm::vec3 s, glm::vec3 r)
 				 : draw_enemy(p, s, r) {
 
+	shell = new draw_shell(p, s, r);
+
 	//set the parameters of white
 	meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
 						mPoint(scale.x, scale.y, scale.z),

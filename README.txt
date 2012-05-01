@@ -20,3 +20,7 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 - C - go down warp pipe
 - Mouse Pointer - Look Around
 - Mouse Click - Shoot Fireball (With Power)
+
+====== Known "Bugs" ======
+- Enemies will walk right through power-ups and shells (but not each other or pipes)
+- Objects (fireballs, stamen, mushroom, shells, flowers) will go through each other

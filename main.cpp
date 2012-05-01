@@ -7,6 +7,7 @@
 #define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
+//#define OBJLOADER_DEBUG
 
 #include <string>
 #include <time.h>
@@ -131,7 +132,8 @@ Cube* camcube; // player "model"
 
 #define MUSHROOM 0
 #define STARMAN 1
-#define FLOWER 2 
+#define FLOWER 2
+#define SHELL 3
 
 vector<draw_object*> prizes; // flowers, mushrooms, starmen, etc
 vector<draw_pipe*> pipes;
@@ -386,6 +388,11 @@ bool simpleAI(draw_enemy* c) {
 	else if(c->collidesWith(camcube, dt) && !c->destroyed && c->destroycountdown < 0){
 		if(c->collidesBottomY(camcube, dt) && !c->collidesX(camcube, dt) && !c->collidesZ(camcube, dt)) {
 			if(!invincible) camcube->velocity.y = jumpvel/2;
+			if(strcmp(c->type, "koopa") == 0) {
+				((draw_koopa*)c)->shell->move(glm::vec3(c->position.x, c->position.y, c->position.z));
+				((draw_koopa*)c)->shell->rotate(glm::vec3(c->rot.x, c->rot.y, c->rot.z));
+				prizes.push_back(((draw_koopa*)c)->shell);
+			}
 #ifdef PLAY_SOUNDS
 			FMOD_RESULT result;
 			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, stompsound, false,NULL );
@@ -486,6 +493,84 @@ bool mushroomAI(draw_object* c) {
 	}
 	c->position += c->velocity * dt;
 	c->move(c->position);
+}
+
+bool shellAI(draw_shell* c) {
+	c->velocity.y += gravity.y * dt;
+	if(c->velocity.y <= termvel.y) return true;
+	for(int n = 0; n < enemies.size(); n++) {
+		if(c->collidesWith(enemies[n], dt) && (c->velocity.x != 0 || c->velocity.z != 0)) {
+			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
+			n--;
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, shellsound, false, NULL);
+			AudioError(result);
+#endif
+		}
+	}
+	
+	if(c->collidesWith(camcube, dt) && c->velocity.x == 0 && c->velocity.z == 0) {
+		if(camcube->velocity.y < 0) {
+			camcube->velocity.y = jumpvel/2;
+		} // going down bounces
+		
+		// angle between user and enemy
+		float dx = abs(c->position.x - camcube->position.x);
+		float dz = abs(c->position.z - camcube->position.z);
+		float anglebetween = atan(dz/dx);
+		
+		int modz = 1; // modifies to make up for losing part of circle in atan
+		int modx = 1;
+		if(c->position.z-camcube->position.z < 0) modz = -1;
+		if(c->position.x-camcube->position.x < 0) modx = -1;
+		c->velocity.y = 0;
+		c->velocity.x = 20*modx*aimovespeed*cos(anglebetween);
+		c->velocity.z = 20*modz*aimovespeed*sin(anglebetween);
+		
+#ifdef PLAY_SOUNDS
+		FMOD_RESULT result;
+		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, stompsound, false, NULL);
+		AudioError(result);
+#endif
+	}
+	else if(c->collidesWith(camcube, dt) && !invincible) {
+		numlives--;
+		reset();
+		return true;	
+	} // is moving
+	
+	for(int n = 0; n < cubes.size(); n++) {
+		if(c->collidesTopY(cubes[n], dt)) {
+			c->velocity.y = 0;
+			break;
+		}
+	} 
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesTopY(pipes[n], dt)) {
+			c->velocity.y = 0;
+			break;
+		}
+	} // collision with floors
+	
+	for(int i = 0; i < cubes.size(); i++) {
+		if(c->collidesWith(cubes[i], dt)) {
+			if(c->collidesX(cubes[i], dt)) c->velocity.x *= -1;
+			else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -1;
+			break;
+		}
+	}
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesWith(pipes[n], dt)) {
+			if(c->collidesX(pipes[n], dt)) c->velocity.x *= -1;
+			else if(c->collidesZ(pipes[n], dt)) c->velocity.z *= -1;
+			break;
+		}
+	}
+	
+	c->position += c->velocity * dt;
+	c->move(c->position);
+	return false;
 }
 
 bool fireballAI(draw_fireball* c) {
@@ -867,6 +952,12 @@ void moveCamera() {
 		else if(strcmp(prizes[n]->type, "flower") == 0) {
 			if(prizes[n]->collidesWith(camcube, dt)) {
 				hasfire = true;
+				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
+				n--;
+			}
+		}
+		else if(strcmp(prizes[n]->type, "shell") == 0) {
+			if(shellAI((draw_shell*)prizes[n])) {
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
 			}
@@ -1272,7 +1363,7 @@ int main(int argc, char* argv[]) {
     //these are all of the graphics. they can be easily modified so let me know
 
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(18 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(8 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {
