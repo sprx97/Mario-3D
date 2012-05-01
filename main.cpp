@@ -1169,15 +1169,25 @@ void onDisplay() {
 	if(state == GAME_STATE) {
 		char* printlives = new char[10];
 		sprintf(printlives, "Lives: %d", numlives);
-		renderGLUTText(0.0, 0.975, printlives, mPoint(0, 0, 0));
+		renderGLUTText(0.0, 0.95, printlives, mPoint(0, 0, 0));
 		
 		char* printcoins = new char[10];
 		sprintf(printcoins, "Coins: %d", coincount);
-		renderGLUTText(0.0, 0.95, printcoins, mPoint(0, 0, 0));
+		renderGLUTText(0.0, 0.925, printcoins, mPoint(0, 0, 0));
 	
 		char* printlevel = new char[10];
 		sprintf(printlevel, "Level: %d", levelnum);
-		renderGLUTText(.95, 0.95, printlevel, mPoint(0, 0, 0));
+		renderGLUTText(0.0, 0.975, printlevel, mPoint(0, 0, 0));
+		
+		char* printpowers = new char[30];
+		const char* starpower = ""; 
+		const char* mushpower = "";
+		const char* firepower = "";
+		if(hasfire) firepower = "fire ";
+		if(camcube->size == cubesize*2) mushpower = "mushroom ";
+		if(invincible) starpower = "starman ";
+		sprintf(printpowers, "Powers: %s%s%s", firepower, mushpower, starpower);
+		renderGLUTText(0.0, .90, printpowers, mPoint(0, 0, 0));
 		
 #ifdef PRINT_FPS
 		char* fps = new char[20];
