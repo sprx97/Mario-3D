@@ -166,11 +166,11 @@ int idlecount = 0;
 float lastidle = 0;
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
-int test = 0;
 
 bool hasfire = false;
 bool invincible = false;
 
+int levelnum = 0;
 int numlives = 3;
 int coincount = 0;
 
@@ -1175,6 +1175,10 @@ void onDisplay() {
 		sprintf(printcoins, "Coins: %d", coincount);
 		renderGLUTText(0.0, 0.95, printcoins, mPoint(0, 0, 0));
 	
+		char* printlevel = new char[10];
+		sprintf(printlevel, "Level: %d", levelnum);
+		renderGLUTText(.95, 0.95, printlevel, mPoint(0, 0, 0));
+		
 #ifdef PRINT_FPS
 		char* fps = new char[20];
 		sprintf(fps, "%.2f FPS", 1000.0/(glutGet(GLUT_ELAPSED_TIME) - lastframe));
