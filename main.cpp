@@ -3,7 +3,7 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
-#define PLAY_SOUNDS
+//#define PLAY_SOUNDS
 #define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
@@ -1041,8 +1041,9 @@ void gameIdle() {
 #endif
 		mouseinit = true;
 	}
+#ifdef PLAY_SOUNDS
 	if(!musicplaying) playmusic();
-    
+#endif
 	moveCamera();
 } // idle function for when in game state
 
@@ -1427,7 +1428,7 @@ void loadWorld1_1() {
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
-	initAudio();
+	//	initAudio();
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);

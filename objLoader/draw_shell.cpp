@@ -35,6 +35,6 @@ void draw_shell::setHitboxes() {
 
 //load all three
 void draw_shell::load() {
-  meshes[0].loadOBJ("objLoader/emptyShellW.obj");
-  meshes[1].loadOBJ("objLoader/emptyShellG.obj");
+  meshes[0].loadOBJ("objLoader/shellWhite.obj");
+  meshes[1].loadOBJ("objLoader/shellGreen.obj");
 }
