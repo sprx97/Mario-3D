@@ -291,13 +291,6 @@ void reset() {
 	
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
-	enemies.clear();
-	prizes.clear();
-
-	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 }
 
@@ -361,7 +354,7 @@ bool simpleAI(draw_enemy* c) {
 		switch (behavior){
 			case 0:
 				c->velocity.z += pathwidthcheck * (aimovespeed * .1f) * dt;
-				c->velocity.x -= pathlengthcheck * (aimovespeed * .25f) * dt;
+//				c->velocity.x -= pathlengthcheck * (aimovespeed * .25f) * dt;
 				if(c->position.z > 0 || c->position.z < -(pathwidth-2)*cubesize) pathwidthcheck = -pathwidthcheck;
 				if(c->position.x < 12 * cubesize) {
 					pathlengthcheck = -1;
@@ -1479,6 +1472,14 @@ void loadWorld1_1() {
 		} // bricks	
 		if((n >= 82 && n <= 89) || n == 93 || n == 94 || n == 95 || n == 123 || n == 124 || n == 125 || n == 130 || n == 133) {
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+			if(n >= 82 && n <= 89) {
+				cubes.push_back(new Cube(cubesize*n, 10*cubesize, -2*cubesize, "brickblock", cubesize));
+				cubes.push_back(new Cube(cubesize*n, 10*cubesize, 0*cubesize, "brickblock", cubesize));
+			}
+		}
+		if(n == 65) {
+			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+			// should be "used" ? block with 1-up on top
 		}
 	} // floating brick blocks
 	
@@ -1542,8 +1543,40 @@ void loadWorld1_1() {
 		}
 	} // ? blocks and objs
 	
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*28, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*39, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*47, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*58, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*165, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*181, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes[3]->linkedpipe = pipes[4];
 	// pipes
+	
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*83, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*99, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*175, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	// enemies
+	
 	// coins
 }
 
