@@ -22,6 +22,12 @@
 						mPoint(scale.x, scale.y, scale.z),
 						mPoint(rot.x, rot.y, rot.z),
 						Material())); 
+
+  //set spots
+  meshes.push_back(Mesh(mPoint(position.x, position.y, position.z),
+			mPoint(scale.x, scale.y, scale.z),
+			mPoint(rot.x, rot.y, rot.z),
+			Material(mPoint(1, 1, 1), mPoint(1, 1, 1), mPoint(1, 1, 1)))); 
   
   hitboxes.push_back(new Cube(position.x, position.y+2*scale.y, position.z+scale.z, "brickblock", 2*scale.x));
 
@@ -42,4 +48,5 @@ void draw_mushroom::load() {
   meshes[0].loadOBJ("objLoader/mushroom_body.obj");
   meshes[1].loadOBJ("objLoader/mushroom_top.obj");
   meshes[2].loadOBJ("objLoader/mushroom_eyes.obj");
+  meshes[3].loadOBJ("objLoader/mushroomspots.obj");
 }
