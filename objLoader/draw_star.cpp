@@ -32,6 +32,6 @@ void draw_star::setHitboxes() {
 
 //load all three
 void draw_star::load() {
-  meshes[0].loadOBJ("../objLoader/star_smooth.obj");
-  meshes[1].loadOBJ("../objLoader/star_eyes.obj");
+  meshes[0].loadOBJ("objLoader/star_smooth.obj");
+  meshes[1].loadOBJ("objLoader/star_eyes.obj");
 }

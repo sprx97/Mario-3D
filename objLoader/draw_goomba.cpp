@@ -3,7 +3,10 @@
 #include <string>
 
  draw_goomba::draw_goomba(glm::vec3 p, glm::vec3 s, glm::vec3 r)
-				 : draw_object(p, s, r) {
+				 : draw_enemy(p, s, r) {
+
+  destroycountdown = -1;
+  knockbackcountdown = -1;
 
   destroycountdown = -1;
   knockbackcountdown = -1;
@@ -54,9 +57,9 @@ void draw_goomba::setHitboxes() {
 
 //load all three
 void draw_goomba::load() {
-  meshes[0].loadOBJ("../objLoader/goombawhite.obj");
-  meshes[1].loadOBJ("../objLoader/goombablack.obj");
-  meshes[2].loadOBJ("../objLoader/goombahead.obj");
-  meshes[3].loadOBJ("../objLoader/goombabody.obj");
-  meshes[4].loadOBJ("../objLoader/goombafeet.obj");
+  meshes[0].loadOBJ("objLoader/goombawhite.obj");
+  meshes[1].loadOBJ("objLoader/goombablack.obj");
+  meshes[2].loadOBJ("objLoader/goombahead.obj");
+  meshes[3].loadOBJ("objLoader/goombabody.obj");
+  meshes[4].loadOBJ("objLoader/goombafeet.obj");
 }

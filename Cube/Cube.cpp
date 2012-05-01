@@ -20,29 +20,31 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "questionblock_texture.c"
-#include "brickblock_texture.c"
-#include "groundblock_texture.c"
-#include "skybox_texture.c"
-#include "title_texture.c"
+#include "../Textures/questionblock_texture.c"
+#include "../Textures/brickblock_texture.c"
+#include "../Textures/groundblock_texture.c"
+#include "../Textures/skybox_texture.c"
+#include "../Textures/title_texture.c"
 
-#include "start.c"
-#include "startl.c"
-#include "startq.c"
-#include "startn.c"
-#include "border.c"
+#include "../Textures/start.c"
+#include "../Textures/startl.c"
+#include "../Textures/startq.c"
+#include "../Textures/startn.c"
+#include "../Textures/border.c"
 
-#include "../common/shader_utils.h"
+#include "../Shaders/shader_utils.h"
 #include "Cube.h"
 
 using namespace std;
 
-Cube::Cube(float x, float y, float z, const char* texture, float s, int p) {
+Cube::Cube(float x, float y, float z, const char* texture, float s, draw_object* p) {
 	position = glm::vec3(x, y, z);
 	velocity = glm::vec3(0.0, 0.0, 0.0);
-	bool destroyed = false;
-	bool hit = false;
-	prizetype = p;
+	destroyed = false;
+	hit = false;
+	prize = p;
+	
+	destroycountdown = -1;
 	
 //	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 //	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };

@@ -39,7 +39,7 @@ void draw_mushroom::setHitboxes() {
 
 //load all three
 void draw_mushroom::load() {
-  meshes[0].loadOBJ("../objLoader/mushroom_body.obj");
-  meshes[1].loadOBJ("../objLoader/mushroom_top.obj");
-  meshes[2].loadOBJ("../objLoader/mushroom_eyes.obj");
+  meshes[0].loadOBJ("objLoader/mushroom_body.obj");
+  meshes[1].loadOBJ("objLoader/mushroom_top.obj");
+  meshes[2].loadOBJ("objLoader/mushroom_eyes.obj");
 }

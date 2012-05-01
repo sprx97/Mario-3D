@@ -119,8 +119,10 @@ void Mesh::loadOBJ(const string &filename, bool makeDisplayList)
             vector<string> faceTokens = tokenizeString(line, " ");
             if(faceTokens.size() != 4 && faceTokens.size() != 5)
             {
+#ifdef OBJLOADER_DEBUG
                 fprintf(stderr, "ERROR: OBJ file contains an %u-sided polygon (unsupported). Skipping.\n", (unsigned int)faceTokens.size());
-                continue;
+#endif  
+				continue;
             }
 
             //some local variables to hold the vertex+attribute indices we read in.
@@ -147,7 +149,9 @@ void Mesh::loadOBJ(const string &filename, bool makeDisplayList)
                     vt[i-1] = atoi(groupTokens[1].c_str()); objHasVertexTexCoords = true;
                     vn[i-1] = atoi(groupTokens[2].c_str()); objHasVertexNormals = true;
                 } else if(groupTokens.size() != 1) {
+#ifdef OBJLOADER_DEBUG
                     fprintf(stderr, "Error. Malformed OBJ file, %s.\n", filename.c_str());
+#endif
                     exit(1);
                 }
             }    
@@ -197,10 +201,11 @@ void Mesh::loadOBJ(const string &filename, bool makeDisplayList)
 
         }
     }
+#ifdef OBJLOADER_DEBUG
 
     printf("%s: We read %d vertices, %d vertex normals, %d vertex tex coords, and %d faces.\n",
             filename.c_str(), (int)vertices.size()/3, (int)vertexNormals.size()/3, (int)vertexTexCoords.size()/2,  (int)vertexIndices.size()/3);
-
+#endif
     in.close();
 	
     if (makeDisplayList) createOBJDisplayList(); // And make it into a display list
@@ -217,8 +222,9 @@ void Mesh::loadOBJ(const string &filename, bool makeDisplayList)
 //
 void Mesh::createOBJDisplayList()
 {
-
+#ifdef OBJLOADER_DEBUG
   printf(" entering createdisplaylist\n");
+#endif
 	objectDisplayList = glGenLists(1);
 	glNewList(objectDisplayList, GL_COMPILE);
 	

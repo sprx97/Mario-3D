@@ -27,5 +27,5 @@ void draw_coin::setHitboxes() {
 
 //load all three
 void draw_coin::load() {
-  meshes[0].loadOBJ("../objLoader/coinfinal.obj");
+  meshes[0].loadOBJ("objLoader/coinfinal.obj");
 }

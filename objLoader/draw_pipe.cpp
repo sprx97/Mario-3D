@@ -31,5 +31,5 @@ void draw_pipe::setHitboxes() {
 
 //load all three
 void draw_pipe::load() {
-  meshes[0].loadOBJ("../objLoader/pipesmooth.obj");
+  meshes[0].loadOBJ("objLoader/pipesmooth.obj");
 }
