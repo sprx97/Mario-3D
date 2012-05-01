@@ -120,7 +120,6 @@ int keys[256] = {0}; // array of whether keys are pressed
 int cubesize = 2;
 int pathlength = 100;
 double pathwidth = 8;
-int ncubes = 0;
 vector<Cube*> cubes; // array of cubes
 Cube* title; // title graphic
 Cube* border; // menu graphic
@@ -700,6 +699,7 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 		AudioError(result);
 #endif
 		prizes.push_back(Zoidberg->prize);
+		// darkened texture
 		Zoidberg->hit = true;
 		Zoidberg->prize = NULL;
 		if(strcmp(prizes[prizes.size()-1]->type, "mushroom") == 0) {
@@ -846,7 +846,25 @@ void moveCamera() {
 	applyGravity();
 	
 	for(int n = 0; n < cubes.size(); n++) {
+		if(cubes[n]->destroycountdown > 0) {
+			cubes[n]->destroycountdown--;
+			if(cubes[n]->destroycountdown == 0) {
+				// turn into darkened texture
+				cubes[n]->hit = true;
+			}
+		}
 		if(cubes[n]->prize != NULL) spawnsPrize(camcube, cubes[n]);
+		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !cubes[n]->hit) {
+			if(camcube->velocity.y > 0) coincount++; // get coin
+#ifdef PLAY_SOUNDS
+			FMOD_RESULT result;
+			result = fmodSystem->playSound(FMOD_CHANNEL_FREE, coinsound, false,NULL );
+			AudioError(result);
+#endif
+			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
+		}
+		
+		if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.01;
 	}
 
 	camcube->velocity.x = 0;
@@ -1344,6 +1362,68 @@ void initLighting() {
 	glEnable(GL_DEPTH_TEST); 
 }
 
+void loadDebugLevel() {
+	levelnum = 0;
+
+	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+    for (int m = 0; m < pathwidth; m++) {
+        for (int n = 0; n < 100; n++) {
+            cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
+		}
+	}    
+    for (int n = 0; n < pathlength/16; n++) {
+		int r = rand()%4;
+		draw_object* newobj;
+		switch(r) {
+			case MUSHROOM:
+				newobj = new draw_mushroom(glm::vec3(cubesize*n*16, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+										   glm::vec3(.75, .75, .75), 
+										   glm::vec3(0, -90, 0));
+				break;
+			case FLOWER:
+				newobj = new draw_flower(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+										 glm::vec3(.25, .25, .25), 
+										 glm::vec3(0, 180, 0));
+				break;
+			case STARMAN:
+				newobj = new draw_star(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
+									 glm::vec3(.2, .2, .2), 
+									 glm::vec3(0, -90, 0));
+				break;
+			default:
+				newobj = NULL;
+				break;
+		}
+	
+		cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, newobj));
+	} // floating ? cubes
+    for( int o = 0; o < pathlength/32; o++) {
+      pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
+    }
+	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
+	pipes[pathlength/32 -1]->linkedpipe = pipes[0]; // links last pipe to first pipe
+	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+    //these are all of the graphics. they can be easily modified so let me know
+
+	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	
+	for(int n = 0; n < pathlength; n++) {
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+	}
+}
+
+void loadWorld1_1() {
+	levelnum = 1;
+	
+	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+
+	
+}
+
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
@@ -1377,53 +1457,8 @@ int main(int argc, char* argv[]) {
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
 	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
-	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
-    for (int m = 0; m < pathwidth; m++) {
-        for (int n = (100*m); n < (m*100)+100; n++) {
-            cubes.push_back(new Cube(cubesize*(n%100), 0.0, -m*cubesize, "groundblock", cubesize));
-			ncubes++;
-		}
-	}    
-    for (int n = 0; n < pathlength/16; n++) {
-		int r = rand()%3;
-		draw_object* newobj;
-		switch(r) {
-			case MUSHROOM:
-				newobj = new draw_mushroom(glm::vec3(cubesize*n*16, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
-										   glm::vec3(.75, .75, .75), 
-										   glm::vec3(0, -90, 0));
-				break;
-			case FLOWER:
-				newobj = new draw_flower(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
-										 glm::vec3(.25, .25, .25), 
-										 glm::vec3(0, 180, 0));
-				break;
-			case STARMAN:
-				newobj = new draw_star(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
-									 glm::vec3(.2, .2, .2), 
-									 glm::vec3(0, -90, 0));
-				break;
-		}
-	
-		cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, newobj));
-	} // floating ? cubes
-    for( int o = 0; o < pathlength/32; o++) {
-      pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
-    }
-	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
-	pipes[pathlength/32 -1]->linkedpipe = pipes[0]; // links last pipe to first pipe
-	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
-	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-    //these are all of the graphics. they can be easily modified so let me know
-
-	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	
-	for(int n = 0; n < pathlength; n++) {
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
-	}
+	loadDebugLevel();
+//	loadWorld1_1();
 	
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working

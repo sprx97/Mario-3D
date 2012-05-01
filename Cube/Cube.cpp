@@ -44,6 +44,8 @@ Cube::Cube(float x, float y, float z, const char* texture, float s, draw_object*
 	hit = false;
 	prize = p;
 	
+	destroycountdown = -1;
+	
 //	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 //	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	size = s;

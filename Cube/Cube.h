@@ -18,6 +18,8 @@ class Cube {
 //		GLfloat specrefoff[];
 		float size;
 		
+		int destroycountdown;
+		
 		GLfloat vertices[72]; // vertecies of each face
 		GLuint vbo_vertices; // VBO of coordinates
 		
