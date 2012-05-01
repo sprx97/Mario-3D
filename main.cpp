@@ -275,17 +275,16 @@ void reset() {
 #endif
 	}
 	
-	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
 	enemies.clear();
 	prizes.clear();
 
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(8 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
-	for (int n = 0; n < cubes.size(); n++) cubes[n]->hit = false;
 }
 
 void rotateToFaceCamAI(draw_object *c) {
@@ -424,7 +423,7 @@ bool simpleAI(draw_enemy* c) {
 		}
 		else {
 			if(invincible) {
-				c->destroycountdown = 1000;
+				c->destroycountdown = 60;
 				// angle between user and gooma
 				float dx = abs(c->position.x - camcube->position.x);
 				float dz = abs(c->position.z - camcube->position.z);
@@ -434,7 +433,7 @@ bool simpleAI(draw_enemy* c) {
 				int modx = 1;
 				if(c->position.z-camcube->position.z < 0) modz = -1;
 				if(c->position.x-camcube->position.x < 0) modx = -1;
-				c->velocity.y = .05;
+				c->velocity.y = .075;
 				c->velocity.x = 16*modx*aimovespeed*cos(anglebetween);
 				c->velocity.z = 16*modz*aimovespeed*sin(anglebetween);
 			}
@@ -444,7 +443,7 @@ bool simpleAI(draw_enemy* c) {
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
 				
-				c->knockbackcountdown = 1000;
+				c->knockbackcountdown = 60;
 				
 				// angle between user and gooma
 				float dx = abs(c->position.x - camcube->position.x);
@@ -455,7 +454,7 @@ bool simpleAI(draw_enemy* c) {
 				int modx = 1;
 				if(c->position.z-camcube->position.z < 0) modz = -1;
 				if(c->position.x-camcube->position.x < 0) modx = -1;
-				c->velocity.y = .05;
+				c->velocity.y = .075;
 				c->velocity.x = 8*modx*aimovespeed*cos(anglebetween);
 				c->velocity.z = 8*modz*aimovespeed*sin(anglebetween);
 			}
@@ -613,20 +612,34 @@ bool fireballAI(draw_fireball* c) {
 			return true;
 		}
 	}
-
-    for(int i = 0; i < cubes.size(); i++) {
-		if(c->collidesWith(cubes[i], dt)) {
-			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -.75;
-			else if(c->collidesX(cubes[i], dt)) c->velocity.x *= -.75;
-			else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -.75;
+	
+	bool ychanged = false;
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesY(pipes[n], dt)) {
+			c->velocity.y *= -1;
+			ychanged = true;
 			break;
 		}
-    }
-	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n], dt)) {
+	}
+	for(int n = 0; n < cubes.size(); n++) {
+		if(c->collidesY(cubes[n], dt)) {
+			c->velocity.y *= -1;
+			ychanged = true;
+			break;
+		}
+	}
+
+	if(!ychanged) {
+		for(int i = 0; i < cubes.size(); i++) {
+			if(c->collidesWith(cubes[i], dt)) {
+				if(c->collidesX(cubes[i], dt)) c->velocity.x *= -.75;
+				else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -.75;
+				break;
+			}
+		}
+		for(int n = 0; n < pipes.size(); n++) {
 			if(c->collidesWith(pipes[n], dt)) {
-				if(c->collidesY(pipes[n], dt)) c->velocity.y *= -.75;
-				else if(c->collidesX(pipes[n], dt)) c->velocity.x *= -.75;
+				if(c->collidesX(pipes[n], dt)) c->velocity.x *= -.75;
 				else if(c->collidesZ(pipes[n], dt)) c->velocity.z *= -.75;
 				break;
 			}
@@ -639,30 +652,64 @@ bool fireballAI(draw_fireball* c) {
 }
 
 void starAI(draw_object* c) {
-	c->velocity.y += 3*gravity.y * dt;	
+	c->velocity.y += 2*gravity.y * dt;
 	if(c->velocity.y > .075) c->velocity.y = .075;
-    for(int i = 0; i < cubes.size(); i++) {
-		if(c->collidesWith(cubes[i], dt)) {
-			if(c->collidesY(cubes[i], dt)) c->velocity.y *= -1;
-			else if(c->collidesX(cubes[i], dt)) c->velocity.x *= -1;
-			else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -1;
+	bool ychanged = false;
+	for(int n = 0; n < cubes.size(); n++) {
+		if(c->collidesY(cubes[n], dt)) {
+			c->velocity.y *= -1;
+			ychanged = true;
 			break;
 		}
-    }
+	}
 	for(int n = 0; n < pipes.size(); n++) {
-		if(c->collidesWith(pipes[n], dt)) {
+		if(c->collidesY(pipes[n], dt)) {
+			c->velocity.y *= -1;
+			ychanged = true;
+			break;
+		}
+	}
+	if(!ychanged) {
+		for(int i = 0; i < cubes.size(); i++) {
+			if(c->collidesWith(cubes[i], dt)) {
+				if(c->collidesX(cubes[i], dt)) c->velocity.x *= -1;
+				else if(c->collidesZ(cubes[i], dt)) c->velocity.z *= -1;
+				break;
+			}
+		}
+		for(int n = 0; n < pipes.size(); n++) {
 			if(c->collidesWith(pipes[n], dt)) {
-				if(c->collidesY(pipes[n], dt)) c->velocity.y *= -1;
-				else if(c->collidesX(pipes[n], dt)) c->velocity.x *= -1;
+				if(c->collidesX(pipes[n], dt)) c->velocity.x *= -1;
 				else if(c->collidesZ(pipes[n], dt)) c->velocity.z *= -1;
 				break;
 			}
 		}
 	}
+	
 	c->position += c->velocity * dt;
 	c->move(c->position);
 	c->rot += glm::vec3(0, 2.5, 0);
 	c->rotate(c->rot);
+}
+
+void spawnsPrize(Cube* c, Cube* Zoidberg) {
+	if (c->collidesBottomY(Zoidberg, dt) && !Zoidberg->hit) {
+#ifdef PLAY_SOUNDS
+		FMOD_RESULT result;
+		result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
+		AudioError(result);
+#endif
+		prizes.push_back(Zoidberg->prize);
+		Zoidberg->hit = true;
+		Zoidberg->prize = NULL;
+		if(strcmp(prizes[prizes.size()-1]->type, "mushroom") == 0) {
+			prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
+		}
+		else if(strcmp(prizes[prizes.size()-1]->type, "flower") == 0) {}
+		else if(strcmp(prizes[prizes.size()-1]->type, "star") == 0) {
+			prizes[prizes.size()-1]->velocity = glm::vec3(.025, .1, 0);
+		}
+    }    
 }
 
 int initShaders() {
@@ -773,47 +820,6 @@ void setVectors() {
 #endif
 } // sets player vectors and mouse location
 
-void spawnsPrize(Cube* c, Cube* Zoidberg) {
-	if (c->collidesBottomY(Zoidberg, dt) && c->velocity.y == 0 && !Zoidberg->hit) {
-#ifdef PLAY_SOUNDS
-		FMOD_RESULT result;
-#endif
-		switch(Zoidberg->prizetype) {
-			case MUSHROOM:
-				prizes.push_back(new draw_mushroom(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+1.5*Zoidberg->size, Zoidberg->position.z-.75), 
-											 glm::vec3(.75, .75, .75), 
-											 glm::vec3(0, -90, 0)));
-				prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
-				Zoidberg->hit = true;
-#ifdef PLAY_SOUNDS
-				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
-				AudioError(result);
-#endif
-				break;
-
-			case FLOWER:
-				prizes.push_back(new draw_flower(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z), 
-										 glm::vec3(.25, .25, .25), 
-										 glm::vec3(0, 0, 0)));
-				// flower doesn't move
-				Zoidberg->hit = true;
-#ifdef PLAY_SOUNDS
-				result = fmodSystem->playSound(FMOD_CHANNEL_FREE, prizesound, false,NULL );
-				AudioError(result);
-#endif
-				break;
-
-			case STARMAN:
-				prizes.push_back(new draw_star(glm::vec3(Zoidberg->position.x, Zoidberg->position.y+Zoidberg->size, Zoidberg->position.z),
-									 glm::vec3(.2, .2, .2), 
-									 glm::vec3(0, -90, 0)));
-				prizes[prizes.size()-1]->velocity = glm::vec3(.025, .1, 0);
-				Zoidberg->hit = true;
-				break;
-		}
-    }    
-}
-
 void moveCamera() {
 	if(warping1) {
 		for(int n = 0; n < cubes.size(); n++) {
@@ -840,7 +846,7 @@ void moveCamera() {
 	applyGravity();
 	
 	for(int n = 0; n < cubes.size(); n++) {
-		if(!cubes[n]->hit && cubes[n]->prizetype != -1) spawnsPrize(camcube, cubes[n]);
+		if(cubes[n]->prize != NULL) spawnsPrize(camcube, cubes[n]);
 	}
 
 	camcube->velocity.x = 0;
@@ -1365,7 +1371,27 @@ int main(int argc, char* argv[]) {
 		}
 	}    
     for (int n = 0; n < pathlength/16; n++) {
-        cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, rand()%3));
+		int r = rand()%3;
+		draw_object* newobj;
+		switch(r) {
+			case MUSHROOM:
+				newobj = new draw_mushroom(glm::vec3(cubesize*n*16, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+										   glm::vec3(.75, .75, .75), 
+										   glm::vec3(0, -90, 0));
+				break;
+			case FLOWER:
+				newobj = new draw_flower(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+										 glm::vec3(.25, .25, .25), 
+										 glm::vec3(0, 180, 0));
+				break;
+			case STARMAN:
+				newobj = new draw_star(glm::vec3(cubesize*n*16, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
+									 glm::vec3(.2, .2, .2), 
+									 glm::vec3(0, -90, 0));
+				break;
+		}
+	
+		cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, newobj));
 	} // floating ? cubes
     for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
@@ -1373,11 +1399,11 @@ int main(int argc, char* argv[]) {
 	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
 	pipes[pathlength/32 -1]->linkedpipe = pipes[0]; // links last pipe to first pipe
 	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
-	camcube = new Cube(0, 3*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -4 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(8 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, -6 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	
 	for(int n = 0; n < pathlength; n++) {

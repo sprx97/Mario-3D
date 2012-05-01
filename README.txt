@@ -24,3 +24,4 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 ====== Known "Bugs" ======
 - Enemies will walk right through power-ups and shells (but not each other or pipes)
 - Objects (fireballs, stamen, mushroom, shells, flowers) will go through each other
+- Fireballs and stars sometimes fall through floor

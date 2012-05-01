@@ -37,12 +37,12 @@
 
 using namespace std;
 
-Cube::Cube(float x, float y, float z, const char* texture, float s, int p) {
+Cube::Cube(float x, float y, float z, const char* texture, float s, draw_object* p) {
 	position = glm::vec3(x, y, z);
 	velocity = glm::vec3(0.0, 0.0, 0.0);
-	bool destroyed = false;
-	bool hit = false;
-	prizetype = p;
+	destroyed = false;
+	hit = false;
+	prize = p;
 	
 //	GLfloat specrefon[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 //	GLfloat sprcrefoff[] = { 0.0f, 0.0f, 0.0f, 0.0f };

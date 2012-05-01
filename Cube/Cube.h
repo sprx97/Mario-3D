@@ -12,7 +12,7 @@ class Cube {
 	public:
 		glm::vec3 position, velocity;
 		
-		int prizetype;
+		draw_object* prize;
 	
 //		GLfloat specrefon[];
 //		GLfloat specrefoff[];
@@ -33,7 +33,7 @@ class Cube {
     
 		const char* texturename;
 
-		Cube(float, float, float, const char*, float, int = -1);
+		Cube(float, float, float, const char*, float, draw_object* = NULL);
 		bool intersectsWith(float, float, float);
 		bool intersectsWith(Cube*);
 		bool collidesWith(Cube*, float);
