@@ -876,7 +876,7 @@ void moveCamera() {
 			}
 		}
 		if(cubes[n]->prize != NULL) spawnsPrize(camcube, cubes[n]);
-		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !cubes[n]->hit) {
+		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt) && !cubes[n]->hit) {
 			if(camcube->velocity.y > 0) {
 				coincount++; // get coin
 #ifdef PLAY_SOUNDS
@@ -885,7 +885,7 @@ void moveCamera() {
 			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
-		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt)) {
+		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt)) {
 			// play brick block break sound
 			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
 			camcube->velocity.y = -.1;
