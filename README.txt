@@ -22,7 +22,7 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 - Mouse Click - Shoot Fireball (With Power)
 
 ====== Known "Bugs" ======
-- Game takes 10-15 seconds to load. BE PATIENT.
+- Game takes 15-30 seconds to load a game. BE PATIENT.
 - Sometimes freezes computer when trying to quit.
 - Enemies will walk right through power-ups and shells (but not each other or pipes)
 - Objects (fireballs, starmen, mushroom, shells, flowers) will go through each other

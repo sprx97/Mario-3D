@@ -97,6 +97,7 @@ FMOD::Sound *gameoversound;
 FMOD::Sound *winsound;
 FMOD::Sound *oneup;
 FMOD::Sound *pipesound;
+FMOD::Sound *flagsound;
 FMOD::Sound *breaksound;
 FMOD::Channel* starChannel;
 FMOD::Channel* musicChannel;
@@ -118,6 +119,7 @@ bool jump = false;
 int onpipe = -1;
 bool warping1 = false;
 bool warping2 = false;
+bool winning = false;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -184,6 +186,9 @@ bool invincible = false;
 int levelnum = 0;
 int numlives = 3;
 int coincount = 0;
+
+void loadDebugLevel();
+void loadWorld1_1();
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
@@ -292,6 +297,10 @@ void initAudio() {
 									 &breaksound);
 	AudioError(result);
 	
+	result = fmodSystem->createSound("Sounds/flagpole.wav", FMOD_SOFTWARE, 0, 
+								     &flagsound);
+	AudioError(result);
+	
 	result2 = fmodSystem->createStream("Sounds/mariostar.wav",
 										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
 	AudioError(result2);
@@ -320,13 +329,16 @@ void playsound(FMOD::Sound* snd) {
 
 void reset() {
 	if(numlives < 0) {
-		state = MENU_STATE; // game over state
+		state = TITLE_STATE; // game over state
 #ifdef PLAY_SOUNDS
 		playsound(gameoversound);
 #endif
 		numlives = 3;
 	}
 
+	hasfire = false;
+	invincible = false;
+	winning = false;
 	musicplaying = false;
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
@@ -894,6 +906,17 @@ void moveCamera() {
 		camcube->position += camcube->velocity * dt;
 		return;
 	}
+	
+	if(winning) {
+		for(int n = 0; n < cubes.size(); n++) {
+			if(cubes[n]->collidesWith(camcube, dt)) {
+				playsound(winsound);
+				freezetime = 480;
+			}
+		}
+		camcube->position += camcube->velocity * dt;
+		return;
+	}
 
 	setVectors();
 	applyGravity();
@@ -1008,8 +1031,10 @@ void moveCamera() {
 	if(flag->collidesWith(camcube, dt)) {
 		musicChannel->setPaused(true);
 		starChannel->setPaused(true);
-		playsound(winsound);
-		state = MENU_STATE; // win the level!
+		playsound(flagsound);
+		winning = true;
+		camcube->velocity = glm::vec3(0, -jumpvel/4, 0);
+		return;
 	}
 	for(int n = 0; n < coins.size(); n++) {
 		coins[n]->rotate(glm::vec3(coins[n]->rot.x, coins[n]->rot.y, coins[n]->rot.z+1));
@@ -1132,7 +1157,10 @@ void idle() {
 //	dt = (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
 //	cout << (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS) << endl;
 //	lastidle = glutGet(GLUT_ELAPSED_TIME);
-	if(freezetime > 0) freezetime--;
+	if(freezetime > 0) {
+		freezetime--;
+		if(freezetime == 0 && winning) state = TITLE_STATE;
+	}
 	else if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
 	else if(state == GAME_STATE) gameIdle();
@@ -1346,7 +1374,16 @@ void toggleFullscreen() {
 void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
 	
-	if(state == TITLE_STATE) state = GAME_STATE; // next state
+	if(state == TITLE_STATE) {
+		enemies.clear();
+		prizes.clear();
+		cubes.clear();
+		pipes.clear();
+		fireballs.clear();
+		loadWorld1_1();
+		reset();
+		state = GAME_STATE; // next state
+	}
 	else if(state == MENU_STATE) {
 		keys[key] = 1; // key is pressed
 		if(key == 'q') {
@@ -1371,7 +1408,16 @@ void key_released(unsigned char key, int x, int y) {
 
 void mouse_click(int button, int mstate, int x, int y) {
 	if (mstate == GLUT_DOWN) {
-		if(state == TITLE_STATE) state = MENU_STATE; // next state
+		if(state == TITLE_STATE) {
+			enemies.clear();
+			prizes.clear();
+			cubes.clear();
+			pipes.clear();
+			fireballs.clear();
+			loadWorld1_1();
+			reset();
+			state = GAME_STATE; // next state
+		}
 		else if(state == MENU_STATE) {
 			//printf("%d, %d\n", screen_width, screen_height);
 			//printf("%d, %d\n", x, y);
