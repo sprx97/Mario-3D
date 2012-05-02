@@ -181,7 +181,7 @@ float MAX_FPS = 60.0; // 60 frames per second
 int freezetime = 0;
 
 bool hasfire = false;
-bool invincible = false;
+int invincible = 0;
 
 int levelnum = 0;
 int numlives = 3;
@@ -337,7 +337,7 @@ void reset() {
 	}
 
 	hasfire = false;
-	invincible = false;
+	invincible = 0;
 	winning = false;
 	musicplaying = false;
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
@@ -474,7 +474,7 @@ bool simpleAI(draw_enemy* c) {
 	}
 	else if(c->collidesWith(camcube, dt) && !c->destroyed && c->destroycountdown < 0){
 		if(c->collidesBottomY(camcube, dt) && !c->collidesX(camcube, dt) && !c->collidesZ(camcube, dt)) {
-			if(!invincible) camcube->velocity.y = jumpvel/2;
+			if(invincible <= 0) camcube->velocity.y = jumpvel/2;
 			if(strcmp(c->type, "koopa") == 0) {
 				((draw_koopa*)c)->shell->move(glm::vec3(c->position.x, c->position.y, c->position.z));
 				((draw_koopa*)c)->shell->rotate(glm::vec3(c->rot.x, c->rot.y, c->rot.z));
@@ -487,7 +487,7 @@ bool simpleAI(draw_enemy* c) {
 			return true;
 		}
 		else {
-			if(invincible) {
+			if(invincible > 0) {
 				c->destroycountdown = 60;
 				// angle between user and gooma
 				float dx = abs(c->position.x - camcube->position.x);
@@ -622,7 +622,7 @@ bool shellAI(draw_shell* c) {
 		playsound(shellsound);
 #endif
 	}
-	else if(c->collidesWith(camcube, dt) && !invincible) {
+	else if(c->collidesWith(camcube, dt) && invincible <= 0) {
 		numlives--;
 		die();
 		return true;	
@@ -918,6 +918,8 @@ void moveCamera() {
 		return;
 	}
 
+	if(invincible > 0) invincible--;
+
 	setVectors();
 	applyGravity();
 	
@@ -1079,12 +1081,12 @@ void moveCamera() {
 		else if(strcmp(prizes[n]->type, "star") == 0) {
 			starAI(prizes[n]);
 			if(prizes[n]->collidesWith(camcube, dt)) {
-				if(!invincible) {
+				if(invincible <= 0) {
 					movespeed *= 1.5; // only first starman
 					musicChannel->setPaused(true);
 					starChannel->setPaused(false);
 				}
-				invincible = true;
+				invincible = 600; // 10 seconds
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
 			}
@@ -1305,7 +1307,7 @@ void onDisplay() {
 		const char* firepower = "";
 		if(hasfire) firepower = "fire ";
 		if(camcube->size == cubesize*2) mushpower = "mushroom ";
-		if(invincible) starpower = "starman ";
+		if(invincible > 0) starpower = "starman ";
 		sprintf(printpowers, "Powers: %s%s%s", firepower, mushpower, starpower);
 		renderGLUTText(0.0, .90, printpowers, mPoint(0, 0, 0));
 		

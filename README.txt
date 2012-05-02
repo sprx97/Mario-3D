@@ -23,8 +23,12 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 
 ====== Known "Bugs" ======
 - Game takes 15-30 seconds to load a game. BE PATIENT.
+	- Fix by using less objects, or by being patient
 - Sometimes freezes computer when trying to quit.
+	- Not actually sure what causes this. I think it's an error with GLUT trying to destroy the window when we are drawing to it.
 - Enemies will walk right through power-ups and shells (but not each other or pipes)
+	- Just need to add more for loops in simpleAI which calls collidesWith methods.
 - Objects (fireballs, starmen, mushroom, shells, flowers) will go through each other
+	- Same as above.
 - Fireballs and stars sometimes fall through floor
-- You never lose power-ups, even when dying
+	- Need to do separate for loops for x, y, and z collision so that y collision takes priority.
