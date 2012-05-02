@@ -169,6 +169,7 @@ int idlecount = 0;
 float lastidle = 0;
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
+int freezetime = 0;
 
 bool hasfire = false;
 bool invincible = false;
@@ -307,6 +308,7 @@ void reset() {
 }
 
 void die() {
+	freezetime = 240;
 	musicChannel->setPaused(true);
 	starChannel->setPaused(true);
 	if (numlives>=0) playSound(deathsound);
@@ -1084,7 +1086,8 @@ void idle() {
 //	dt = (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
 //	cout << (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS) << endl;
 //	lastidle = glutGet(GLUT_ELAPSED_TIME);
-	if(state == TITLE_STATE) titleIdle();
+	if(freezetime > 0) freezetime--;
+	else if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
 	else if(state == GAME_STATE) gameIdle();
 } // constantly calculates redraws
@@ -1094,7 +1097,7 @@ void timer(int value) {
 //	idlecount = 0;
 	glutTimerFunc((1000.0/MAX_FPS), timer, 0);
 	idle();
-	glutPostRedisplay();
+	if(freezetime <= 0) glutPostRedisplay();
 }
 
 void gameDisplay() {
