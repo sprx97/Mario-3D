@@ -723,7 +723,8 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 		Zoidberg->hit = true;
 		Zoidberg->prize = NULL;
 		if(strcmp(prizes[prizes.size()-1]->type, "mushroom") == 0) {
-			prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
+			if(((draw_mushroom*)(prizes[prizes.size()-1]))->is1up == false) prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
+			else prizes[prizes.size()-1]->velocity = glm::vec3(0, 0, 0);
 		}
 		else if(strcmp(prizes[prizes.size()-1]->type, "flower") == 0) {}
 		else if(strcmp(prizes[prizes.size()-1]->type, "star") == 0) {
@@ -997,16 +998,21 @@ void moveCamera() {
 		if(strcmp(prizes[n]->type, "mushroom") == 0) {
 			mushroomAI(prizes[n]);
 			if(prizes[n]->collidesWith(camcube, dt)) {
-				camcube->position.y -= camcube->size/2;
-				camcube->size = cubesize*2;
-				camcube->position.y += camcube->size/2;
-				// grows
+				if(((draw_mushroom*)(prizes[n]))->is1up) {
+					// play 1-up sound here
+					numlives++;
+				}
+				else {
+					camcube->position.y -= camcube->size/2;
+					camcube->size = cubesize*2;
+					camcube->position.y += camcube->size/2;
+#ifdef PLAY_SOUNDS
+					playSound(prizesound);
+#endif
+				} // grows
 				
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
-#ifdef PLAY_SOUNDS
-				playSound(mushgetsound);
-#endif
 			}
 		}
 		else if(strcmp(prizes[n]->type, "star") == 0) {
@@ -1507,7 +1513,11 @@ void loadWorld1_1() {
 		}
 		if(n == 65) {
 			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
-			// should be "used" ? block with 1-up on top
+			prizes.push_back(new draw_mushroom(glm::vec3(cubesize*n, 7*cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.76),
+											   glm::vec3(.75, .75, .75),
+											   glm::vec3(0, -90, 0), 
+											   1));
+			// should be "used" ? block
 		}
 	} // floating brick blocks
 	
