@@ -3,8 +3,10 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
+#define PRINT_LOADING
+//#define DEBUG_LEVEL
 #define PLAY_SOUNDS
-//#define SKIP_MENUS
+#define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
@@ -1400,7 +1402,11 @@ void key_pressed(unsigned char key, int x, int y) {
 		coincount=0;
 		movespeed=.01;
 
+#ifdef DEBUG_LEVEL
+		loadDebugLevel();
+#else
 		loadWorld1_1();
+#endif
 		reset();
 		state = GAME_STATE; // next state
 	}
@@ -1441,7 +1447,11 @@ void mouse_click(int button, int mstate, int x, int y) {
 			coincount=0;
 			movespeed=.01;
 
+#ifdef DEBUG_LEVEL
+			loadDebugLevel();
+#else
 			loadWorld1_1();
+#endif
 			reset();
 			state = GAME_STATE; // next state
 		}
@@ -1512,12 +1522,19 @@ void loadDebugLevel() {
 	pathlength = 100;
 	pathwidth = 8;
 
+#ifdef PRINT_LOADING
+	cout << "Loading Cubes..." << endl;
+#endif
+
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
             cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
 		}
 	}    
+#ifdef PRINT_LOADING
+	cout << "Loading Objects..." << endl;
+#endif
     for (int n = 0; n < pathlength/16; n++) {
 		int r = rand()%4;
 		draw_object* newobj;
@@ -1544,7 +1561,12 @@ void loadDebugLevel() {
 	
 		cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, newobj));
 	} // floating ? cubes
-    for( int o = 0; o < pathlength/32; o++) {
+
+#ifdef PRINT_LOADING
+	cout << "Loading Pipes..." << endl;
+#endif
+  
+	for( int o = 0; o < pathlength/32; o++) {
       pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
     }
 	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
@@ -1553,9 +1575,17 @@ void loadDebugLevel() {
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
     //these are all of the graphics. they can be easily modified so let me know
 
+#ifdef PRINT_LOADING
+	cout << "Loading Enemies..." << endl;
+#endif
+
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+
+#ifdef PRINT_LOADING
+	cout << "Loading Coins..." << endl;
+#endif
 	
 	for(int n = 0; n < 100; n++) {
 		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
@@ -1573,6 +1603,10 @@ void loadWorld1_1() {
 
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 	flag = new draw_flag(glm::vec3(200*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+
+#ifdef PRINT_LOADING
+	cout << "Loading Cubes..." << endl;
+#endif
 
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
@@ -1633,6 +1667,10 @@ void loadWorld1_1() {
 			// should be "used" ? block
 		}
 	} // floating brick blocks
+
+#ifdef PRINT_LOADING
+	cout << "Loading Objects..." << endl;
+#endif
 	
 	draw_object* newobj = NULL;
 	for(int n = 0; n < pathlength; n++) {
@@ -1693,6 +1731,10 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 	} // ? blocks and objs
+
+#ifdef PRINT_LOADING
+	cout << "Loading Pipes..." << endl;
+#endif
 	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*28, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*39, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
@@ -1702,9 +1744,12 @@ void loadWorld1_1() {
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*181, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
 	pipes[3]->linkedpipe = pipes[4];
 	// pipes
+
+#ifdef PRINT_LOADING
+	cout << "Loading Enemies..." << endl;
+#endif
 	
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
@@ -1730,12 +1775,22 @@ void loadWorld1_1() {
 #endif
 	// enemies
 
+#ifdef PRINT_LOADING
+	cout << "Loading Coins..." << endl;
+#endif
+
+	for(int n = 200; n < 213; n++) {
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+	}
 	// coins
 }
 
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
+#ifdef PRINT_LOADING
+	cout << "Loading Sounds..." << endl;
+#endif
 	initAudio();
 
 	glutInit(&argc, argv);
@@ -1767,11 +1822,18 @@ int main(int argc, char* argv[]) {
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
 	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
-//	loadDebugLevel();
+#ifdef DEBUG_LEVEL
+	loadDebugLevel();
+#else
 	loadWorld1_1();
-	
+#endif	
+
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
+#endif
+
+#ifdef PRINT_LOADING
+	cout << "Initializing GLUT..." << endl;
 #endif
 		
 	if(initShaders()) {
