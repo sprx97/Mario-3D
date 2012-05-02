@@ -87,14 +87,20 @@ FMOD::Sound *coinsound;
 FMOD::Sound *jumpsound;
 FMOD::Sound *prizesound;
 FMOD::Sound *mushgetsound;
+FMOD::Sound *mushlosesound;
 FMOD::Sound *stompsound;
 FMOD::Sound *fireballsound;
 FMOD::Sound *shellsound;
 FMOD::Sound *deathsound;
 FMOD::Sound *gameoversound;
 FMOD::Sound *winsound;
+FMOD::Sound *oneup;
+FMOD::Sound *pipesound;
+FMOD::Sound *breaksound;
 FMOD::Channel* starChannel;
 FMOD::Channel* musicChannel;
+FMOD_RESULT resultchan1;
+FMOD_RESULT resultchan2;
 #endif
 
 int windowid;
@@ -245,6 +251,10 @@ void initAudio() {
 									 &mushgetsound);
 	AudioError(result);
 	
+	result = fmodSystem->createSound("Sounds/marioloseshroom.wav", FMOD_SOFTWARE, 0, 
+									 &mushlosesound);
+	AudioError(result);
+	
 	result = fmodSystem->createSound("Sounds/mariostomp.wav", FMOD_SOFTWARE, 0, 
 									 &stompsound);
 	AudioError(result);
@@ -269,23 +279,38 @@ void initAudio() {
 									 &winsound);
 	AudioError(result);
 	
+	result = fmodSystem->createSound("Sounds/1-up.wav", FMOD_SOFTWARE, 0,
+									 &oneup);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("Sounds/warppipe.wav", FMOD_SOFTWARE, 0,
+									 &pipesound);
+	AudioError(result);
+	
+	result = fmodSystem->createSound("Sounds/breakblock.wav", FMOD_SOFTWARE, 0,
+									 &breaksound);
+	AudioError(result);
+	
 	result2 = fmodSystem->createStream("Sounds/mariostar.wav",
 										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
+	AudioError(result2);
+	
+	resultchan1 = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, true, &musicChannel);
+	AudioError(result);
+	
+	resultchan2 = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, true, &starChannel);
 	AudioError(result2);
 }
 
 void playmusic() {
-	FMOD_RESULT result;
-	FMOD_RESULT result2;
-	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, false, &musicChannel);
-	AudioError(result);
 	musicplaying = true;
-	
-	result2 = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, true, &starChannel);
-	AudioError(result2);
+	musicChannel->setPosition(0, FMOD_TIMEUNIT_MS);
+	starChannel->setPosition(0, FMOD_TIMEUNIT_MS);
+	musicChannel->setPaused(false);
+	starChannel->setPaused(true);
 }
 
-void playSound(FMOD::Sound* snd) {
+void playsound(FMOD::Sound* snd) {
 	FMOD_RESULT result;
 	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, snd, false, NULL);
 	AudioError(result);
@@ -296,7 +321,7 @@ void reset() {
 	if(numlives < 0) {
 		state = MENU_STATE; // game over state
 #ifdef PLAY_SOUNDS
-		playSound(gameoversound);
+		playsound(gameoversound);
 #endif
 		numlives = 3;
 	}
@@ -311,7 +336,7 @@ void die() {
 	freezetime = 240;
 	musicChannel->setPaused(true);
 	starChannel->setPaused(true);
-	if (numlives>=0) playSound(deathsound);
+	if (numlives>=0) playsound(deathsound);
 	reset();
 }
 
@@ -443,8 +468,8 @@ bool simpleAI(draw_enemy* c) {
 				prizes.push_back(((draw_koopa*)c)->shell);
 			}
 #ifdef PLAY_SOUNDS
-			if(strcmp(c->type, "koopa") == 0) playSound(shellsound);
-			else playSound(stompsound);
+			if(strcmp(c->type, "koopa") == 0) playsound(shellsound);
+			else playsound(stompsound);
 #endif
 			return true;
 		}
@@ -463,13 +488,19 @@ bool simpleAI(draw_enemy* c) {
 				c->velocity.y = .075;
 				c->velocity.x = 16*modx*aimovespeed*cos(anglebetween);
 				c->velocity.z = 16*modz*aimovespeed*sin(anglebetween);
+				
+				if(strcmp(c->type, "koopa") == 0) playsound(shellsound);
+				else playsound(stompsound);
 			}
-			else if(camcube->size != cubesize) {
+			else if(camcube->size != cubesize || hasfire) {
 //				printf("Mushroom lost\n");
+				playsound(mushlosesound);
+				hasfire = false;
+				if(camcube->size != cubesize){
 				camcube->position.y -= camcube->size/2;
 				camcube->size = cubesize;
 				camcube->position.y += camcube->size/2;
-				
+				}
 				c->knockbackcountdown = 60;
 				
 				// angle between user and gooma
@@ -551,7 +582,7 @@ bool shellAI(draw_shell* c) {
 			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			playSound(shellsound);
+			playsound(shellsound);
 #endif
 		}
 	}
@@ -575,7 +606,7 @@ bool shellAI(draw_shell* c) {
 		c->velocity.z = 20*modz*aimovespeed*sin(anglebetween);
 		
 #ifdef PLAY_SOUNDS
-		playSound(shellsound);
+		playsound(shellsound);
 #endif
 	}
 	else if(c->collidesWith(camcube, dt) && !invincible) {
@@ -628,7 +659,7 @@ bool fireballAI(draw_fireball* c) {
 			enemies.erase(enemies.begin()+n, enemies.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			playSound(shellsound);
+			playsound(shellsound);
 #endif
 			return true;
 		}
@@ -716,7 +747,7 @@ void starAI(draw_object* c) {
 void spawnsPrize(Cube* c, Cube* Zoidberg) {
 	if (c->collidesBottomY(Zoidberg, dt) && !Zoidberg->hit) {
 #ifdef PLAY_SOUNDS
-		playSound(prizesound);
+		playsound(prizesound);
 #endif
 		prizes.push_back(Zoidberg->prize);
 		// darkened texture
@@ -878,13 +909,13 @@ void moveCamera() {
 			if(camcube->velocity.y > 0) {
 				coincount++; // get coin
 #ifdef PLAY_SOUNDS
-				playSound(coinsound);
+				playsound(coinsound);
 #endif
 			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
 		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt)) {
-			// play brick block break sound
+			playsound(breaksound);
 			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
 			camcube->velocity.y = -.1;
 		}
@@ -956,6 +987,7 @@ void moveCamera() {
 	if(keys['c'] && onpipe != -1) {
 		if(pipes[onpipe]->linkedpipe != NULL) {
 			warping1 = true;
+			playsound(pipesound);
 			camcube->velocity.y = -jumpvel;
 		}
 	}
@@ -963,7 +995,7 @@ void moveCamera() {
 		camcube->velocity.y = jumpvel;
 		jump = true;
 #ifdef PLAY_SOUNDS
-		playSound(jumpsound);
+		playsound(jumpsound);
 #endif
 	}
 	if(jump && !keys[' '] && camcube->velocity.y > jumpvel/5) {
@@ -974,7 +1006,7 @@ void moveCamera() {
 	if(flag->collidesWith(camcube, dt)) {
 		musicChannel->setPaused(true);
 		starChannel->setPaused(true);
-		playSound(winsound);
+		playsound(winsound);
 		state = MENU_STATE; // win the level!
 	}
 	for(int n = 0; n < coins.size(); n++) {
@@ -983,13 +1015,14 @@ void moveCamera() {
 			coincount++;
 			if(coincount == 100) {
 				numlives++;
+				playsound(oneup);
 				coincount = 0;
 			}
 			
 			coins.erase(coins.begin()+n, coins.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			playSound(coinsound);
+			playsound(coinsound);
 #endif
 		}
 	}
@@ -1005,7 +1038,7 @@ void moveCamera() {
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
 #ifdef PLAY_SOUNDS
-				playSound(mushgetsound);
+				playsound(mushgetsound);
 #endif
 			}
 		}
@@ -1027,6 +1060,9 @@ void moveCamera() {
 				hasfire = true;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
+#ifdef PLAY_SOUNDS
+				playsound(mushgetsound);
+#endif
 			}
 		}
 		else if(strcmp(prizes[n]->type, "shell") == 0) {
@@ -1354,7 +1390,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			newfire->velocity.z = (lookat.z)*firemovespeed;
 			fireballs.push_back(newfire);
 #ifdef PLAY_SOUNDS
-			playSound(fireballsound);
+			playsound(fireballsound);
 #endif
 //			cout << "mouse click" <<endl;
 		  }
