@@ -1515,13 +1515,13 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 21) {
-			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 22) {
-			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
@@ -1531,7 +1531,7 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 80) {
-			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));			
@@ -1541,7 +1541,7 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 103) {
-			newobj = new draw_star(glm::vec3(cubesize*n, 4 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
+			newobj = new draw_star(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
 								   glm::vec3(.2, .2, .2), 
 								   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
@@ -1551,7 +1551,7 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 111) {
-			newobj = new draw_mushroom(glm::vec3(cubesize*n, 4 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
@@ -1561,7 +1561,7 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 172) {
-			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
@@ -1585,8 +1585,7 @@ void loadWorld1_1() {
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*83, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*99, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
