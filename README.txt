@@ -23,7 +23,8 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 
 ====== Known "Bugs" ======
 - Game takes 15-30 seconds to load a game. BE PATIENT.
-	- Fix by using less objects, or by being patient
+	- Fix by using less objects, or by being patient.
+	- Specifically, the Goombas and Koopas take a long time because they have the most detail
 - Sometimes freezes computer when trying to quit.
 	- Not actually sure what causes this. I think it's an error with GLUT trying to destroy the window when we are drawing to it.
 - Enemies will walk right through power-ups and shells (but not each other or pipes)
