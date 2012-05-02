@@ -4,10 +4,11 @@
 // Main driver
 
 #define PLAY_SOUNDS
-#define SKIP_MENUS
+//#define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
+#define LITE_MODE // less enemies for faster loading
 
 #include <string>
 #include <time.h>
@@ -96,6 +97,7 @@ FMOD::Sound *gameoversound;
 FMOD::Sound *winsound;
 FMOD::Sound *oneup;
 FMOD::Sound *pipesound;
+FMOD::Sound *flagsound;
 FMOD::Sound *breaksound;
 FMOD::Channel* starChannel;
 FMOD::Channel* musicChannel;
@@ -117,6 +119,7 @@ bool jump = false;
 int onpipe = -1;
 bool warping1 = false;
 bool warping2 = false;
+bool winning = false;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -132,6 +135,7 @@ double pathwidth = 4;
 int pathlength = 100; // these 2 change for each level
 vector<Cube*> cubes; // array of cubes
 Cube* title; // title graphic
+Cube* loading; // loading screen
 Cube* border; // menu graphic
 Cube* startbutton; // start button graphic
 Cube* quitbutton; // quit button graphic
@@ -139,6 +143,7 @@ Cube* settings1; // normal gravity
 Cube* settings2; // low gravity
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
+bool loadscreendraw = false;
 
 #define MUSHROOM 0
 #define STARMAN 1
@@ -184,6 +189,9 @@ int levelnum = 0;
 int numlives = 3;
 int coincount = 0;
 
+void loadDebugLevel();
+void loadWorld1_1();
+
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
 }// distance between 2 points
@@ -223,7 +231,6 @@ void AudioError(FMOD_RESULT result)	// this checks for FMOD errors
 
 void initAudio() {
 	FMOD_RESULT result;
-	FMOD_RESULT result2;
 	
 	result = FMOD::System_Create(&fmodSystem);
 	AudioError(result);
@@ -231,9 +238,13 @@ void initAudio() {
 	result = fmodSystem->init(32, FMOD_INIT_NORMAL, 0);
 	AudioError(result);
 	
-	result = fmodSystem->createStream("Sounds/mario.wav", 
+	resultchan1 = fmodSystem->createStream("Sounds/mario.wav", 
 									  FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &music);
 	AudioError(result);
+	
+	resultchan2 = fmodSystem->createStream("Sounds/mariostar.wav",
+									   FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
+	AudioError(resultchan2);
 	
 	result = fmodSystem->createSound("Sounds/mariocoin.wav", FMOD_SOFTWARE, 0, 
 									 &coinsound);
@@ -291,23 +302,26 @@ void initAudio() {
 									 &breaksound);
 	AudioError(result);
 	
-	result2 = fmodSystem->createStream("Sounds/mariostar.wav",
-										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
-	AudioError(result2);
-	
-	resultchan1 = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, true, &musicChannel);
+	result = fmodSystem->createSound("Sounds/flagpole.wav", FMOD_SOFTWARE, 0, 
+								     &flagsound);
 	AudioError(result);
 	
+	resultchan1 = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, true, &musicChannel);
+	AudioError(resultchan1);
+	
 	resultchan2 = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, true, &starChannel);
-	AudioError(result2);
+	AudioError(resultchan2);
+	
+	musicChannel->setPriority(1);
+	starChannel->setPriority(0);
 }
 
 void playmusic() {
-	musicplaying = true;
 	musicChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 	starChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 	musicChannel->setPaused(false);
 	starChannel->setPaused(true);
+	musicplaying = true;
 }
 
 void playsound(FMOD::Sound* snd) {
@@ -319,13 +333,16 @@ void playsound(FMOD::Sound* snd) {
 
 void reset() {
 	if(numlives < 0) {
-		state = MENU_STATE; // game over state
+		state = TITLE_STATE; // game over state
 #ifdef PLAY_SOUNDS
 		playsound(gameoversound);
 #endif
 		numlives = 3;
 	}
 
+	hasfire = false;
+	invincible = false;
+	winning = false;
 	musicplaying = false;
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
@@ -754,7 +771,8 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 		Zoidberg->hit = true;
 		Zoidberg->prize = NULL;
 		if(strcmp(prizes[prizes.size()-1]->type, "mushroom") == 0) {
-			prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
+			if(((draw_mushroom*)(prizes[prizes.size()-1]))->is1up == false) prizes[prizes.size()-1]->velocity = glm::vec3(mushmovespeed, 0, 0);
+			else prizes[prizes.size()-1]->velocity = glm::vec3(0, 0, 0);
 		}
 		else if(strcmp(prizes[prizes.size()-1]->type, "flower") == 0) {}
 		else if(strcmp(prizes[prizes.size()-1]->type, "star") == 0) {
@@ -892,6 +910,17 @@ void moveCamera() {
 		camcube->position += camcube->velocity * dt;
 		return;
 	}
+	
+	if(winning) {
+		for(int n = 0; n < cubes.size(); n++) {
+			if(cubes[n]->collidesWith(camcube, dt)) {
+				playsound(winsound);
+				freezetime = 480;
+			}
+		}
+		camcube->position += camcube->velocity * dt;
+		return;
+	}
 
 	setVectors();
 	applyGravity();
@@ -905,7 +934,7 @@ void moveCamera() {
 			}
 		}
 		if(cubes[n]->prize != NULL) spawnsPrize(camcube, cubes[n]);
-		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !cubes[n]->hit) {
+		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt) && !cubes[n]->hit) {
 			if(camcube->velocity.y > 0) {
 				coincount++; // get coin
 #ifdef PLAY_SOUNDS
@@ -914,7 +943,7 @@ void moveCamera() {
 			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
-		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt)) {
+		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt)) {
 			playsound(breaksound);
 			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
 			camcube->velocity.y = -.1;
@@ -1006,8 +1035,10 @@ void moveCamera() {
 	if(flag->collidesWith(camcube, dt)) {
 		musicChannel->setPaused(true);
 		starChannel->setPaused(true);
-		playsound(winsound);
-		state = MENU_STATE; // win the level!
+		playsound(flagsound);
+		winning = true;
+		camcube->velocity = glm::vec3(0, -jumpvel/4, 0);
+		return;
 	}
 	for(int n = 0; n < coins.size(); n++) {
 		coins[n]->rotate(glm::vec3(coins[n]->rot.x, coins[n]->rot.y, coins[n]->rot.z+1));
@@ -1030,16 +1061,23 @@ void moveCamera() {
 		if(strcmp(prizes[n]->type, "mushroom") == 0) {
 			mushroomAI(prizes[n]);
 			if(prizes[n]->collidesWith(camcube, dt)) {
-				camcube->position.y -= camcube->size/2;
-				camcube->size = cubesize*2;
-				camcube->position.y += camcube->size/2;
-				// grows
+				if(((draw_mushroom*)(prizes[n]))->is1up) {
+					numlives++;
+#ifdef PLAY_SOUNDS
+					playsound(oneup);
+#endif
+				}
+				else {
+					camcube->position.y -= camcube->size/2;
+					camcube->size = cubesize*2;
+					camcube->position.y += camcube->size/2;
+#ifdef PLAY_SOUNDS
+					playsound(mushgetsound);
+#endif
+				} // grows
 				
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
 				n--;
-#ifdef PLAY_SOUNDS
-				playsound(mushgetsound);
-#endif
 			}
 		}
 		else if(strcmp(prizes[n]->type, "star") == 0) {
@@ -1048,6 +1086,7 @@ void moveCamera() {
 				if(!invincible) {
 					movespeed *= 1.5; // only first starman
 					musicChannel->setPaused(true);
+					starChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 					starChannel->setPaused(false);
 				}
 				invincible = true;
@@ -1104,8 +1143,9 @@ void gameIdle() {
 #endif
 		mouseinit = true;
 	}
+#ifdef PLAY_SOUNDS
 	if(!musicplaying) playmusic();
-    
+#endif
 	moveCamera();
 } // idle function for when in game state
 
@@ -1122,7 +1162,10 @@ void idle() {
 //	dt = (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
 //	cout << (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS) << endl;
 //	lastidle = glutGet(GLUT_ELAPSED_TIME);
-	if(freezetime > 0) freezetime--;
+	if(freezetime > 0) {
+		freezetime--;
+		if(freezetime == 0 && winning) state = TITLE_STATE;
+	}
 	else if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
 	else if(state == GAME_STATE) gameIdle();
@@ -1219,7 +1262,8 @@ void titleDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-	title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+		//if (!loadscreendraw) title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	loading->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -1336,7 +1380,25 @@ void toggleFullscreen() {
 void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
 	
-	if(state == TITLE_STATE) state = GAME_STATE; // next state
+	if(state == TITLE_STATE) {
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
+		loadscreendraw = true;
+		enemies.clear();
+		prizes.clear();
+		cubes.clear();
+		pipes.clear();
+		fireballs.clear();
+		numlives=3;
+		coincount=0;
+		movespeed=.01;
+		loadWorld1_1();
+		reset();
+		state = GAME_STATE; // next state
+	}
 	else if(state == MENU_STATE) {
 		keys[key] = 1; // key is pressed
 		if(key == 'q') {
@@ -1361,7 +1423,20 @@ void key_released(unsigned char key, int x, int y) {
 
 void mouse_click(int button, int mstate, int x, int y) {
 	if (mstate == GLUT_DOWN) {
-		if(state == TITLE_STATE) state = MENU_STATE; // next state
+		if(state == TITLE_STATE) {
+			loadscreendraw = true;
+			enemies.clear();
+			prizes.clear();
+			cubes.clear();
+			pipes.clear();
+			fireballs.clear();
+			numlives=3;
+			coincount=0;
+			movespeed=.01;
+			loadWorld1_1();
+			reset();
+			state = GAME_STATE; // next state
+		}
 		else if(state == MENU_STATE) {
 			//printf("%d, %d\n", screen_width, screen_height);
 			//printf("%d, %d\n", x, y);
@@ -1542,8 +1617,12 @@ void loadWorld1_1() {
 			}
 		}
 		if(n == 65) {
-			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
-			// should be "used" ? block with 1-up on top
+			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "groundblock", cubesize));
+			prizes.push_back(new draw_mushroom(glm::vec3(cubesize*n, 7*cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.76),
+											   glm::vec3(.75, .75, .75),
+											   glm::vec3(0, -90, 0), 
+											   1));
+			// should be "used" ? block
 		}
 	} // floating brick blocks
 	
@@ -1603,7 +1682,7 @@ void loadWorld1_1() {
 			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
-			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 	} // ? blocks and objs
 	
@@ -1617,27 +1696,30 @@ void loadWorld1_1() {
 	// pipes
 	
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#ifndef LITE_MODE
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*99, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*175, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#endif
 	// enemies
 
 	// coins
@@ -1669,8 +1751,9 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
 	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
+	loading = new Cube(0.0, 0.0, 4.0, "loadscreen", 2); // inits loading screen
 
-	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits title screen
+	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits menu screen
 	startbutton = new Cube(0.25, 0.2, 3.0, "start", 0.5f);
 	quitbutton = new Cube(-0.25, 0.2, 3.0, "quit", 0.5f);
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
