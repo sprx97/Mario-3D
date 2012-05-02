@@ -4,7 +4,7 @@
 // Main driver
 
 #define PLAY_SOUNDS
-#define SKIP_MENUS
+//#define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
@@ -135,6 +135,7 @@ double pathwidth = 4;
 int pathlength = 100; // these 2 change for each level
 vector<Cube*> cubes; // array of cubes
 Cube* title; // title graphic
+Cube* loading; // loading screen
 Cube* border; // menu graphic
 Cube* startbutton; // start button graphic
 Cube* quitbutton; // quit button graphic
@@ -142,6 +143,7 @@ Cube* settings1; // normal gravity
 Cube* settings2; // low gravity
 Cube* bg; // background skycube
 Cube* camcube; // player "model"
+bool loadscreendraw = false;
 
 #define MUSHROOM 0
 #define STARMAN 1
@@ -229,7 +231,6 @@ void AudioError(FMOD_RESULT result)	// this checks for FMOD errors
 
 void initAudio() {
 	FMOD_RESULT result;
-	FMOD_RESULT result2;
 	
 	result = FMOD::System_Create(&fmodSystem);
 	AudioError(result);
@@ -237,9 +238,13 @@ void initAudio() {
 	result = fmodSystem->init(32, FMOD_INIT_NORMAL, 0);
 	AudioError(result);
 	
-	result = fmodSystem->createStream("Sounds/mario.wav", 
+	resultchan1 = fmodSystem->createStream("Sounds/mario.wav", 
 									  FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &music);
 	AudioError(result);
+	
+	resultchan2 = fmodSystem->createStream("Sounds/mariostar.wav",
+									   FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
+	AudioError(resultchan2);
 	
 	result = fmodSystem->createSound("Sounds/mariocoin.wav", FMOD_SOFTWARE, 0, 
 									 &coinsound);
@@ -301,23 +306,22 @@ void initAudio() {
 								     &flagsound);
 	AudioError(result);
 	
-	result2 = fmodSystem->createStream("Sounds/mariostar.wav",
-										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
-	AudioError(result2);
-	
 	resultchan1 = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, true, &musicChannel);
-	AudioError(result);
+	AudioError(resultchan1);
 	
 	resultchan2 = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, true, &starChannel);
-	AudioError(result2);
+	AudioError(resultchan2);
+	
+	musicChannel->setPriority(1);
+	starChannel->setPriority(0);
 }
 
 void playmusic() {
-	musicplaying = true;
 	musicChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 	starChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 	musicChannel->setPaused(false);
 	starChannel->setPaused(true);
+	musicplaying = true;
 }
 
 void playsound(FMOD::Sound* snd) {
@@ -1084,6 +1088,7 @@ void moveCamera() {
 				if(invincible <= 0) {
 					movespeed *= 1.5; // only first starman
 					musicChannel->setPaused(true);
+					starChannel->setPosition(0, FMOD_TIMEUNIT_MS);
 					starChannel->setPaused(false);
 				}
 				invincible = 600; // 10 seconds
@@ -1259,7 +1264,8 @@ void titleDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-	title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+		//if (!loadscreendraw) title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	loading->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	glDisableVertexAttribArray(attribute_coord3d);
 	glDisableVertexAttribArray(attribute_texcoord);
@@ -1377,11 +1383,23 @@ void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
 	
 	if(state == TITLE_STATE) {
+		if(key == 'q') {
+			glutDestroyWindow(windowid);
+			free_resources();
+			exit(0);
+		}
+		loadscreendraw = true;
+
 		enemies.clear();
 		prizes.clear();
 		cubes.clear();
 		pipes.clear();
 		fireballs.clear();
+
+		numlives=3;
+		coincount=0;
+		movespeed=.01;
+
 		loadWorld1_1();
 		reset();
 		state = GAME_STATE; // next state
@@ -1411,11 +1429,18 @@ void key_released(unsigned char key, int x, int y) {
 void mouse_click(int button, int mstate, int x, int y) {
 	if (mstate == GLUT_DOWN) {
 		if(state == TITLE_STATE) {
+			loadscreendraw = true;
+
 			enemies.clear();
 			prizes.clear();
 			cubes.clear();
 			pipes.clear();
 			fireballs.clear();
+
+			numlives=3;
+			coincount=0;
+			movespeed=.01;
+
 			loadWorld1_1();
 			reset();
 			state = GAME_STATE; // next state
@@ -1734,8 +1759,9 @@ int main(int argc, char* argv[]) {
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
 	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
+	loading = new Cube(0.0, 0.0, 4.0, "loadscreen", 2); // inits loading screen
 
-	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits title screen
+	border = new Cube(0.0, 0.0, 6.0, "border", 4.0f); // inits menu screen
 	startbutton = new Cube(0.25, 0.2, 3.0, "start", 0.5f);
 	quitbutton = new Cube(-0.25, 0.2, 3.0, "quit", 0.5f);
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
