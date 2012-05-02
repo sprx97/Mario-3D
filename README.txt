@@ -22,7 +22,9 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 - Mouse Click - Shoot Fireball (With Power)
 
 ====== Known "Bugs" ======
+- Game takes 10-15 seconds to load. BE PATIENT.
+- Sometimes freezes computer when trying to quit.
 - Enemies will walk right through power-ups and shells (but not each other or pipes)
-- Objects (fireballs, stamen, mushroom, shells, flowers) will go through each other
+- Objects (fireballs, starmen, mushroom, shells, flowers) will go through each other
 - Fireballs and stars sometimes fall through floor
 - You never lose power-ups, even when dying
