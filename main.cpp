@@ -90,7 +90,9 @@ FMOD::Sound *mushgetsound;
 FMOD::Sound *stompsound;
 FMOD::Sound *fireballsound;
 FMOD::Sound *shellsound;
+FMOD::Sound *deathsound;
 FMOD::Sound *gameoversound;
+FMOD::Sound *winsound;
 FMOD::Channel* starChannel;
 FMOD::Channel* musicChannel;
 #endif
@@ -214,6 +216,8 @@ void AudioError(FMOD_RESULT result)	// this checks for FMOD errors
 
 void initAudio() {
 	FMOD_RESULT result;
+	FMOD_RESULT result2;
+	
 	result = FMOD::System_Create(&fmodSystem);
 	AudioError(result);
 	
@@ -252,26 +256,32 @@ void initAudio() {
 									 &shellsound);
 	AudioError(result);
 
-	result = fmodSystem->createSound("Sounds/mariodie.wav", FMOD_SOFTWARE, 0,
-									 &gameoversound);
-									 
+	result = fmodSystem->createSound("Sounds/mariodeath.wav", FMOD_SOFTWARE, 0,
+									 &deathsound);
 	AudioError(result);
 	
-	result = fmodSystem->createStream("Sounds/mariostar.wav",
-										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
-
+	result = fmodSystem->createSound("Sounds/mariogo.wav", FMOD_SOFTWARE, 0,
+									 &gameoversound);
 	AudioError(result);
+	
+	result = fmodSystem->createSound("Sounds/mariowin.wav", FMOD_SOFTWARE, 0,
+									 &winsound);
+	AudioError(result);
+	
+	result2 = fmodSystem->createStream("Sounds/mariostar.wav",
+										FMOD_SOFTWARE | FMOD_LOOP_NORMAL, 0, &starsound);
+	AudioError(result2);
 }
 
 void playmusic() {
 	FMOD_RESULT result;
+	FMOD_RESULT result2;
 	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, music, false, &musicChannel);
 	AudioError(result);
 	musicplaying = true;
 	
-	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, false, &starChannel);
-	AudioError(result);
-	starChannel->setVolume(0);
+	result2 = fmodSystem->playSound(FMOD_CHANNEL_FREE, starsound, true, &starChannel);
+	AudioError(result2);
 }
 
 void playSound(FMOD::Sound* snd) {
@@ -283,15 +293,24 @@ void playSound(FMOD::Sound* snd) {
 
 void reset() {
 	if(numlives < 0) {
-		state = MENU_STATE;
+		state = MENU_STATE; // game over state
 #ifdef PLAY_SOUNDS
 		playSound(gameoversound);
 #endif
+		numlives = 3;
 	}
-	
+
+	musicplaying = false;
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
+}
+
+void die() {
+	musicChannel->setPaused(true);
+	starChannel->setPaused(true);
+	if (numlives>=0) playSound(deathsound);
+	reset();
 }
 
 void rotateToFaceCamAI(draw_object *c) {
@@ -422,7 +441,8 @@ bool simpleAI(draw_enemy* c) {
 				prizes.push_back(((draw_koopa*)c)->shell);
 			}
 #ifdef PLAY_SOUNDS
-			playSound(stompsound);
+			if(strcmp(c->type, "koopa") == 0) playSound(shellsound);
+			else playSound(stompsound);
 #endif
 			return true;
 		}
@@ -466,7 +486,7 @@ bool simpleAI(draw_enemy* c) {
 			else {
 //				printf("You died\n");
 				numlives--;
-				reset();
+				die();
 			}
 		}
 	}
@@ -553,12 +573,12 @@ bool shellAI(draw_shell* c) {
 		c->velocity.z = 20*modz*aimovespeed*sin(anglebetween);
 		
 #ifdef PLAY_SOUNDS
-		playSound(stompsound);
+		playSound(shellsound);
 #endif
 	}
 	else if(c->collidesWith(camcube, dt) && !invincible) {
 		numlives--;
-		reset();
+		die();
 		return true;	
 	} // is moving
 	
@@ -949,7 +969,12 @@ void moveCamera() {
 	}
 	// key input
 
-	if(flag->collidesWith(camcube, dt)) state = MENU_STATE; // win the level!
+	if(flag->collidesWith(camcube, dt)) {
+		musicChannel->setPaused(true);
+		starChannel->setPaused(true);
+		playSound(winsound);
+		state = MENU_STATE; // win the level!
+	}
 	for(int n = 0; n < coins.size(); n++) {
 		coins[n]->rotate(glm::vec3(coins[n]->rot.x, coins[n]->rot.y, coins[n]->rot.z+1));
 		if(coins[n]->collidesWith(camcube, dt)) {
@@ -987,8 +1012,8 @@ void moveCamera() {
 			if(prizes[n]->collidesWith(camcube, dt)) {
 				if(!invincible) {
 					movespeed *= 1.5; // only first starman
-					musicChannel->setVolume(0);
-					starChannel->setVolume(1);
+					musicChannel->setPaused(true);
+					starChannel->setPaused(false);
 				}
 				invincible = true;
 				prizes.erase(prizes.begin()+n, prizes.begin()+n+1);
@@ -1026,7 +1051,7 @@ void moveCamera() {
 	camcube->position += camcube->velocity * dt;
 	if (camcube->position.y < -50) {
 		numlives--;
-		reset();
+		die();
 	}
 }
 
@@ -1576,7 +1601,7 @@ void loadWorld1_1() {
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	// enemies
-	
+
 	// coins
 }
 
