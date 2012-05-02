@@ -3,7 +3,7 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
-//#define PLAY_SOUNDS
+#define PLAY_SOUNDS
 #define SKIP_MENUS
 //#define DRAW_HITBOXES
 #define PRINT_FPS
@@ -1513,7 +1513,7 @@ void loadWorld1_1() {
 			}
 		}
 		if(n == 65) {
-			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+			cubes.push_back(new Cube(cubesize*n, 7*cubesize, -(pathwidth-1)/2*cubesize, "groundblock", cubesize));
 			prizes.push_back(new draw_mushroom(glm::vec3(cubesize*n, 7*cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.76),
 											   glm::vec3(.75, .75, .75),
 											   glm::vec3(0, -90, 0), 
@@ -1578,7 +1578,7 @@ void loadWorld1_1() {
 			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
-			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 	} // ? blocks and objs
 	
@@ -1621,7 +1621,7 @@ void loadWorld1_1() {
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
-	//	initAudio();
+	initAudio();
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
