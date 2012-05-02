@@ -8,6 +8,7 @@
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
+#define LITE_MODE // less enemies for faster loading
 
 #include <string>
 #include <time.h>
@@ -1592,27 +1593,30 @@ void loadWorld1_1() {
 	// pipes
 	
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#ifndef LITE_MODE
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*99, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*175, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#endif
 	// enemies
 
 	// coins
