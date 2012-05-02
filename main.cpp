@@ -1007,7 +1007,7 @@ void moveCamera() {
 					camcube->size = cubesize*2;
 					camcube->position.y += camcube->size/2;
 #ifdef PLAY_SOUNDS
-					playSound(prizesound);
+					playSound(mushgetsound);
 #endif
 				} // grows
 				
