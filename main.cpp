@@ -1841,11 +1841,34 @@ void loadWorld1_1() {
 }
 
 void loadWorld2_1() {
-//	char* printtest = new char[10];
-//	sprintf(printtest, "Loading");
-//	renderGLUTText(0.0, 0.95, printtest, mPoint(1, 1, 1));
-//	glutSwapBuffers();
+// ================================================================================================
+	glutSwapBuffers();
 
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+
+    //set the projection matrix to be orthographic, but save the old one first...
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0,1,0,1);
+	
+    //clear the model-view matrix before we render that quad...
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	char* printtest = new char[10];
+	sprintf(printtest, "Loading");
+	renderGLUTText(0.0, 0.95, printtest, mPoint(1, 1, 1));
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+	
+	glEnable(GL_LIGHTING);
+	glEnable(GL_DEPTH_TEST);
+
+	glutSwapBuffers();
+// ================================================================================================
 	levelnum = 2;
 	
 	pathlength = 215;
