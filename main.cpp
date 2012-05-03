@@ -3,7 +3,7 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
-#define NO_ENEMIES
+//#define NO_ENEMIES
 #define PRINT_LOADING
 //#define DEBUG_LEVEL
 #define PLAY_SOUNDS
