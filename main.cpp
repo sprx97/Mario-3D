@@ -193,6 +193,7 @@ int coincount = 0;
 
 void loadDebugLevel();
 void loadWorld1_1();
+void loadWorld1_2();
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
@@ -924,7 +925,13 @@ void moveCamera() {
 		return;
 	}
 
-	if(invincible > 0) invincible--;
+	if(invincible > 0) {
+		invincible--;
+		if(invincible == 0) {
+			musicChannel->setPaused(false);
+			starChannel->setPaused(true);			
+		}
+	}
 
 	setVectors();
 	applyGravity();
@@ -1405,7 +1412,8 @@ void key_pressed(unsigned char key, int x, int y) {
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
 #else
-		loadWorld1_1();
+		if(levelnum == 0) loadWorld1_1();
+		else if(levelnum == 1) loadWorld1_2();
 #endif
 		reset();
 		state = GAME_STATE; // next state
@@ -1450,7 +1458,8 @@ void mouse_click(int button, int mstate, int x, int y) {
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
 #else
-			loadWorld1_1();
+			if(levelnum == 0) loadWorld1_1();
+			else if(levelnum == 1) loadWorld1_2();
 #endif
 			reset();
 			state = GAME_STATE; // next state
@@ -1725,7 +1734,7 @@ void loadWorld1_1() {
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
 		}
 		if(n == 172) {
-			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
+			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
@@ -1775,6 +1784,7 @@ void loadWorld1_1() {
 #endif
 	// enemies
 
+/*
 #ifdef PRINT_LOADING
 	cout << "Loading Coins..." << endl;
 #endif
@@ -1783,6 +1793,11 @@ void loadWorld1_1() {
 		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
 	}
 	// coins
+*/
+}
+
+void loadWorld1_2() {
+	loadDebugLevel();
 }
 
 int main(int argc, char* argv[]) {
