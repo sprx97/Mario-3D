@@ -10,7 +10,7 @@
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
-#define LITE_MODE // less enemies for faster loading
+//#define LITE_MODE // less enemies for faster loading
 
 #include <string>
 #include <time.h>
@@ -337,11 +337,34 @@ void playsound(FMOD::Sound* snd) {
 
 void reset() {
 	if(numlives < 0) {
-		state = TITLE_STATE; // game over state
 #ifdef PLAY_SOUNDS
 		playsound(gameoversound);
 #endif
 		numlives = 3;
+	
+		levelnum = 0;
+		state = TITLE_STATE;
+		loadscreendraw = true;
+		glClearColor(0.0, 0.0, 0.0, 1.0); // black
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		titleDisplay();
+		glutSwapBuffers();
+		
+		enemies.clear();
+		prizes.clear();
+		cubes.clear();
+		pipes.clear();
+		fireballs.clear();
+
+#ifdef DEBUG_LEVEL
+		loadDebugLevel();
+#else
+		if(levelnum == 0) loadWorld1_1();
+		else if(levelnum == 1) loadWorld2_1();
+		else loadDebugLevel();
+#endif
+
+		state = GAME_STATE; // next state
 	}
 
 	hasfire = false;
@@ -770,6 +793,7 @@ void spawnsPrize(Cube* c, Cube* Zoidberg) {
 #ifdef PLAY_SOUNDS
 		playsound(prizesound);
 #endif
+		if(camcube->velocity.y > 0) camcube->velocity.y = 0;
 		prizes.push_back(Zoidberg->prize);
 		// darkened texture
 		Zoidberg->hit = true;
@@ -837,7 +861,6 @@ void applyGravity() {
 	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesY(camcube, dt)) {
 			if(cubes[n]->collidesBottomY(camcube, dt)) jump = false;
-			camcube->velocity.y = 0;
 			break;
 		}
 	}
@@ -952,13 +975,14 @@ void moveCamera() {
 #ifdef PLAY_SOUNDS
 				playsound(coinsound);
 #endif
+				camcube->velocity.y = -.01;
 			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
 		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt)) {
 			playsound(breaksound);
 			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
-			camcube->velocity.y = -.1;
+			camcube->velocity.y = -.01;
 		}
 		else if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.01;
 	}
@@ -1945,6 +1969,33 @@ void loadWorld2_1() {
 	cout << "Loading Enemies..." << endl;
 #endif	
 
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*31, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*60, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*62, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*68, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*72, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*100, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*113, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*117, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*162, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*173, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*187, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+#ifndef LITE_MODE
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*33, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*51, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*70, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*71, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*138, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*149, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*160, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*171, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+#endif
+
 #ifdef PRINT_LOADING
 	cout << "Loading Coins...\n" << endl;
 #endif
@@ -1992,7 +2043,7 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG_LEVEL
 	loadDebugLevel();
 #else
-	loadWorld1_1();
+	loadWorld2_1();
 #endif	
 
 #ifdef __APPLE__
