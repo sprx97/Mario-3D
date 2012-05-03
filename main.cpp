@@ -2060,7 +2060,7 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG_LEVEL
 	loadDebugLevel();
 #else
-	loadWorld2_1();
+	loadWorld1_1();
 #endif	
 
 #ifdef __APPLE__
