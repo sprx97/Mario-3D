@@ -3,6 +3,7 @@
 // CSE20212 Final Project - Mario 3D
 // Main driver
 
+#define NO_ENEMIES
 #define PRINT_LOADING
 //#define DEBUG_LEVEL
 #define PLAY_SOUNDS
@@ -589,27 +590,31 @@ bool mushroomAI(draw_object* c) {
 	for(int n = 0; n < cubes.size(); n++) {
 		if(c->collidesTopY(cubes[n], dt)) {
 			c->velocity.y = 0;
-			break;
-		}
-		else if(c->collidesX(cubes[n], dt)) {
-			c->velocity.x *= -1;
-			break;
-		}
-		else if(c->collidesZ(cubes[n], dt)) {
-			c->velocity.z *= -1;
-			break;
 		}
 	}
 	for(int n = 0; n < pipes.size(); n++) {
 		if(c->collidesTopY(pipes[n], dt)) {
 			c->velocity.y = 0;
-			break;
-		}
-		else if(c->collidesX(pipes[n], dt)) {
+		}	
+	}
+	c->position.y += .001;
+	
+	for(int n = 0; n < cubes.size(); n++) {
+		if(c->collidesX(cubes[n], dt)) {
 			c->velocity.x *= -1;
 			break;
 		}
-		else if(c->collidesZ(pipes[n], dt)) {
+		if(c->collidesZ(cubes[n], dt)) {
+			c->velocity.z *= -1;
+			break;
+		}
+	}
+	for(int n = 0; n < pipes.size(); n++) {
+		if(c->collidesX(pipes[n], dt)) {
+			c->velocity.x *= -1;
+			break;
+		}
+		if(c->collidesZ(pipes[n], dt)) {
 			c->velocity.z *= -1;
 			break;
 		}
@@ -1627,9 +1632,11 @@ void loadDebugLevel() {
 	cout << "Loading Enemies..." << endl;
 #endif
 
+#ifndef NO_ENEMIES
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#endif
 
 #ifdef PRINT_LOADING
 	cout << "Loading Coins...\n" << endl;
@@ -1797,6 +1804,7 @@ void loadWorld1_1() {
 	cout << "Loading Enemies..." << endl;
 #endif
 	
+#ifndef NO_ENEMIES
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
@@ -1820,6 +1828,7 @@ void loadWorld1_1() {
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*175, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+#endif
 #endif
 	// enemies
 
@@ -1975,6 +1984,7 @@ void loadWorld2_1() {
 	cout << "Loading Enemies..." << endl;
 #endif	
 
+#ifndef NO_ENEMIES
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*31, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*60, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
@@ -2000,6 +2010,7 @@ void loadWorld2_1() {
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*149, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*160, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*171, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+#endif
 #endif
 
 #ifdef PRINT_LOADING
