@@ -191,9 +191,10 @@ int levelnum = 0;
 int numlives = 3;
 int coincount = 0;
 
+void titleDisplay();
 void loadDebugLevel();
 void loadWorld1_1();
-void loadWorld1_2();
+void loadWorld2_1();
 
 float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(abs((x2-x1)*(x2-x1)) + abs((y2-y1)*(y2-y1)) + abs((z2-z1)*(z2-z1)));
@@ -1169,13 +1170,32 @@ void titleIdle() {
 } // idle function for title state
 
 void idle() {
-//	idlecount++;
-//	dt = (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS);
-//	cout << (glutGet(GLUT_ELAPSED_TIME)-lastidle)/(1000.0/MAX_FPS) << endl;
-//	lastidle = glutGet(GLUT_ELAPSED_TIME);
 	if(freezetime > 0) {
 		freezetime--;
-		if(freezetime == 0 && winning) state = TITLE_STATE;
+		if(freezetime == 0 && winning) {
+			state = TITLE_STATE;
+			loadscreendraw = true;
+			glClearColor(0.0, 0.0, 0.0, 1.0); // black
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			titleDisplay();
+			glutSwapBuffers();
+
+			enemies.clear();
+			prizes.clear();
+			cubes.clear();
+			pipes.clear();
+			fireballs.clear();
+
+#ifdef DEBUG_LEVEL
+			loadDebugLevel();
+#else
+			if(levelnum == 0) loadWorld1_1();
+			else if(levelnum == 1) loadWorld2_1();
+			else loadDebugLevel();
+#endif
+			reset();
+			state = GAME_STATE; // next state
+		} // loads next level
 	}
 	else if(state == TITLE_STATE) titleIdle();
 	else if(state == MENU_STATE) menuIdle();
@@ -1273,7 +1293,7 @@ void titleDisplay() {
 	glEnableVertexAttribArray(attribute_texcoord);
 	glEnableVertexAttribArray(attribute_coord3d);
 	
-		//if (!loadscreendraw) title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
+	//if (!loadscreendraw) title->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 	loading->draw(view, projection, attribute_coord3d, attribute_texcoord, uniform_mvp);
 
 	glDisableVertexAttribArray(attribute_coord3d);
@@ -1405,15 +1425,12 @@ void key_pressed(unsigned char key, int x, int y) {
 		pipes.clear();
 		fireballs.clear();
 
-		numlives=3;
-		coincount=0;
-		movespeed=.01;
-
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
 #else
 		if(levelnum == 0) loadWorld1_1();
-		else if(levelnum == 1) loadWorld1_2();
+		else if(levelnum == 1) loadWorld2_1();
+		else loadDebugLevel();
 #endif
 		reset();
 		state = GAME_STATE; // next state
@@ -1450,16 +1467,13 @@ void mouse_click(int button, int mstate, int x, int y) {
 			cubes.clear();
 			pipes.clear();
 			fireballs.clear();
-
-			numlives=3;
-			coincount=0;
-			movespeed=.01;
-
+			
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
 #else
 			if(levelnum == 0) loadWorld1_1();
-			else if(levelnum == 1) loadWorld1_2();
+			else if(levelnum == 1) loadWorld2_1();
+			else loadDebugLevel();
 #endif
 			reset();
 			state = GAME_STATE; // next state
@@ -1593,7 +1607,7 @@ void loadDebugLevel() {
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
 
 #ifdef PRINT_LOADING
-	cout << "Loading Coins..." << endl;
+	cout << "Loading Coins...\n" << endl;
 #endif
 	
 	for(int n = 0; n < 100; n++) {
@@ -1784,20 +1798,158 @@ void loadWorld1_1() {
 #endif
 	// enemies
 
-/*
+
 #ifdef PRINT_LOADING
-	cout << "Loading Coins..." << endl;
+	cout << "Loading Coins...\n" << endl;
 #endif
 
-	for(int n = 200; n < 213; n++) {
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
-	}
-	// coins
-*/
+	state = GAME_STATE;
 }
 
-void loadWorld1_2() {
-	loadDebugLevel();
+void loadWorld2_1() {
+	levelnum = 2;
+	
+	pathlength = 215;
+	pathwidth = 3;
+	
+	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
+
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+	flag = new draw_flag(glm::vec3(202*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+
+#ifdef PRINT_LOADING
+	cout << "Loading Cubes..." << endl;
+#endif
+
+    for (int m = 0; m < pathwidth; m++) {
+        for (int n = 0; n < pathlength; n++) {
+			if((n >= 93 && n <= 96) || (n >= 107 && n <= 109) || (n >= 140 && n <= 142) || (n >= 154 && n <= 155)) continue;
+			cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
+			if((n >= 21 && n <= 25) || (n == 35) || (n == 36) || (n == 156) || (n == 192) || (n == 193) || (n == 202 && m == 1)) {
+				cubes.push_back(new Cube(cubesize*n, 1*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 1
+			if((n >= 22 && n <= 25) || (n == 35) || (n == 36) || (n == 156) || (n == 192) ||  (n == 193)) {
+				cubes.push_back(new Cube(cubesize*n, 2*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 2
+			if((n >= 23 && n <= 25) || (n == 35) || (n == 156) || (n == 192) || (n == 193)) {
+				cubes.push_back(new Cube(cubesize*n, 3*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // level 3
+			if((n >= 24 && n <= 25) || (n == 35) || (n == 192) || (n == 193)) {
+				cubes.push_back(new Cube(cubesize*n, 4*cubesize, -m*cubesize, "groundblock", cubesize));			
+			} // level 4
+			if((n == 25) || (n == 192) || (n == 193)) {
+				cubes.push_back(new Cube(cubesize*n, 5*cubesize, -m*cubesize, "groundblock", cubesize));			
+			} // level 5
+			if(n == 192 || n == 193) {
+				cubes.push_back(new Cube(cubesize*n, 6*cubesize, -m*cubesize, "groundblock", cubesize));
+				cubes.push_back(new Cube(cubesize*n, 7*cubesize, -m*cubesize, "groundblock", cubesize));
+				cubes.push_back(new Cube(cubesize*n, 8*cubesize, -m*cubesize, "groundblock", cubesize));
+			} // 6-8
+		}
+	} // ground blocks (and stair blocks)
+	
+	for(int n = 0; n < pathlength; n++) {
+		if(n == 16 || n == 18 || n == 69 || n == 187 || n == 188) {
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+		}
+		if(n == 30 || n == 31 || n == 32 || n == 71 || n == 72 || n == 73 || n == 82 || n == 83
+		|| n == 84 || n == 85 || n == 86 || n == 93 || n == 94 || n == 95 || n == 96 || n == 127 || n == 128
+		|| n == 129 || n == 166 || n == 167 || n == 168 || n == 169 || n == 170) {
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+		}
+		if(n == 190) {
+			cubes.push_back(new Cube(cubesize*n, 1*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
+		}
+	} // floating brick blocks
+
+#ifdef PRINT_LOADING
+	cout << "Loading Objects..." << endl;
+#endif
+	
+	draw_object* newobj = NULL;
+	for(int n = 0; n < pathlength; n++) {
+		if(n == 17) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75),
+									   glm::vec3(.75, .75, .75),
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 29) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+			
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75),
+									   glm::vec3(.75, .75, .75),
+									   glm::vec3(0, -90, 0), 1);
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 58 || n == 57 || n == 56 || n == 55 || n == 54) {
+			newobj = NULL;
+			if(n == 54) newobj = new draw_mushroom(glm::vec3(cubesize*n, 5*cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75),
+												   glm::vec3(.75, .75, .75),
+												   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+			
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 70) {
+			newobj = new draw_star(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
+								   glm::vec3(.2, .2, .2), 
+								   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 80 || n == 81 || n == 82 || n == 83 || n == 86 || n == 87 || n == 88) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 126) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10*cubesize+1.5*cubesize, -(pathwidth-1)/2*cubesize-.75),
+									   glm::vec3(.75, .75, .75),
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 172) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 174) {
+			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10*cubesize+1.5*cubesize, -(pathwidth-1)/2*cubesize-.72),
+									   glm::vec3(.75, .75, .75),
+									   glm::vec3(0, -90, 0));
+			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+		if(n == 186) {
+			newobj = NULL;
+			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		}
+	} // ? blocks and objs
+
+
+#ifdef PRINT_LOADING
+	cout << "Loading Pipes..." << endl;
+#endif
+
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*47, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*75, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*104, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*116, -2, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*123, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*127, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*131, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes.push_back(new draw_pipe(glm::vec3(cubesize*178, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	pipes[2]->linkedpipe = pipes[3];
+	// pipes
+	
+#ifdef PRINT_LOADING
+	cout << "Loading Enemies..." << endl;
+#endif	
+
+#ifdef PRINT_LOADING
+	cout << "Loading Coins...\n" << endl;
+#endif
+
+	state = GAME_STATE;
 }
 
 int main(int argc, char* argv[]) {
@@ -1848,7 +2000,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 #ifdef PRINT_LOADING
-	cout << "Initializing GLUT..." << endl;
+	cout << "Initializing GLUT...\n" << endl;
 #endif
 		
 	if(initShaders()) {
