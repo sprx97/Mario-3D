@@ -861,6 +861,7 @@ void applyGravity() {
 	for(int n = 0; n < cubes.size(); n++) {
 		if(cubes[n]->collidesY(camcube, dt)) {
 			if(cubes[n]->collidesBottomY(camcube, dt)) jump = false;
+			camcube->velocity.y = 0;
 			break;
 		}
 	}
@@ -975,16 +976,16 @@ void moveCamera() {
 #ifdef PLAY_SOUNDS
 				playsound(coinsound);
 #endif
-				camcube->velocity.y = -.01;
+				camcube->velocity.y = -.1;
 			}
 			if(cubes[n]->destroycountdown < 0) cubes[n]->destroycountdown = 300;
 		}
 		 if(strcmp(cubes[n]->texturename, "brickblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt)) {
 			playsound(breaksound);
 			cubes.erase(cubes.begin()+n, cubes.begin()+n+1);
-			camcube->velocity.y = -.01;
+			camcube->velocity.y = -.1;
 		}
-		else if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.01;
+		else if(camcube->collidesBottomY(cubes[n], dt)) camcube->velocity.y = -.1;
 	}
 
 	camcube->velocity.x = 0;
@@ -1831,6 +1832,11 @@ void loadWorld1_1() {
 }
 
 void loadWorld2_1() {
+//	char* printtest = new char[10];
+//	sprintf(printtest, "Loading");
+//	renderGLUTText(0.0, 0.95, printtest, mPoint(1, 1, 1));
+//	glutSwapBuffers();
+
 	levelnum = 2;
 	
 	pathlength = 215;
