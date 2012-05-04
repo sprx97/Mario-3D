@@ -4,7 +4,6 @@
 // Main driver
 
 //#define NO_ENEMIES
-#define PRINT_LOADING
 //#define DEBUG_LEVEL
 #define PLAY_SOUNDS
 #define SKIP_MENUS
@@ -71,11 +70,7 @@ GLint uniform_mvp;
 
 #define BLOCK_SIZE 512 
 
-#ifdef SKIP_MENUS
-int state = GAME_STATE;
-#else
 int state = TITLE_STATE;
-#endif
 
 GLuint title_id;
 GLuint vbo_title_vertices;
@@ -169,6 +164,7 @@ GLfloat specular[] = { 20 * cubesize, cubesize, -4 * cubesize, 1.0f }; // lighti
 GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 float movespeed = 0.01;
+float originalmovespeed = movespeed;;
 float aimovespeed = movespeed * .5;
 float mushmovespeed = 0.01;
 float firemovespeed = .1;
@@ -184,14 +180,16 @@ float lastidle = 0;
 float lastframe = 0; // last frame in ms from GLUT_ELAPSED_TIME
 float MAX_FPS = 60.0; // 60 frames per second
 int freezetime = 0;
+bool initialized = false;
 
 bool hasfire = false;
 int invincible = 0;
 
-int levelnum = 0;
+int levelnum = -1;
 int numlives = 3;
 int coincount = 0;
 
+void toggleFullscreen();
 void titleDisplay();
 void loadDebugLevel();
 void loadWorld1_1();
@@ -343,9 +341,13 @@ void reset() {
 #endif
 		numlives = 3;
 	
-		levelnum = 0;
+		levelnum = -1;
 		state = TITLE_STATE;
 		loadscreendraw = true;
+		glClearColor(0.0, 0.0, 0.0, 1.0); // black
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		titleDisplay();
+		glutSwapBuffers();
 		glClearColor(0.0, 0.0, 0.0, 1.0); // black
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		titleDisplay();
@@ -356,6 +358,7 @@ void reset() {
 		cubes.clear();
 		pipes.clear();
 		fireballs.clear();
+		coins.clear();
 
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
@@ -370,6 +373,7 @@ void reset() {
 
 	hasfire = false;
 	invincible = 0;
+	movespeed = originalmovespeed;
 	winning = false;
 	musicplaying = false;
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
@@ -958,6 +962,7 @@ void moveCamera() {
 	if(invincible > 0) {
 		invincible--;
 		if(invincible == 0) {
+			movespeed = originalmovespeed;
 			musicChannel->setPaused(false);
 			starChannel->setPaused(true);			
 		}
@@ -1200,11 +1205,21 @@ void titleIdle() {
 } // idle function for title state
 
 void idle() {
+	if(!initialized) {
+		loadDebugLevel();
+		initialized = true;	
+		return;
+	}
+
 	if(freezetime > 0) {
 		freezetime--;
 		if(freezetime == 0 && winning) {
 			state = TITLE_STATE;
 			loadscreendraw = true;
+			glClearColor(0.0, 0.0, 0.0, 1.0); // black
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			titleDisplay();
+			glutSwapBuffers();
 			glClearColor(0.0, 0.0, 0.0, 1.0); // black
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			titleDisplay();
@@ -1215,6 +1230,7 @@ void idle() {
 			cubes.clear();
 			pipes.clear();
 			fireballs.clear();
+			coins.clear();
 
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
@@ -1390,7 +1406,7 @@ void onDisplay() {
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
-
+	
 	glutSwapBuffers();
 } // displays to screen
 
@@ -1454,6 +1470,7 @@ void key_pressed(unsigned char key, int x, int y) {
 		cubes.clear();
 		pipes.clear();
 		fireballs.clear();
+		coins.clear();
 
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
@@ -1497,6 +1514,7 @@ void mouse_click(int button, int mstate, int x, int y) {
 			cubes.clear();
 			pipes.clear();
 			fireballs.clear();
+			coins.clear();
 			
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
@@ -1570,24 +1588,57 @@ void initLighting() {
 	glEnable(GL_DEPTH_TEST); 
 }
 
+void printLoadingText(const char* printtext, double height) {
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+
+    //set the projection matrix to be orthographic, but save the old one first...
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0,1,0,1);
+	
+    //clear the model-view matrix before we render that quad...
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	renderGLUTText(0.0, height, printtext, mPoint(1, 1, 1));
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+	
+	glEnable(GL_LIGHTING);
+	glEnable(GL_DEPTH_TEST);
+
+	glutSwapBuffers();
+}
+
 void loadDebugLevel() {
 	levelnum = 0;
 	pathlength = 100;
 	pathwidth = 8;
 
-#ifdef PRINT_LOADING
-	cout << "Loading Cubes..." << endl;
-#endif
+	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
+
+	char loadtext[100] = "Loading Cubes";
+	printLoadingText(loadtext, .975);
 
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
             cubes.push_back(new Cube(cubesize*n, 0.0, -m*cubesize, "groundblock", cubesize));
+			if(n%25 == 0) {
+				strcat(loadtext, ".");
+				printLoadingText(loadtext, .975);
+			}			
 		}
-	}    
-#ifdef PRINT_LOADING
-	cout << "Loading Objects..." << endl;
-#endif
+	}  
+	printLoadingText(loadtext, .975);
+	  
+	strcpy(loadtext, "Loading Objects");
+	printLoadingText(loadtext, .95);	
+
     for (int n = 0; n < pathlength/16; n++) {
 		int r = rand()%4;
 		draw_object* newobj;
@@ -1613,39 +1664,56 @@ void loadDebugLevel() {
 		}
 	
 		cubes.push_back(new Cube(cubesize*n*16, 5 * cubesize, -(pathwidth-1)/2*cubesize, ("questionblock"), cubesize, newobj));
-	} // floating ? cubes
 
-#ifdef PRINT_LOADING
-	cout << "Loading Pipes..." << endl;
-#endif
-  
+		strcat(loadtext, ".");
+		printLoadingText(loadtext, .95);
+	} // floating ? cubes
+	printLoadingText(loadtext, .95);
+
+	strcpy(loadtext, "Loading Pipes");
+	printLoadingText(loadtext, .925);	
+    
 	for( int o = 0; o < pathlength/32; o++) {
-      pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
+		pipes.push_back(new draw_pipe(glm::vec3(cubesize*o*32+20, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));	    
+		strcat(loadtext, ".");
+		printLoadingText(loadtext, .925);
     }
 	pipes[0]->linkedpipe = pipes[pathlength/32 - 1]; // links first pipe to last pipe
 	pipes[pathlength/32 -1]->linkedpipe = pipes[0]; // links last pipe to first pipe
-	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
-	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-    //these are all of the graphics. they can be easily modified so let me know
+	printLoadingText(loadtext, .925);
 
-#ifdef PRINT_LOADING
-	cout << "Loading Enemies..." << endl;
-#endif
+	strcpy(loadtext, "Loading Enemies");
+	printLoadingText(loadtext, .9);
 
 #ifndef NO_ENEMIES
 	enemies.push_back(new draw_goomba(glm::vec3(20 * cubesize, 3*cubesize, -3 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+	
 	enemies.push_back(new draw_koopa(glm::vec3(16 * cubesize, 3*cubesize, -1 * cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+	
 	enemies.push_back(new draw_goomba(glm::vec3(18 * cubesize, 3*cubesize, 0 * cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 #endif
-
-#ifdef PRINT_LOADING
-	cout << "Loading Coins...\n" << endl;
-#endif
+	printLoadingText(loadtext, .9);
+		
+	strcpy(loadtext, "Loading Coins");
+	printLoadingText(loadtext, .875);
 	
 	for(int n = 0; n < 100; n++) {
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-3)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
-		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+1)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth-4)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		coins.push_back(new draw_coin(glm::vec3(cubesize*n, 1.5, -(pathwidth+2)/2*cubesize), glm::vec3(.025, .025, .025), glm::vec3(90, 0, 90)));
+		if(n%10 == 0) {
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .875);
+		}
 	}
+	printLoadingText(loadtext, .875);
+	
+	state = GAME_STATE;
 }
 
 void loadWorld1_1() {
@@ -1659,9 +1727,8 @@ void loadWorld1_1() {
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 	flag = new draw_flag(glm::vec3(200*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 
-#ifdef PRINT_LOADING
-	cout << "Loading Cubes..." << endl;
-#endif
+	char loadtext[100] = "Loading Cubes";
+	printLoadingText(loadtext, .975);
 
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
@@ -1698,6 +1765,10 @@ void loadWorld1_1() {
 			if(n == 191) {
 				cubes.push_back(new Cube(cubesize*n, 9*cubesize, -m*cubesize, "groundblock", cubesize));			
 			} // 9
+			if(n%25 == 0) {
+				strcat(loadtext, ".");
+				printLoadingText(loadtext, .975);
+			}		
 		}
 	} // ground blocks (and stair blocks)
 	
@@ -1721,154 +1792,243 @@ void loadWorld1_1() {
 											   1));
 			// should be "used" ? block
 		}
+		if(n%25 == 0) {
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .975);
+		}
 	} // floating brick blocks
+	printLoadingText(loadtext, .975);
 
-#ifdef PRINT_LOADING
-	cout << "Loading Objects..." << endl;
-#endif
+	strcpy(loadtext, "Loading Objects");
+	printLoadingText(loadtext, .95);
 	
 	draw_object* newobj = NULL;
 	for(int n = 0; n < pathlength; n++) {
 		if(n == 16) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+		
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 21) {
 			newobj = new draw_mushroom(glm::vec3(cubesize*n, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 22) {
 			newobj = new draw_flower(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 23) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 80) {
 			newobj = new draw_mushroom(glm::vec3(cubesize*n, 5 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));			
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 96) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 103) {
 			newobj = new draw_star(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
 								   glm::vec3(.2, .2, .2), 
 								   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 108 || n == 111 || n == 114) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 111) {
 			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10 * cubesize + 1.5*cubesize, -(pathwidth-1)/2*cubesize-.75), 
 									   glm::vec3(.75, .75, .75), 
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 131 || n == 132) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 		if(n == 172) {
 			newobj = new draw_flower(glm::vec3(cubesize*n, 5 * cubesize + cubesize, -(pathwidth-1)/2*cubesize), 
 									 glm::vec3(.25, .25, .25), 
 									 glm::vec3(0, 180, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);		
 		}
 	} // ? blocks and objs
-
-#ifdef PRINT_LOADING
-	cout << "Loading Pipes..." << endl;
-#endif
+	printLoadingText(loadtext, .95);		
+	
+	strcpy(loadtext, "Loading Pipes");
+	printLoadingText(loadtext, .925);
 	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*28, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*39, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);	
+	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*47, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);	
+	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*58, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);	
+	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*165, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);	
+	
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*181, -1.5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
 	pipes[3]->linkedpipe = pipes[4];
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);	
 	// pipes
-
-#ifdef PRINT_LOADING
-	cout << "Loading Enemies..." << endl;
-#endif
+	printLoadingText(loadtext, .925);	
+	
+	strcpy(loadtext, "Loading Enemies");
+	printLoadingText(loadtext, .9);
 	
 #ifndef NO_ENEMIES
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+	
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*42, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*50, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*57, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*97, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*108, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*126, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*141, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*177, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 #ifndef LITE_MODE
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*20, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*46, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*56, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*87, cubesize*12, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize*12, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*99, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*125, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*127, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*175, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*179, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 #endif
 #endif
 	// enemies
 
-
-#ifdef PRINT_LOADING
-	cout << "Loading Coins...\n" << endl;
-#endif
+	strcpy(loadtext, "Loading Coins");
+	printLoadingText(loadtext, .875);
+	printLoadingText(loadtext, .875);
 
 	state = GAME_STATE;
 }
 
 void loadWorld2_1() {
-// ================================================================================================
-	glutSwapBuffers();
-
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
-
-    //set the projection matrix to be orthographic, but save the old one first...
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(0,1,0,1);
-	
-    //clear the model-view matrix before we render that quad...
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-	char* printtest = new char[10];
-	sprintf(printtest, "Loading");
-	renderGLUTText(0.0, 0.95, printtest, mPoint(1, 1, 1));
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-	
-	glEnable(GL_LIGHTING);
-	glEnable(GL_DEPTH_TEST);
-
-	glutSwapBuffers();
-// ================================================================================================
 	levelnum = 2;
 	
 	pathlength = 215;
@@ -1879,9 +2039,8 @@ void loadWorld2_1() {
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 	flag = new draw_flag(glm::vec3(202*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
 
-#ifdef PRINT_LOADING
-	cout << "Loading Cubes..." << endl;
-#endif
+	char loadtext[100] = "Loading Cubes";
+	printLoadingText(loadtext, .975);
 
     for (int m = 0; m < pathwidth; m++) {
         for (int n = 0; n < pathlength; n++) {
@@ -1907,6 +2066,10 @@ void loadWorld2_1() {
 				cubes.push_back(new Cube(cubesize*n, 7*cubesize, -m*cubesize, "groundblock", cubesize));
 				cubes.push_back(new Cube(cubesize*n, 8*cubesize, -m*cubesize, "groundblock", cubesize));
 			} // 6-8
+			if(n%25 == 0) {
+				strcat(loadtext, ".");
+				printLoadingText(loadtext, .975);
+			}
 		}
 	} // ground blocks (and stair blocks)
 	
@@ -1922,11 +2085,15 @@ void loadWorld2_1() {
 		if(n == 190) {
 			cubes.push_back(new Cube(cubesize*n, 1*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize));
 		}
+		if(n%25 == 0) {
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .975);
+		}
 	} // floating brick blocks
-
-#ifdef PRINT_LOADING
-	cout << "Loading Objects..." << endl;
-#endif
+	printLoadingText(loadtext, .975);
+	
+	strcpy(loadtext, "Loading Objects");
+	printLoadingText(loadtext, .95);
 	
 	draw_object* newobj = NULL;
 	for(int n = 0; n < pathlength; n++) {
@@ -1935,6 +2102,9 @@ void loadWorld2_1() {
 									   glm::vec3(.75, .75, .75),
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 29) {
 			newobj = NULL;
@@ -1944,6 +2114,9 @@ void loadWorld2_1() {
 									   glm::vec3(.75, .75, .75),
 									   glm::vec3(0, -90, 0), 1);
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 58 || n == 57 || n == 56 || n == 55 || n == 54) {
 			newobj = NULL;
@@ -1954,91 +2127,205 @@ void loadWorld2_1() {
 			
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 70) {
 			newobj = new draw_star(glm::vec3(cubesize*n, 10 * cubesize + cubesize, -(pathwidth-1)/2*cubesize),
 								   glm::vec3(.2, .2, .2), 
 								   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 80 || n == 81 || n == 82 || n == 83 || n == 86 || n == 87 || n == 88) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 126) {
 			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10*cubesize+1.5*cubesize, -(pathwidth-1)/2*cubesize-.75),
 									   glm::vec3(.75, .75, .75),
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 172) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 174) {
 			newobj = new draw_mushroom(glm::vec3(cubesize*n, 10*cubesize+1.5*cubesize, -(pathwidth-1)/2*cubesize-.72),
 									   glm::vec3(.75, .75, .75),
 									   glm::vec3(0, -90, 0));
 			cubes.push_back(new Cube(cubesize*n, 10*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 		if(n == 186) {
 			newobj = NULL;
 			cubes.push_back(new Cube(cubesize*n, 5*cubesize, -(pathwidth-1)/2*cubesize, "questionblock", cubesize, newobj));
+
+			strcat(loadtext, ".");
+			printLoadingText(loadtext, .95);
 		}
 	} // ? blocks and objs
-
-
-#ifdef PRINT_LOADING
-	cout << "Loading Pipes..." << endl;
-#endif
+	printLoadingText(loadtext, .95);
+	
+	strcpy(loadtext, "Loading Pipes");
+	printLoadingText(loadtext, .925);
 
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*47, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*75, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*104, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*116, -2, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*123, .5, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*127, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*131, 1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
+
 	pipes.push_back(new draw_pipe(glm::vec3(cubesize*178, -1, -(pathwidth-1)/2*cubesize), glm::vec3(.1, .17, .1), glm::vec3(0, 0, 0)));
 	pipes[2]->linkedpipe = pipes[3];
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .925);
 	// pipes
+	printLoadingText(loadtext, .925);
 	
-#ifdef PRINT_LOADING
-	cout << "Loading Enemies..." << endl;
-#endif	
+	strcpy(loadtext, "Loading Enemies");
+	printLoadingText(loadtext, .9);
 
 #ifndef NO_ENEMIES
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*31, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*60, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*62, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*68, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*72, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*100, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*113, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*117, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_goomba(glm::vec3(cubesize*162, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*173, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*187, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 #ifndef LITE_MODE
 	enemies.push_back(new draw_koopa(glm::vec3(cubesize*33, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*51, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*70, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*71, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*138, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*149, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_goomba(glm::vec3(cubesize*160, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
-	enemies.push_back(new draw_koopa(glm::vec3(cubesize*171, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
-#endif
-#endif
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 
-#ifdef PRINT_LOADING
-	cout << "Loading Coins...\n" << endl;
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*43, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*51, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*70, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*71, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, -2*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*88, cubesize, 0*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*138, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*149, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_goomba(glm::vec3(cubesize*160, cubesize, -1*cubesize), glm::vec3(.5, .5, .5), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
+
+	enemies.push_back(new draw_koopa(glm::vec3(cubesize*171, cubesize, -1*cubesize), glm::vec3(3, 3, 3), glm::vec3(0, -90, 0)));
+	strcat(loadtext, ".");
+	printLoadingText(loadtext, .9);
 #endif
+#endif
+	printLoadingText(loadtext, .9);
+
+	strcpy(loadtext, "Loading Coins");
+	printLoadingText(loadtext, .875);
+	printLoadingText(loadtext, .875);
 
 	state = GAME_STATE;
 }
@@ -2046,9 +2333,7 @@ void loadWorld2_1() {
 int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
-#ifdef PRINT_LOADING
 	cout << "Loading Sounds..." << endl;
-#endif
 	initAudio();
 
 	glutInit(&argc, argv);
@@ -2071,6 +2356,8 @@ int main(int argc, char* argv[]) {
 
 	angle = glm::vec3(M_PI/2, -M_PI/32, 0);
 
+	cout << "Loading Menus..." << endl;
+
 	title = new Cube(0.0, 0.0, 4.0, "title", 2); // inits title screen
 	loading = new Cube(0.0, 0.0, 4.0, "loadscreen", 2); // inits loading screen
 
@@ -2080,36 +2367,30 @@ int main(int argc, char* argv[]) {
 	settings1 = new Cube(0.0, -0.3, 3.0, "lowgrav", 0.5f);
 	settings2 = new Cube(0.0, -0.3, 3.0, "normgrav", 0.5f);
 
-#ifdef DEBUG_LEVEL
-	loadDebugLevel();
-#else
-	loadWorld1_1();
-#endif	
-
 #ifdef __APPLE__
 	CGSetLocalEventsSuppressionInterval(0.0); // deprecated, but working
 #endif
 
-#ifdef PRINT_LOADING
-	cout << "Initializing GLUT...\n" << endl;
-#endif
+	cout << "Initializing GLUT..." << endl;
 		
 	if(initShaders()) {
 		initLighting();
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		glutDisplayFunc(onDisplay);
-		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
 		glutReshapeFunc(reshape);
 		glutKeyboardFunc(key_pressed);
 		glutKeyboardUpFunc(key_released); // keyboard keys
 		glutMouseFunc(mouse_click); // mouse buttons
 		glutPassiveMotionFunc(motion);
 		glutMotionFunc(motion);
+		glutTimerFunc(1000.0/MAX_FPS, timer, 0);
+
 		// glut functions
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_TEXTURE_3D);
 
+		cout << "Entering Main Loop..." << endl;
         glutMainLoop();
 	}
 	return 0;
