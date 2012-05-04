@@ -353,12 +353,30 @@ void reset() {
 		titleDisplay();
 		glutSwapBuffers();
 		
-		enemies.clear();
-		prizes.clear();
-		cubes.clear();
-		pipes.clear();
-		fireballs.clear();
-		coins.clear();
+		while(!enemies.empty()) {
+			delete enemies[0];
+			enemies.erase(enemies.begin(), enemies.begin()+1);
+		}
+		while(!prizes.empty()) {
+			delete prizes[0];
+			prizes.erase(prizes.begin(), prizes.begin()+1);
+		}
+		while(!cubes.empty()) {
+			delete cubes[0];
+			cubes.erase(cubes.begin(), cubes.begin()+1);
+		}
+		while(!pipes.empty()) {
+			delete pipes[0];
+			pipes.erase(pipes.begin(), pipes.begin()+1);
+		}
+		while(!fireballs.empty()) {
+			delete fireballs[0];
+			fireballs.erase(fireballs.begin(), fireballs.begin()+1);
+		}
+		while(!coins.empty()) {
+			delete coins[0];
+			coins.erase(coins.begin(), coins.begin()+1);
+		}
 
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
@@ -1233,13 +1251,31 @@ void idle() {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			titleDisplay();
 			glutSwapBuffers();
-
-			enemies.clear();
-			prizes.clear();
-			cubes.clear();
-			pipes.clear();
-			fireballs.clear();
-			coins.clear();
+		
+			while(!enemies.empty()) {
+				delete enemies[0];
+				enemies.erase(enemies.begin(), enemies.begin()+1);
+			}
+			while(!prizes.empty()) {
+				delete prizes[0];
+				prizes.erase(prizes.begin(), prizes.begin()+1);
+			}
+			while(!cubes.empty()) {
+				delete cubes[0];
+				cubes.erase(cubes.begin(), cubes.begin()+1);
+			}
+			while(!pipes.empty()) {
+				delete pipes[0];
+				pipes.erase(pipes.begin(), pipes.begin()+1);
+			}
+			while(!fireballs.empty()) {
+				delete fireballs[0];
+				fireballs.erase(fireballs.begin(), fireballs.begin()+1);
+			}
+			while(!coins.empty()) {
+				delete coins[0];
+				coins.erase(coins.begin(), coins.begin()+1);
+			}
 
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
@@ -1474,12 +1510,30 @@ void key_pressed(unsigned char key, int x, int y) {
 		}
 		loadscreendraw = true;
 
-		enemies.clear();
-		prizes.clear();
-		cubes.clear();
-		pipes.clear();
-		fireballs.clear();
-		coins.clear();
+		while(!enemies.empty()) {
+			delete enemies[0];
+			enemies.erase(enemies.begin(), enemies.begin()+1);
+		}
+		while(!prizes.empty()) {
+			delete prizes[0];
+			prizes.erase(prizes.begin(), prizes.begin()+1);
+		}
+		while(!cubes.empty()) {
+			delete cubes[0];
+			cubes.erase(cubes.begin(), cubes.begin()+1);
+		}
+		while(!pipes.empty()) {
+			delete pipes[0];
+			pipes.erase(pipes.begin(), pipes.begin()+1);
+		}
+		while(!fireballs.empty()) {
+			delete fireballs[0];
+			fireballs.erase(fireballs.begin(), fireballs.begin()+1);
+		}
+		while(!coins.empty()) {
+			delete coins[0];
+			coins.erase(coins.begin(), coins.begin()+1);
+		}
 
 #ifdef DEBUG_LEVEL
 		loadDebugLevel();
@@ -1517,13 +1571,31 @@ void mouse_click(int button, int mstate, int x, int y) {
 	if (mstate == GLUT_DOWN) {
 		if(state == TITLE_STATE) {
 			loadscreendraw = true;
-
-			enemies.clear();
-			prizes.clear();
-			cubes.clear();
-			pipes.clear();
-			fireballs.clear();
-			coins.clear();
+		
+			while(!enemies.empty()) {
+				delete enemies[0];
+				enemies.erase(enemies.begin(), enemies.begin()+1);
+			}
+			while(!prizes.empty()) {
+				delete prizes[0];
+				prizes.erase(prizes.begin(), prizes.begin()+1);
+			}
+			while(!cubes.empty()) {
+				delete cubes[0];
+				cubes.erase(cubes.begin(), cubes.begin()+1);
+			}
+			while(!pipes.empty()) {
+				delete pipes[0];
+				pipes.erase(pipes.begin(), pipes.begin()+1);
+			}
+			while(!fireballs.empty()) {
+				delete fireballs[0];
+				fireballs.erase(fireballs.begin(), fireballs.begin()+1);
+			}
+			while(!coins.empty()) {
+				delete coins[0];
+				coins.erase(coins.begin(), coins.begin()+1);
+			}
 			
 #ifdef DEBUG_LEVEL
 			loadDebugLevel();
