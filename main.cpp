@@ -983,8 +983,15 @@ void moveCamera() {
 		else if(strcmp(cubes[n]->texturename, "questionblock") == 0 && camcube->collidesBottomY(cubes[n], dt) && !camcube->collidesX(cubes[n], dt) && !camcube->collidesZ(cubes[n], dt) && !cubes[n]->hit) {
 			if(camcube->velocity.y > 0) {
 				coincount++; // get coin
+				if(coincount == 100) {
+					numlives++;
 #ifdef PLAY_SOUNDS
-				playsound(coinsound);
+					playsound(oneup);
+#endif
+					coincount = 0;				
+				}
+#ifdef PLAY_SOUNDS
+				if(coincount != 0) playsound(coinsound); // doesn't play when 1-up
 #endif
 				camcube->velocity.y = -.1;
 			}
@@ -1093,14 +1100,16 @@ void moveCamera() {
 			coincount++;
 			if(coincount == 100) {
 				numlives++;
+#ifdef PLAY_SOUNDS
 				playsound(oneup);
+#endif
 				coincount = 0;
 			}
 			
 			coins.erase(coins.begin()+n, coins.begin()+n+1);
 			n--;
 #ifdef PLAY_SOUNDS
-			playsound(coinsound);
+			if(coincount != 0) playsound(coinsound); // doesn't play when 1-up
 #endif
 		}
 	}
