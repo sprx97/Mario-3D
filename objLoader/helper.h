@@ -17,7 +17,7 @@
 #include <GL/glut.h>
 #endif
 
-#include "mPoint.h"
+#include "mpoint.h"
 
 #include <cmath>
 #include <cstdio>

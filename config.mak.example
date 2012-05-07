@@ -1,0 +1,21 @@
+# config.mak
+# ==========
+
+# This file should contain any system-specific configuration. This example
+# configuration is usually shipped as config.mak.example. To have an effect,
+# some lines need to be uncommented, and the file should be named config.mak.
+
+# Currently defined variables:
+# ----------------------------
+
+# MY_LIBS: Appended to the LIBS variable which is a list of arguments to be
+# passed to the linker
+#MY_LIBS=-L/path/to/library/dir
+
+
+# Specific Examples:
+# ------------------
+
+# Example of how to specify the directory containing libfmodex.so on a Gentoo
+# Linux system:
+#MY_LIBS=-L/opt/fmodex/api/lib 
