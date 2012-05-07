@@ -1,17 +1,18 @@
+include $(shell ls config.mak 2>/dev/null)
 OS = $(shell uname -s)
 
 # Mac
 ifeq ($(OS), Darwin)
 	COMPILER = g++
 	INCLUDES = -I/opt/local/include
-	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm -lfmodex
+	LIBS = -framework OpenGL -framework GLUT -framework ApplicationServices -lGLEW -lm -lfmodex $(MY_LIBS)
 	FLAGS =
 endif
 # Linux
 ifeq ($(OS), Linux)
 	COMPILER = g++
 	INCLUDES =
-	LIBS = -lm -lGL -lglut -lGLEW -lGLU
+	LIBS = -lm -lGL -lglut -lGLEW -lGLU -lfmodex $(MY_LIBS)
 	FLAGS =
 endif
 
