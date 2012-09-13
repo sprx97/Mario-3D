@@ -1302,19 +1302,6 @@ void timer(int value) {
 }
 
 void gameDisplay() {
-  //clear model view at begginning of display
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-	view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
-	projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
-
-	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
-
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//	gluPerspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);	
-
 	flag->draw();
 	for(int n = 0; n < enemies.size(); n++) enemies[n]->draw();
 	for(int n = 0; n < pipes.size(); n++) pipes[n]->draw();
@@ -1393,16 +1380,65 @@ void titleDisplay() {
 } // display function for title state
 
 void onDisplay() {
-	glClearColor(0.0, 0.0, 0.0, 1.0); // black
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// clears the screen
+	glViewport(0, 0, screen_width, screen_height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0, screen_width / (float) screen_height, 0.1, 100000);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+	glScissor(0, 0, screen_width, screen_height);	
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+	
+	if(state == GAME_STATE) {
+		view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
+		projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+
+		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+	}
 	
 	if(state == TITLE_STATE) titleDisplay();
 	else if (state == MENU_STATE) menuDisplay();
 	else if(state == GAME_STATE) gameDisplay();
 
+	if(state == GAME_STATE) {
+		glViewport(3*screen_width/4.0, 0, screen_width/4.0, screen_height/4.0);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(45, (screen_width/4.0)/(screen_height/4.0), 0.1, 100000);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glScissor(3*screen_width/4.0, 0, screen_width/4.0, screen_height/4.0);	
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		view = glm::lookAt(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z + 100), 
+						   glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
+						   glm::vec3(0.0, 1.0, 0.0));
+		projection = glm::perspective(45.0f, (float)(1.0f*(screen_width/4.0)/(screen_height/4.0)), 0.1f, 5000.0f);
+
+		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z + 100, 
+				  camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 
+				  0.0, 1.0, 0.0);
+		
+		gameDisplay();		
+	}
+
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
+
+	glViewport(0, 0, screen_width, screen_height);
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	gluPerspective(45.0, screen_width / (float) screen_height, 0.1, 100000);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	glEnable(GL_SCISSOR_TEST);
+	glScissor(0, 0, screen_width, screen_height);	
 
     //set the projection matrix to be orthographic, but save the old one first...
     glMatrixMode(GL_PROJECTION);
@@ -1458,15 +1494,6 @@ void onDisplay() {
 void reshape(int width, int height) {
 	screen_width = width;
 	screen_height = height;
-	glViewport(0, 0, screen_width, screen_height);
-	
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-
-	//if (screen_width <= screen_height) glOrtho(0.0, 16.0, 0.0, 16.0*screen_height/screen_width, -10.0, 10.0);
-	//else glOrtho(0.0, 16.0*screen_width/screen_height, 0.0, 16.0, -100.0, 100.0);
-	gluPerspective(45.0, width / (float) height, 0.1, 100000);
-	glMatrixMode(GL_MODELVIEW);
 } // resizes screen
 
 void free_resources() {
@@ -2470,6 +2497,7 @@ int main(int argc, char* argv[]) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_TEXTURE_3D);
+		glEnable(GL_SCISSOR_TEST);
 
 		cout << "Entering Main Loop..." << endl;
         glutMainLoop();
