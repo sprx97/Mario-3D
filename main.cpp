@@ -1412,12 +1412,12 @@ void onDisplay() {
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		view = glm::lookAt(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z + 100), 
+		view = glm::lookAt(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z + 50), 
 						   glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
 						   glm::vec3(0.0, 1.0, 0.0));
 		projection = glm::perspective(45.0f, (float)(1.0f*(screen_width/4.0)/(screen_height/4.0)), 0.1f, 5000.0f);
 
-		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z + 100, 
+		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z + 50, 
 				  camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 
 				  0.0, 1.0, 0.0);
 		
