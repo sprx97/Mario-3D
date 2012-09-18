@@ -10,7 +10,7 @@
 //#define DRAW_HITBOXES
 #define PRINT_FPS
 //#define OBJLOADER_DEBUG
-//#define LITE_MODE // less enemies for faster loading
+#define LITE_MODE // less enemies for faster loading
 
 #include <string>
 #include <time.h>
@@ -118,6 +118,7 @@ int onpipe = -1;
 bool warping1 = false;
 bool warping2 = false;
 bool winning = false;
+bool swapviews = false;
 
 static glm::vec3 angle;
 static glm::vec3 forward;
@@ -1379,6 +1380,26 @@ void titleDisplay() {
 	glUseProgram(0);
 } // display function for title state
 
+void setup3DCamera() {
+	if(state == GAME_STATE) {
+		view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
+		projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
+
+		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
+	}
+}
+
+void setup2DCamera() {
+	view = glm::lookAt(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z + 50), 
+					   glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
+					   glm::vec3(0.0, 1.0, 0.0));
+	projection = glm::perspective(45.0f, (float)(1.0f*(screen_width/4.0)/(screen_height/4.0)), 0.1f, 5000.0f);
+
+	gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z + 50, 
+			  camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 
+			  0.0, 1.0, 0.0);
+}
+
 void onDisplay() {
 	glViewport(0, 0, screen_width, screen_height);
 	glMatrixMode(GL_PROJECTION);
@@ -1390,12 +1411,8 @@ void onDisplay() {
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 	
-	if(state == GAME_STATE) {
-		view = glm::lookAt(camcube->position, camcube->position + lookat, glm::vec3(0.0, 1.0, 0.0));
-		projection = glm::perspective(45.0f, 1.0f*screen_width/screen_height, 0.1f, 5000.0f);
-
-		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z, camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 0.0, 1.0, 0.0);
-	}
+	setup3DCamera();
+//	if(state == GAME_STATE && swapviews) setup2DCamera();
 	
 	if(state == TITLE_STATE) titleDisplay();
 	else if (state == MENU_STATE) menuDisplay();
@@ -1412,14 +1429,8 @@ void onDisplay() {
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		view = glm::lookAt(glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z + 50), 
-						   glm::vec3(camcube->position.x, camcube->position.y, camcube->position.z), 
-						   glm::vec3(0.0, 1.0, 0.0));
-		projection = glm::perspective(45.0f, (float)(1.0f*(screen_width/4.0)/(screen_height/4.0)), 0.1f, 5000.0f);
-
-		gluLookAt(camcube->position.x, camcube->position.y, camcube->position.z + 50, 
-				  camcube->position.x + lookat.x, camcube->position.y + lookat.y, camcube->position.z + lookat.z, 
-				  0.0, 1.0, 0.0);
+		setup2DCamera();
+//		if(swapviews) setup3DCamera();
 		
 		gameDisplay();		
 	}
@@ -1528,6 +1539,7 @@ void toggleFullscreen() {
 
 void key_pressed(unsigned char key, int x, int y) {
 	if(key == GLUT_KEY_ESC) toggleFullscreen();
+	if(key == 'i') swapviews = 1-swapviews;
 	
 	if(state == TITLE_STATE) {
 		if(key == 'q') {
@@ -1726,7 +1738,7 @@ void loadDebugLevel() {
 	pathlength = 100;
 	pathwidth = 8;
 
-	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+	flag = new draw_flag(glm::vec3(cubesize*6*16, 8, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 200, 0)); 
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
 
 	char loadtext[100] = "Loading Cubes";
@@ -1833,7 +1845,7 @@ void loadWorld1_1() {
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-	flag = new draw_flag(glm::vec3(200*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+	flag = new draw_flag(glm::vec3(200*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 200, 0)); 
 
 	char loadtext[100] = "Loading Cubes";
 	printLoadingText(loadtext, .975);
@@ -2145,7 +2157,7 @@ void loadWorld2_1() {
 	bg = new Cube(0.0, 0.0, 0.0, "skybox", 3000);
 
 	camcube = new Cube(0, 2*cubesize, -(pathwidth-1)/2*cubesize, "brickblock", cubesize); 
-	flag = new draw_flag(glm::vec3(202*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 90, 0)); 
+	flag = new draw_flag(glm::vec3(202*cubesize, 9, -(pathwidth-1)/2*cubesize), glm::vec3(.75, .75, .75), glm::vec3(0, 200, 0)); 
 
 	char loadtext[100] = "Loading Cubes";
 	printLoadingText(loadtext, .975);
