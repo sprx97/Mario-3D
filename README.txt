@@ -1,6 +1,3 @@
-TEST
-
-
 Mario3D v1.0
 Jeremy Vercillo, Ryan Liebscher, Natalia Woodbine
 2/9/2012 - 5/2/2012
