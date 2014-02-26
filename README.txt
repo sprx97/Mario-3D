@@ -33,3 +33,4 @@ One you are in the game, the goal is to reach the flag at the end of the level w
 	- Same as above.
 - Fireballs and stars sometimes fall through floor
 	- Need to do separate for loops for x, y, and z collision so that y collision takes priority.
+
